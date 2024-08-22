@@ -29,7 +29,7 @@ pip install numpy scipy matplotlib librosa
 ```
 
 ## Usage
-1. After recording the test record sweep tracks, you need to create a file each for the left and right sweeps.  If you don't want to plot the crosstalk the file can be mono, otherwise the script expects the first channel of each file (Left) to be the sweep and the second channel (Right) to be the crosstalk.  The file cannot have any "silent" parts - it must begin at the beginning of the tone and end right when the tone stops.  The file should be in WAV format. 
+1. After recording the test record sweep tracks, you need to create a file each for the left and right sweeps.  If you don't want to plot the crosstalk the file can be mono, otherwise the script expects the first channel of each file (Left) to be the sweep and the second channel (Right) to be the crosstalk.  The file cannot have any "silent" parts - it must begin at the start of the tone and end right when the tone stops.  The file should be in WAV format. 
 2. Edit the SJPlot.py script file "#edit user parameters" section to include the wav filenames, information, and script settings.
 3. Run the script to process the files.  A PNG image file of the plot will be created in the same directory as the script.
 
