@@ -68,26 +68,20 @@ import librosa
 #edit user parameters
 
 
-file_0 = '20240812_150MLX_105pF_TRS1007-4A1_L.wav'
-file_1 = '20240812_150MLX_835pF_TRS1007-4A1_L.wav'
+file_0 = 'Left Channel WAV File'
+file_1 = 'Right Channel WAV File'
 
-#file_0 = 'OC9XML_100R_TRS10071B1_L.wav'
-#file_1 = 'OC9XML_100R_TRS10071B1_R.wav'
 
-#file_1 = ''
+infoline = 'Cart / Load / Test Record'
 
-infoline = 'Signet TK100 LC / 47k 155pF / TRS-1007 4A1'
-infoline = 'test'
+equipinfo = 'Arm -> Phono Stage -> ADC'
 
-equipinfo = 'EPA-A501H-> Kirkwood Flat MM -> Benchmark ADC1'
-equipinfo = ''
-
-plotstyle = 5
+plotstyle = 4
 plotdataout = 0
 roundlvl = 1
 
-riaamode = 1
-riaainv = 0
+riaamode = 2
+riaainv = 1
 str100 = 0
 xg7001 = 0
 
