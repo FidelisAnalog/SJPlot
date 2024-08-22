@@ -39,7 +39,7 @@ python3 SJPlot.py
 
 Or, you can edit and run the script from IDLE which is typically a faster workflow. 
 
-##Example Output##
+## Example Output
 
 <br/>
 <div align="center" style="padding: 20px 0;">
