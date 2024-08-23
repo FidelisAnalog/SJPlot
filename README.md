@@ -44,7 +44,7 @@ Or, you can edit and run the script from IDLE which is typically a faster workfl
 <br/>
 <div align="center" style="padding: 20px 0;">
     <img src="images/ExamplePlot.png" alt="Example Plot.">
-    <p><b>Example dual-axis plot..</b></p>
+    <p><b>Example dual-axis plot.</b></p>
 </div>
 <br/>
 
