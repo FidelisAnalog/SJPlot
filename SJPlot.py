@@ -62,7 +62,7 @@ from matplotlib.gridspec import GridSpec
 import numpy as np
 import os
 import logging
-
+import librosa
 
 
 #edit user parameters
