@@ -480,8 +480,8 @@ def slice_audio(signal, Fs, test_record):
         # Find valid sequences of peak spacing
         valid_diffs = (lower_border <= np.diff(peaks)) & (np.diff(peaks) <= upper_border)
         start_index = np.argmax(np.convolve(valid_diffs, np.ones(consecutive_in_borders, dtype=int), mode='valid') == consecutive_in_borders)
-        if start_index == 0:
-            raise ValueError("No valid burst found")
+        #if start_index == 0:
+        #    raise ValueError("No valid burst found")
 
         start_sample = peaks[start_index]
         logger.debug(f"Start Index: {start_sample}")
