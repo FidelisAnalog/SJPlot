@@ -471,7 +471,6 @@ def slice_audio(signal, Fs, test_record):
         return sosfiltfilt(sos, signal)
 
 
-
     def find_burst_bounds(signal, Fs, lower_border, upper_border, consecutive_in_borders=10, threshold=0.02, shift_size=12, shiftings=3):
         # Detect peaks with constraints on minimum distance
         peaks, _ = find_peaks(signal, height=threshold, distance=lower_border)#prominence=.5)
@@ -541,8 +540,6 @@ def slice_audio(signal, Fs, test_record):
 
     params = record_params[test_record]
 
-    # Read input file
-    #left, right, Fs = read_measurement(input_file)
 
     left = signal[:, 0]
     right = signal[:, 1]
