@@ -61,7 +61,7 @@ swversion = "18.0"
 
 
 
-from scipy.signal import find_peaks, sosfiltfilt, iirfilter, lfilter
+from scipy.signal import find_peaks, sosfiltfilt, iirfilter, lfilter, resample
 from scipy.ndimage import uniform_filter1d
 from scipy.io.wavfile import read, write
 from pathlib import Path
@@ -402,8 +402,8 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
     logger.info(f"Sample Rate: {Fs}")
 
     if Fs <96000:
-        logger.info(f"Resampling to 96,000Hz")
-        audio = librosa.resample(audio, orig_sr=Fs, target_sr=96000)
+        logger.info(f"Resampling to 96000")
+        audio = resample(audio, int(len(audio) * 96000 / Fs))
         Fs = 96000
 
     if split_input_file == 1:
