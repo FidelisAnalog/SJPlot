@@ -45,12 +45,13 @@ endf =          0 - highest frequency to plot
 
 '''
 
-swversion = "17.1"
+swversion = "18.0"
 
-###
 
-from scipy import signal
-from scipy.io.wavfile import read
+
+from scipy.signal import find_peaks, sosfiltfilt, iirfilter, lfilter
+from scipy.ndimage import uniform_filter1d
+from scipy.io.wavfile import read, write
 from pathlib import Path
 from matplotlib.legend_handler import HandlerBase
 from matplotlib.offsetbox import AnchoredText
@@ -60,28 +61,28 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
 import os
-import librosa
-
+import logging
 
 
 
 #edit user parameters
 
 
-file_0 = 'Left Channel WAV File'
-file_1 = 'Right Channel WAV File'
+INPUT_FILE = 'TRS1007.wav'
+TEST_RECORD = 'TRS1007'  # Options: TRS1007, TRS1005, STR100
 
+infoline = 'V15-VMR / 47k 305pF / TRS-1007 4A1 - 2'
+infoline = 'TEST'
 
-infoline = 'Cart / Load / Test Record'
-
-equipinfo = 'Arm -> Phono Stage -> ADC'
+equipinfo = 'EPA-A501H-> Kirkwood Flat MM -> Benchmark ADC1'
+equipinfo = ''
 
 plotstyle = 4
 plotdataout = 0
 roundlvl = 1
 
-riaamode = 2
-riaainv = 1
+riaamode = 1
+riaainv = 0
 str100 = 0
 xg7001 = 0
 
@@ -93,17 +94,20 @@ endf = 20000
 ovdylim = 0
 ovdylimvalue = [-5,5]
 
-topdb = 100
-framelength = 1024
-hoplength = 256
-
-
 #end Edit
 
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
+fh = logging.StreamHandler()
+fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+fh.setFormatter(fh_formatter)
+logger.addHandler(fh)
+logger.propagate = False
 
 
 fileopenidx = 0
-
+file_1 = 'x'
 
 def align_yaxis(ax1, ax2):
     y_lims = np.array([ax.get_ylim() for ax in [ax1, ax2]])
@@ -313,13 +317,13 @@ def createplotdata(insig, Fs):
     aout2 = aout2-norm
     aout3 = aout3-norm
  
-    sos = signal.iirfilter(3,.5, btype='lowpass', output='sos') #filter some noise
-    aout = signal.sosfiltfilt(sos,aout)
-    aout2 = signal.sosfiltfilt(sos,aout2)
-    aout3 = signal.sosfiltfilt(sos,aout3)
+    sos = iirfilter(3,.5, btype='lowpass', output='sos') #filter some noise
+    aout = sosfiltfilt(sos,aout)
+    aout2 = sosfiltfilt(sos,aout2)
+    aout3 = sosfiltfilt(sos,aout3)
 
     if chinfile == 2 and len(aoutx) >1:
-        aoutx = signal.sosfiltfilt(sos,aoutx)
+        aoutx = sosfiltfilt(sos,aoutx)
 
     return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 
@@ -360,12 +364,12 @@ def riaaiir(sig, Fs, mode, inv):
         at,bt = bt,at
         ars,brs = brs,ars
     if mode == 1:
-        sig = signal.lfilter(brs,ars,sig)
+        sig = lfilter(brs,ars,sig)
     if mode == 2:
-        sig = signal.lfilter(bt,at,sig)
+        sig = lfilter(bt,at,sig)
     if mode == 3:
-        sig = signal.lfilter(bt,at,sig)
-        sig = signal.lfilter(brs,ars,sig)
+        sig = lfilter(bt,at,sig)
+        sig = lfilter(brs,ars,sig)
     return sig
 
 
@@ -377,16 +381,22 @@ def normxg7001(sig, Fs):
     return sig
 
 
-def openaudio(_FILE):
+def openaudio(INPUT_FILE):
     global chinfile
     global fileopenidx
-    chinfile = 1
+    chinfile = 2
 
-    srinfile = librosa.get_samplerate(_FILE)
+    #srinfile = librosa.get_samplerate(_FILE)
  
-    audio, Fs = librosa.load(_FILE, sr=None, mono=False)
+    #audio, Fs = librosa.load(_FILE, sr=None, mono=False)
 
 
+    logger.info(f"Reading: {INPUT_FILE}")
+    Fs, audio = read(INPUT_FILE)
+    logger.info(f"Sample Rate: {Fs}")
+    
+
+    '''
     if len(audio.shape) == 2:
         chinfile = 2
         filelength = audio.shape[1] / Fs
@@ -395,36 +405,258 @@ def openaudio(_FILE):
 
     print('Input File:   ' + str(_FILE))
     print('Sample Rate:  ' + str("{:,}".format(srinfile) + 'Hz'))
-
+    '''
+    
     if Fs <96000:
         print('              Resampling to 96,000Hz')
         audio = librosa.resample(audio, orig_sr=Fs, target_sr=96000)
         Fs = 96000
  
-    print('Channels:     ' + str(chinfile))
-    print(f"Length:       {filelength}s")
+    #print('Channels:     ' + str(chinfile))
+    #print(f"Length:       {filelength}s")
 
+
+    left_slice, right_slice = slice_audio(audio, Fs, TEST_RECORD)
+
+    #print(left_slice.shape)
+    #print(left_slice)
+
+    #write('output_file.wav', Fs, left_slice.T)
+
+    #plot_signal(left_slice, Fs, title="Left Sweep Segment")
 
     if riaamode != 0:
-        audio = riaaiir(audio, Fs, riaamode, riaainv)
+        left_slice = riaaiir(left_slice, Fs, riaamode, riaainv)
+        right_slice = riaaiir(right_slice, Fs, riaamode, riaainv)
 
     if xg7001 == 1:
-        audio = normxg7001(audio, Fs)
+        left_slice = normxg7001(left_slice, Fs)
+        right_slice = normxg7001(right_slice, Fs)
 
 
+    left_slice, minf, maxf = ordersignal(left_slice, Fs)
+    #right_slice[:, [0, 1]] = right_slice[:, [1, 0]]
+    right_slice, minf, maxf = ordersignal(right_slice, Fs)
+
+    #minf = .2
+    #maxf = 200
+
+    '''
     audio, index = librosa.effects.trim(audio, top_db=topdb, frame_length=framelength, hop_length=hoplength)
  
     print(f"In/Out (s):   {index / Fs}")
 
 
     audio, minf, maxf = ordersignal(audio, Fs)
-
+    '''
     print('Min Freq:     ' + str("{:,}".format(minf * 100) + 'Hz'))
     print('Max Freq:     ' + str("{:,}".format(maxf * 100) + 'Hz\n'))
- 
+
+    
     fileopenidx +=1
  
-    return audio, Fs, minf, maxf
+    return left_slice, right_slice, Fs, minf, maxf
+
+
+
+
+
+def slice_audio(signal, Fs, test_record):
+
+    # Rotation Helper
+    def rotate_left(y_in, nd):
+        return np.concatenate((y_in[nd:], y_in[:nd]))
+
+
+    # Filter
+    def apply_filter(signal, low, high, Fs, order=17, btype='band'):
+        if btype == 'band':
+            sos = iirfilter(order, [low, high], rs=140, btype='band', analog=False, ftype='cheby2', fs=Fs, output='sos')
+            
+        elif btype == 'high':
+            sos = iirfilter(order, high, rs=140, btype='highpass', analog=False, ftype='cheby2', fs=Fs, output='sos')
+
+        return sosfiltfilt(sos, signal)
+
+
+    def find_burst_bounds(signal, Fs, lower_border, upper_border, consecutive_in_borders=10, threshold=0.02, shift_size=12, shiftings=3):
+        # Detect peaks with constraints on minimum distance
+        peaks, _ = find_peaks(signal, height=threshold, distance=lower_border)#prominence=.5)
+        logger.debug(f"Peaks Found: {len(peaks)}")
+
+        # Find valid sequences of peak spacing
+        valid_diffs = (lower_border <= np.diff(peaks)) & (np.diff(peaks) <= upper_border)
+        start_index = np.argmax(np.convolve(valid_diffs, np.ones(consecutive_in_borders, dtype=int), mode='valid') == consecutive_in_borders)
+        if start_index == 0:
+            raise ValueError("No valid burst found")
+
+        start_sample = peaks[start_index]
+        logger.debug(f"Start Index: {start_sample}")
+        
+        # Define burst region
+        is_ = int(start_sample + (1 * Fs))  # Start 1s after the first peak
+        ie = int(start_sample + (12 * Fs))  # End 12s after
+
+        # Extract and smooth burst region
+        cut_burst = signal[is_:ie]
+        cut_burst = uniform_filter1d(cut_burst, size=shift_size * shiftings)
+
+        # Normalize and find burst end
+        cut_burst /= np.max(cut_burst)
+        burst_end = np.argmax(cut_burst < threshold)
+
+        end_sample = is_ + burst_end
+
+        logger.debug(f"End Index: {end_sample}")
+
+        '''
+        if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
+            plot_signal(
+                signal,
+                Fs,
+                peaks=peaks,
+                threshold=threshold,
+                detected_end_time=(end_sample / Fs),
+                detected_start_time=(start_sample /Fs),
+                title="Burst Detection"
+            )
+        '''
+        
+        return start_sample, end_sample
+
+    def find_end_of_sweep(sweep_start_sample, sweep_end_min, sweep_end_max, signal, Fs, threshold=0.05, shiftings=6):
+        sample_offset_start = sweep_start_sample + int(Fs * sweep_end_min)
+        sample_offset_end = sweep_start_sample + int(Fs * sweep_end_max)
+        signal = signal[sample_offset_start:sample_offset_end]
+        original_signal = signal
+
+        logger.debug(f"Length of End Window: {len(signal)}")
+
+        # Filter a bit by shifting and adding
+        signal_shifted = rotate_left(signal, 1)
+        for i in range(shiftings):
+            signal = signal + signal_shifted
+            signal_shifted = rotate_left(signal_shifted, 1)
+
+        # Find end    
+        signal = np.array(signal < threshold, dtype=float)
+        signal = np.diff(signal)
+        end_sample = np.argmax(signal) + sample_offset_start
+
+        logger.debug(f"End Sample (Global Index): {end_sample}")
+        logger.debug(f"Sample Offset Start: {sample_offset_start}, Sample Offset End: {sample_offset_end}")
+        logger.debug(f"End Sample (Relative Index): {end_sample - sample_offset_start}")
+
+        '''
+        if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
+            plot_signal(
+                original_signal,
+                Fs,
+                threshold=threshold,
+                detected_end_time=(end_sample - sample_offset_start) / Fs,
+                title="Sweep End Detection",
+            )
+        '''
+        
+        return end_sample
+
+
+    # Test record parameters
+    record_params = {
+        'TRS1007': {'sweep_offset': 74, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+        'TRS1005': {'sweep_offset': 32, 'sweep_end_min': 26, 'sweep_end_max': 34, 'sweep_start_detect': 1},
+        'STR100': {'sweep_offset': 74, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
+    }
+
+    if test_record not in record_params:
+        raise ValueError("Invalid test record.")
+
+    params = record_params[test_record]
+
+    # Read input file
+    #left, right, Fs = read_measurement(input_file)
+
+    left = signal[:, 0]
+    right = signal[:, 1]
+
+
+    logger.info(f"Test Record: {test_record}")
+
+    lower_border = int(Fs/2040) # 1020Hz - have to scale with Fs
+    upper_border = int(Fs/1960) # 980Hz
+
+    # Filter and maximize for end of left pilot detection
+    left_filtered = apply_filter(left, 500, 2000, Fs, btype='band')
+    left_normalized = np.abs(left_filtered) / np.max(np.abs(left_filtered))
+
+    # Find end of left pilot tone / start of sweep
+    _, start_left_sweep = find_burst_bounds(left_normalized, Fs, lower_border, upper_border)
+
+    if params['sweep_start_detect'] == 1:
+        sample_offset = start_left_sweep + Fs
+        start_left_sweep, _ = sample_offset + find_burst_bounds(left_normalized[sample_offset:], Fs, lower_border, upper_border)
+
+    logger.info(f"Start of Left Sweep: {start_left_sweep}")
+
+    # Filter and maximize for end of right pilot detection
+    right_filtered = apply_filter(right, 500, 2000, Fs, btype='band')
+    right_normalized = np.abs(right_filtered) / np.max(np.abs(right_filtered))
+
+    # Find end of left pilot tone / start of sweep
+    sample_offset = start_left_sweep + int(Fs * params['sweep_offset'])
+    _, start_right_sweep = sample_offset + find_burst_bounds(right_normalized[sample_offset:], Fs, lower_border, upper_border)
+
+    if params['sweep_start_detect'] == 1:
+        sample_offset = start_right_sweep + Fs
+        start_right_sweep, _ = sample_offset + find_burst_bounds(right_normalized[sample_offset:], Fs, lower_border, upper_border)
+
+    logger.info(f"Start of Right Sweep: {start_right_sweep}")
+
+    # Filter and maximize for end of left sweep detection
+    left_filtered = apply_filter(left, None, 10000, Fs, btype='high')
+    left_normalized = np.abs(left_filtered) / np.max(np.abs(left_filtered))
+
+    # Find end of left sweep
+    end_left_sweep = find_end_of_sweep(start_left_sweep, params['sweep_end_min'], params['sweep_end_max'], left_normalized, Fs)
+    logger.info(f"End of Left Sweep: {end_left_sweep}")
+
+    # Filter and maximize for end of right sweep detection
+    right_filtered = apply_filter(right, None, 10000, Fs, btype='high')
+    right_normalized = np.abs(right_filtered) / np.max(np.abs(right_filtered))
+
+    # Find end of right sweep
+    end_right_sweep = find_end_of_sweep(start_right_sweep, params['sweep_end_min'], params['sweep_end_max'], right_normalized, Fs)
+    logger.info(f"End of Right Sweep: {end_right_sweep}")
+
+    logger.info(f"Left Sweep Duration: {(end_left_sweep-start_left_sweep)/Fs}")
+    logger.info(f"Right Sweep Duration: {(end_right_sweep-start_right_sweep)/Fs}")
+
+    '''
+    if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
+        plot_signal(left[start_left_sweep:end_left_sweep], Fs, title="Left Sweep Segment")
+        plot_signal(right[start_right_sweep:end_right_sweep], Fs, title="Right Sweep Segment")
+    '''
+    
+    # Write results
+    '''
+    output_file_left = os.path.splitext(input_file)[0] + '_L.wav'
+    output_file_right = os.path.splitext(input_file)[0] + '_R.wav'
+
+    logger.info(f"Writing {output_file_left}")
+    write_result(output_file_left, left, right, Fs, start_left_sweep, end_left_sweep)
+
+    logger.info(f"Writing {output_file_right}")
+    write_result(output_file_right, right, left, Fs, start_right_sweep, end_right_sweep)
+    
+    logger.info("Processing Complete.")
+    '''
+    
+    left_slice = np.stack((left[start_left_sweep:end_left_sweep], right[start_left_sweep:end_left_sweep]))
+    right_slice = np.stack((right[start_right_sweep:end_right_sweep], left[start_right_sweep:end_right_sweep]))
+
+
+    return left_slice, right_slice
+
 
 
 
@@ -434,8 +666,11 @@ def openaudio(_FILE):
 if __name__ == "__main__":
 
 
-    input_sig, Fs, minf, maxf = openaudio(file_0)
-    fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig, Fs)
+    left_sig, right_sig, Fs, minf, maxf = openaudio(INPUT_FILE)
+
+
+    
+    fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(left_sig, Fs)
 
     deltaadj = ao0[find_nearest(fo0, normalize)]
     deltah0 = round((max(ao0 - deltaadj)), roundlvl)
@@ -445,16 +680,14 @@ if __name__ == "__main__":
         print('X-talk @1kHz: ' + (str(round(aox0[find_nearest(fox0, 1000)], 2))) + 'dB\n\n')
    
 
-    if file_1:
-        input_sig, Fs, minf, maxf = openaudio(file_1)
-        fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig, Fs)
- 
-        deltaadj = ao1[find_nearest(fo1, normalize)]
-        deltah1 = round((max(ao1 - deltaadj)), roundlvl)
-        deltal1 = abs(round((min(ao1 - deltaadj)), roundlvl))
+    fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(right_sig, Fs)
 
-        if aox1.size > 0:
-            print('X-talk @1kHz: ' + (str(round(aox1[find_nearest(fox1, 1000)], 2))) + 'dB\n\n')
+    deltaadj = ao1[find_nearest(fo1, normalize)]
+    deltah1 = round((max(ao1 - deltaadj)), roundlvl)
+    deltal1 = abs(round((min(ao1 - deltaadj)), roundlvl))
+
+    if aox1.size > 0:
+        print('X-talk @1kHz: ' + (str(round(aox1[find_nearest(fox1, 1000)], 2))) + 'dB\n\n')
 
 
 
@@ -862,7 +1095,7 @@ if __name__ == "__main__":
     now = datetime.now()
 
     if file_1:
-        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + file_0 + "\n" + file_1 + "\n" + \
+        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + INPUT_FILE + "\n" + file_1 + "\n" + \
             now.strftime("%b %d, %Y %H:%M"), fontsize=6)
     else:
         plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + file_0 + "\n" + \
