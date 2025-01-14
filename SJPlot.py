@@ -8,39 +8,51 @@ The info_line should be alpha-numeric with entries separated by " / " only.  The
 will save a .png file that is named from the info line, replacing " / " with "_".  As
 example "this / is / a / test" will create a file named "this_is_a_test.png".
 
-file_0 =        The first (L) or only file to plot
+INPUT_FILE_0 =      The first (L) file to plot, or the only file to plot, or the file you want
+                    to extract sweeps from. 
 
-file_1 =        The second (R) file to plot.  If only using one file change to = ''
+INPUT_FILE_1 =      The second (R) file to plot.  If using one file change to = ''.  If you're
+                    extracting sweeps, this parameter is ignored.
 
-plotstyle =     1 - traditional
-                2 - dual axis (twinx)
-                3 - dual plot FR and distortion
-                4 - dual plot FR zoom and dual axis (twinx)
-                5 - small plot FR only
+SPLIT_INPUT_FILE =  0 - Do not process the file for extraction of sweeps
+                    1 - Extract the sweeps from INPUT_FILE_0.
 
-riaamode =      0 - off
-                1 - bass emphasis
-                2 - trebel de-emphasis
-                3 - both
+SAVE_SPLIT_FILES =  0 - Do not save files
+                    1 - The extract sweeps will be saved, appending either an "_L" or "_R" to the
+                        INPUT_FILE_0 filename for the left and right sweeps, respectively.
 
-riaainv =       0 - disable
-                1 - inverse RIAA EQ per riaamode setting
+TEST_RECORD =       If extracting sweeps, you must specify what test record the audio was captured
+                    from.  Supported records are STR100, TRS1007 (CA or JVC), and TRS1005. 
+                    
+plotstyle =         1 - traditional
+                    2 - dual axis (twinx)
+                    3 - dual plot FR and distortion
+                    4 - dual plot FR zoom and dual axis (twinx)
+                    5 - small plot FR only
 
-str100 =        0 - disable
-                1 - enable 6dB/oct correction from 500Hz to 40Hz
+riaamode =          0 - off
+                    1 - bass emphasis
+                    2 - trebel de-emphasis
+                    3 - both
 
-xg7001 =        0 - disable
-                1 - custom bass filter for Denon XG-7001 sweep (@stereoplay filter)
+riaainv =           0 - disable
+                    1 - inverse RIAA EQ per riaamode setting
 
-normalize =     Frequency in Hz to set as 0dB in the plot
+str100 =            0 - disable
+                    1 - enable 6dB/oct correction from 500Hz to 40Hz
 
-file0norm =     0 - normalize both files independently
-                1 - normalize both files to file 0 level
+xg7001 =            0 - disable
+                    1 - custom bass filter for Denon XG-7001 sweep (@stereoplay filter)
 
-onekfstart =    0 - disable
-                1 - start plot from 1kHz
+normalize =         Frequency in Hz to set as 0dB in the plot
 
-endf =          0 - highest frequency to plot
+file0norm =         0 - normalize both files independently
+                    1 - normalize both files to file 0 level
+
+onekfstart =        0 - disable
+                    1 - start plot from 1kHz
+
+endf =              0 - highest frequency to plot
                
 
 '''
@@ -62,20 +74,24 @@ from matplotlib.gridspec import GridSpec
 import numpy as np
 import os
 import logging
-import librosa
+
 
 
 #edit user parameters
 
 
-INPUT_FILE = 'TRS1007.wav'
-TEST_RECORD = 'TRS1007'  # Options: TRS1007, TRS1005, STR100
 
-infoline = 'V15-VMR / 47k 305pF / TRS-1007 4A1 - 2'
-infoline = 'TEST'
+INPUT_FILE_0 = 'myfirstwavfile.wav'
+INPUT_FILE_1 = 'mysecondwavfile.wav'
 
-equipinfo = 'EPA-A501H-> Kirkwood Flat MM -> Benchmark ADC1'
-equipinfo = ''
+SPLIT_INPUT_FILE = 0
+SAVE_SPLIT_FILES = 0
+
+TEST_RECORD = 'STR100'  # Options: TRS1007, TRS1005, STR100
+
+infoline = 'Cart / Load / Record'
+
+equipinfo = 'Arm -> Phonostage -> ADC'
 
 plotstyle = 4
 plotdataout = 0
@@ -94,6 +110,7 @@ endf = 20000
 ovdylim = 0
 ovdylimvalue = [-5,5]
 
+
 #end Edit
 
 # Configure logging
@@ -107,7 +124,10 @@ logger.propagate = False
 
 
 fileopenidx = 0
-file_1 = 'x'
+
+# Write Output WAV File
+def write_file(output_file, data, Fs):
+    write(output_file, Fs, data)
 
 def align_yaxis(ax1, ax2):
     y_lims = np.array([ax.get_ylim() for ax in [ax1, ax2]])
@@ -154,7 +174,6 @@ def ft_window(n):       #Matlab's flat top window
     return w
 
 
-
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -171,7 +190,6 @@ def createplotdata(insig, Fs):
     fout3 = []
     aout3 = []
     global norm
-
 
     def interpolate(f, a, minf, maxf, fstep):
         f_out = []
@@ -243,7 +261,6 @@ def createplotdata(insig, Fs):
 
         return freq, amp, freqx, ampx, freq2h, amp2h, freq3h, amp3h
 
- 
 
     def normstr100(f, a):
         fmin = 40
@@ -279,10 +296,9 @@ def createplotdata(insig, Fs):
         aout3 = aout3 + a3
 
         return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
+
  
     if onekfstart == 0:
-
-
         f, a, fx, ax, f2, a2, f3, a3 = chunk(insig, Fs, 20, 45, 5, 26.03)
         fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
 
@@ -295,7 +311,6 @@ def createplotdata(insig, Fs):
     f, a, fx, ax, f2, a2, f3, a3 = chunk(insig, Fs, 1000, endf, 100, 0)
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
 
- 
     if str100 == 1:
         aout = normstr100(fout, aout)
         aout2 = normstr100(fout2, aout2)
@@ -303,14 +318,12 @@ def createplotdata(insig, Fs):
         if chinfile == 2:
             aoutx = normstr100(foutx, aoutx)
 
-
     if file0norm == 1 and fileopenidx == 1:
         i = find_nearest(fout, normalize)
         norm = aout[i]
     elif file0norm == 0:
         i = find_nearest(fout, normalize)
         norm = aout[i]
-
 
     aout = aout-norm #amplitude is in dB so normalize by subtraction at [i]
     aoutx = aoutx-norm
@@ -327,7 +340,6 @@ def createplotdata(insig, Fs):
 
     return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 
- 
 
 def ordersignal(sig, Fs):
     F = int(Fs/100)
@@ -347,11 +359,8 @@ def ordersignal(sig, Fs):
     if maxf < minf:
         maxf,minf = minf,maxf
         sig = np.flipud(sig)
-
-
  
     return sig, minf, maxf
-
 
 
 def riaaiir(sig, Fs, mode, inv):
@@ -381,88 +390,71 @@ def normxg7001(sig, Fs):
     return sig
 
 
-def openaudio(INPUT_FILE):
+def get_audio(input_file, split_input_file=0, test_record=None, save_split_files=0):
     global chinfile
     global fileopenidx
-    chinfile = 2
+    chinfile = 1
 
-    #srinfile = librosa.get_samplerate(_FILE)
- 
-    #audio, Fs = librosa.load(_FILE, sr=None, mono=False)
+    logger.info(f"Reading: {input_file}")
+    Fs, audio = read(input_file)
+    logger.debug(f"WavFileWarning raised")
 
-
-    logger.info(f"Reading: {INPUT_FILE}")
-    Fs, audio = read(INPUT_FILE)
     logger.info(f"Sample Rate: {Fs}")
-    
 
-    '''
-    if len(audio.shape) == 2:
-        chinfile = 2
-        filelength = audio.shape[1] / Fs
-    else:
-        filelength = audio.shape[0] / Fs
-
-    print('Input File:   ' + str(_FILE))
-    print('Sample Rate:  ' + str("{:,}".format(srinfile) + 'Hz'))
-    '''
-    
     if Fs <96000:
-        print('              Resampling to 96,000Hz')
+        logger.info(f"Resampling to 96,000Hz")
         audio = librosa.resample(audio, orig_sr=Fs, target_sr=96000)
         Fs = 96000
- 
-    #print('Channels:     ' + str(chinfile))
-    #print(f"Length:       {filelength}s")
 
+    if split_input_file == 1:
+        logger.info(f"Extracting sweeps from audio files...")
+        chinfile = 2
+        audio, audio_2 = slice_audio(audio, Fs, test_record)
 
-    left_slice, right_slice = slice_audio(audio, Fs, TEST_RECORD)
+        if save_split_files == 1:
 
-    #print(left_slice.shape)
-    #print(left_slice)
+            output_file_left = os.path.splitext(input_file)[0] + '_L.wav'
+            output_file_right = os.path.splitext(input_file)[0] + '_R.wav'
 
-    #write('output_file.wav', Fs, left_slice.T)
+            logger.info(f"Writing {output_file_left}")
+            write_file(output_file_left, audio, Fs)
 
-    #plot_signal(left_slice, Fs, title="Left Sweep Segment")
+            logger.info(f"Writing {output_file_right}")
+            write_file(output_file_right, audio_2, Fs)  
+        
+        audio = audio.T
+        audio_2 = audio_2.T
+    else:
+        audio = audio.T
 
     if riaamode != 0:
-        left_slice = riaaiir(left_slice, Fs, riaamode, riaainv)
-        right_slice = riaaiir(right_slice, Fs, riaamode, riaainv)
+        audio = riaaiir(audio, Fs, riaamode, riaainv)
+        try:
+            audio_2 = riaaiir(audio_2, Fs, riaamode, riaainv)
+        except NameError:
+            audio_2 = None
 
     if xg7001 == 1:
-        left_slice = normxg7001(left_slice, Fs)
-        right_slice = normxg7001(right_slice, Fs)
+        audio = normxg7001(audio, Fs)
+        try:
+            audio_2 = normxg7001(audio_2, Fs)
+        except NameError:
+            audio_2 = None
 
-
-    left_slice, minf, maxf = ordersignal(left_slice, Fs)
-    #right_slice[:, [0, 1]] = right_slice[:, [1, 0]]
-    right_slice, minf, maxf = ordersignal(right_slice, Fs)
-
-    #minf = .2
-    #maxf = 200
-
-    '''
-    audio, index = librosa.effects.trim(audio, top_db=topdb, frame_length=framelength, hop_length=hoplength)
- 
-    print(f"In/Out (s):   {index / Fs}")
-
+    if len(audio.shape) == 2:
+        chinfile = 2
 
     audio, minf, maxf = ordersignal(audio, Fs)
-    '''
-    print('Min Freq:     ' + str("{:,}".format(minf * 100) + 'Hz'))
-    print('Max Freq:     ' + str("{:,}".format(maxf * 100) + 'Hz\n'))
-
     
+    logger.info(f"Sweep minimum frequency: {minf * 100:.0f}Hz")
+    logger.info(f"Sweep maximum frequency: {maxf * 100:.0f}Hz")
+   
     fileopenidx +=1
  
-    return left_slice, right_slice, Fs, minf, maxf
-
-
-
+    return audio, audio_2, Fs, minf, maxf
 
 
 def slice_audio(signal, Fs, test_record):
-
     # Rotation Helper
     def rotate_left(y_in, nd):
         return np.concatenate((y_in[nd:], y_in[:nd]))
@@ -477,6 +469,7 @@ def slice_audio(signal, Fs, test_record):
             sos = iirfilter(order, high, rs=140, btype='highpass', analog=False, ftype='cheby2', fs=Fs, output='sos')
 
         return sosfiltfilt(sos, signal)
+
 
 
     def find_burst_bounds(signal, Fs, lower_border, upper_border, consecutive_in_borders=10, threshold=0.02, shift_size=12, shiftings=3):
@@ -508,21 +501,9 @@ def slice_audio(signal, Fs, test_record):
         end_sample = is_ + burst_end
 
         logger.debug(f"End Index: {end_sample}")
-
-        '''
-        if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
-            plot_signal(
-                signal,
-                Fs,
-                peaks=peaks,
-                threshold=threshold,
-                detected_end_time=(end_sample / Fs),
-                detected_start_time=(start_sample /Fs),
-                title="Burst Detection"
-            )
-        '''
         
         return start_sample, end_sample
+
 
     def find_end_of_sweep(sweep_start_sample, sweep_end_min, sweep_end_max, signal, Fs, threshold=0.05, shiftings=6):
         sample_offset_start = sweep_start_sample + int(Fs * sweep_end_min)
@@ -546,17 +527,6 @@ def slice_audio(signal, Fs, test_record):
         logger.debug(f"End Sample (Global Index): {end_sample}")
         logger.debug(f"Sample Offset Start: {sample_offset_start}, Sample Offset End: {sample_offset_end}")
         logger.debug(f"End Sample (Relative Index): {end_sample - sample_offset_start}")
-
-        '''
-        if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
-            plot_signal(
-                original_signal,
-                Fs,
-                threshold=threshold,
-                detected_end_time=(end_sample - sample_offset_start) / Fs,
-                title="Sweep End Detection",
-            )
-        '''
         
         return end_sample
 
@@ -628,32 +598,13 @@ def slice_audio(signal, Fs, test_record):
     end_right_sweep = find_end_of_sweep(start_right_sweep, params['sweep_end_min'], params['sweep_end_max'], right_normalized, Fs)
     logger.info(f"End of Right Sweep: {end_right_sweep}")
 
-    logger.info(f"Left Sweep Duration: {(end_left_sweep-start_left_sweep)/Fs}")
-    logger.info(f"Right Sweep Duration: {(end_right_sweep-start_right_sweep)/Fs}")
+    logger.info(f"Left Sweep Duration: {(end_left_sweep-start_left_sweep)/Fs:.4f}")
+    logger.info(f"Right Sweep Duration: {(end_right_sweep-start_right_sweep)/Fs:.4f}")
 
-    '''
-    if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
-        plot_signal(left[start_left_sweep:end_left_sweep], Fs, title="Left Sweep Segment")
-        plot_signal(right[start_right_sweep:end_right_sweep], Fs, title="Right Sweep Segment")
-    '''
-    
-    # Write results
-    '''
-    output_file_left = os.path.splitext(input_file)[0] + '_L.wav'
-    output_file_right = os.path.splitext(input_file)[0] + '_R.wav'
+    left_slice = np.column_stack((left[start_left_sweep:end_left_sweep], right[start_left_sweep:end_left_sweep]))
+    right_slice = np.column_stack((right[start_right_sweep:end_right_sweep], left[start_right_sweep:end_right_sweep]))
 
-    logger.info(f"Writing {output_file_left}")
-    write_result(output_file_left, left, right, Fs, start_left_sweep, end_left_sweep)
-
-    logger.info(f"Writing {output_file_right}")
-    write_result(output_file_right, right, left, Fs, start_right_sweep, end_right_sweep)
-    
-    logger.info("Processing Complete.")
-    '''
-    
-    left_slice = np.stack((left[start_left_sweep:end_left_sweep], right[start_left_sweep:end_left_sweep]))
-    right_slice = np.stack((right[start_right_sweep:end_right_sweep], left[start_right_sweep:end_right_sweep]))
-
+    logger.info(f"Sweep extraction completed.")
 
     return left_slice, right_slice
 
@@ -661,34 +612,55 @@ def slice_audio(signal, Fs, test_record):
 
 
 
-
-
 if __name__ == "__main__":
 
-
-    left_sig, right_sig, Fs, minf, maxf = openaudio(INPUT_FILE)
-
-
     
-    fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(left_sig, Fs)
 
-    deltaadj = ao0[find_nearest(fo0, normalize)]
-    deltah0 = round((max(ao0 - deltaadj)), roundlvl)
-    deltal0 = abs(round((min(ao0 - deltaadj)), roundlvl))
+    if SPLIT_INPUT_FILE == 1:
+        input_sig_1, input_sig_2, Fs, minf, maxf = get_audio(INPUT_FILE_0, SPLIT_INPUT_FILE, TEST_RECORD, SAVE_SPLIT_FILES)
+        fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig_1, Fs)
 
-    if aox0.size > 0:
-        print('X-talk @1kHz: ' + (str(round(aox0[find_nearest(fox0, 1000)], 2))) + 'dB\n\n')
-   
+        deltaadj = ao0[find_nearest(fo0, normalize)]
+        deltah0 = round((max(ao0 - deltaadj)), roundlvl)
+        deltal0 = abs(round((min(ao0 - deltaadj)), roundlvl))
 
-    fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(right_sig, Fs)
+        logger.info(f"Left crosstalk @1kHz: {aox0[find_nearest(fox0, 1000)]:.2f}dB")
 
-    deltaadj = ao1[find_nearest(fo1, normalize)]
-    deltah1 = round((max(ao1 - deltaadj)), roundlvl)
-    deltal1 = abs(round((min(ao1 - deltaadj)), roundlvl))
+        fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig_2, Fs)
+ 
+        deltaadj = ao1[find_nearest(fo1, normalize)]
+        deltah1 = round((max(ao1 - deltaadj)), roundlvl)
+        deltal1 = abs(round((min(ao1 - deltaadj)), roundlvl))
 
-    if aox1.size > 0:
-        print('X-talk @1kHz: ' + (str(round(aox1[find_nearest(fox1, 1000)], 2))) + 'dB\n\n')
+        logger.info(f"Right crosstalk @1kHz: {aox1[find_nearest(fox1, 1000)]:.2f}dB")
 
+        INPUT_FILE_1 = 'x'
+
+
+    else:
+
+
+        input_sig, _, Fs, minf, maxf = get_audio(INPUT_FILE_0)
+        fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig, Fs)
+
+        deltaadj = ao0[find_nearest(fo0, normalize)]
+        deltah0 = round((max(ao0 - deltaadj)), roundlvl)
+        deltal0 = abs(round((min(ao0 - deltaadj)), roundlvl))
+
+        if aox0.size > 0:
+            logger.info(f"Left crosstalk @1kHz: {aox0[find_nearest(fox0, 1000)]:.2f}dB")
+
+
+        if INPUT_FILE_1:
+            input_sig, _, Fs, minf, maxf = get_audio(INPUT_FILE_1)
+            fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig, Fs)
+     
+            deltaadj = ao1[find_nearest(fo1, normalize)]
+            deltah1 = round((max(ao1 - deltaadj)), roundlvl)
+            deltal1 = abs(round((min(ao1 - deltaadj)), roundlvl))
+
+            if aox1.size > 0:
+                logger.info(f"Right crosstalk @1kHz: {aox1[find_nearest(fox1, 1000)]:.2f}dB")
 
 
     if plotdataout == 1:
@@ -704,7 +676,7 @@ if __name__ == "__main__":
         for fo, ao, aox, ao2, ao3 in dataout:
             print(fo, ao, aox, ao2, ao3, sep=', ')
 
-        if file_1:
+        if INPUT_FILE_1:
             dao1 = [*ao1, *[''] * (len(fo1) - len(ao1))]
             daox1 = [*aox1, *[''] * (len(fo1) - len(aox1))]
             dao2h1 = [*ao2h1, *[''] * (len(fo1) - len(ao2h1))]
@@ -717,14 +689,12 @@ if __name__ == "__main__":
                 print(fo, ao, aox, ao2, ao3, sep=', ')
 
 
-
     plt.rcParams["xtick.minor.visible"] =  True
     plt.rcParams["ytick.minor.visible"] =  True
 
     if plotstyle == 1:
         fig, axs = plt.subplots(1, 1, figsize=(14,6))
         axs = np.ravel([axs])
-
 
         axs[0].semilogx(fo0,ao0, color = '#0000ff', label = 'Freq Response')
 
@@ -734,8 +704,7 @@ if __name__ == "__main__":
         axs[0].semilogx(fox0,aox0,color = '#0000ff', linestyle = (0, (3, 1, 1, 1)), label = 'Crosstalk')
  
 
-
-        if file_1:
+        if INPUT_FILE_1:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axs[0].semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -750,8 +719,7 @@ if __name__ == "__main__":
 
             axs[0].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
 
-        else:
-     
+        else:   
             plt.legend(loc=4)
 
         axs[0].set_ylabel("Amplitude (dB)")
@@ -763,15 +731,12 @@ if __name__ == "__main__":
             axs[0].set_ylim(*ovdylimvalue)
  
 
-
     if plotstyle == 2:
         fig, axs = plt.subplots(1, sharex=True, figsize=(14,6))
         axs = np.ravel([axs])
         axtwin = axs[0].twinx()
 
-
         axs[0].set_ylim(-5,5)
-
 
 
         if max(ao0) <7:
@@ -788,17 +753,15 @@ if __name__ == "__main__":
 
 
         if aox0.size > 0:
-            if file_1:
+            if INPUT_FILE_1:
                 axs[0].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
             else:
                 axs[0].set_ylim((min(aox0) -2), (max(ao0) +2))
- 
  
         if ovdylim == 1:
             axs[0].set_ylim(*ovdylimvalue)
 
  
-
         axs[0].semilogx(fo0,ao0, color = '#0000ff', label = 'Freq Response')
 
         axtwin.semilogx(fo2h0,ao2h0,color = '#0080ff', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -806,9 +769,8 @@ if __name__ == "__main__":
 
         axs[0].semilogx(fox0,aox0,color = '#0000ff', linestyle = (0, (3, 1, 1, 1)), label = 'Crosstalk')
  
-
-
-        if file_1:
+ 
+        if INPUT_FILE_1:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axtwin.semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -821,36 +783,29 @@ if __name__ == "__main__":
                        ['Freq Response', 'Crosstalk', '2ⁿᵈ Harmonic', '3ʳᵈ Harmonic'],
                        handler_map={tuple: AnyObjectHandler()},loc=4)
 
-
             if aox0.size > 0  and aox1.size > 0:
                 axs[0].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
 
         else:
-     
             lines1, labels1 = axs[0].get_legend_handles_labels()
             lines2, labels2 = axtwin.get_legend_handles_labels()
             plt.legend(lines1 + lines2, labels1 + labels2, loc=4)
      
-
         new_lim1, new_lim2 = align_yaxis(axs[0], axtwin)
         axs[0].set_ylim(new_lim1)
         axtwin.set_ylim(new_lim2)
-
 
         axs[0].set_ylabel("Amplitude (dB)")
         axtwin.set_ylabel("Distortion (dB)")
         axs[0].set_xlabel("Frequency (Hz)")
 
 
-
     if plotstyle == 3:
         fig, axs = plt.subplots(2, 1, sharex=True, figsize=(14,6))
 
-
         axs[0].set_ylim(-5,5)
 
-
-        if file_1:
+        if INPUT_FILE_1:
             if (min(chain(ao0, ao1)) <-5) or (max(chain(ao0, ao1)) >5):
                 axs[0].autoscale(enable=True, axis='y')
         elif (min(ao0) <-5) or (max(ao0) >5):
@@ -859,18 +814,16 @@ if __name__ == "__main__":
         if ovdylim == 1:
             axs[0].set_ylim(*ovdylimvalue)
 
-
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
         axs[1].semilogx(fo2h0,ao2h0,color = '#0080ff', label = '2nd Harmonic')
         axs[1].semilogx(fo3h0,ao3h0,color = '#00dfff', label = '3rd Harmonic')
 
 
-        if file_1:
+        if INPUT_FILE_1:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axs[1].semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic')
             axs[1].semilogx(fo3h1,ao3h1,color = '#ffdf00', label = '3ʳᵈ Harmonic')
-
 
             axs[0].legend([("#0000ff", "-", "#ff0000", "-"),],
                        ['Freq Response'],
@@ -880,25 +833,20 @@ if __name__ == "__main__":
                        ['2ⁿᵈ Harmonic', '3ʳᵈ Harmonic'],
                        handler_map={tuple: AnyObjectHandler()},loc=4)
 
-
         else:
             axs[0].legend(loc=4)
             axs[1].legend(loc=4)
-
 
         axs[0].set_ylabel("Amplitude (dB)")
         axs[1].set_ylabel("Distortion (dB)")
         axs[1].set_xlabel("Frequency (Hz)")
 
-        
 
     if plotstyle == 4:
         fig, axs = plt.subplots(2, 1, sharex=True, figsize=(14,10))
         axtwin = axs[1].twinx()
 
-
         axs[0].set_ylim(-5,5)
-
 
         if max(ao0) <7:
             axs[1].set_ylim(-25, 7)
@@ -912,19 +860,16 @@ if __name__ == "__main__":
         if max(ao0) < 0.5:
             axs[1].set_ylim(-30,2)
 
-
         if aox0.size > 0:
-            if file_1:
+            if INPUT_FILE_1:
                 axs[1].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
             else:
                 axs[1].set_ylim((min(aox0) -2), (max(ao0) +2))
- 
  
         if ovdylim == 1:
             axs[1].set_ylim(*ovdylimvalue)
 
  
-
         axs[1].semilogx(fo0,ao0, color = '#0000ff', label = 'Freq Response')
 
         axtwin.semilogx(fo2h0,ao2h0,color = '#0080ff', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -932,9 +877,8 @@ if __name__ == "__main__":
 
         axs[1].semilogx(fox0,aox0,color = '#0000ff', linestyle = (0, (3, 1, 1, 1)), label = 'Crosstalk')
  
-
-
-        if file_1:
+ 
+        if INPUT_FILE_1:
             axs[1].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axtwin.semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -947,24 +891,19 @@ if __name__ == "__main__":
                        ['Freq Response', 'Crosstalk', '2ⁿᵈ Harmonic', '3ʳᵈ Harmonic'],
                        handler_map={tuple: AnyObjectHandler()},loc=4)
 
-
             if aox0.size > 0  and aox1.size > 0:
                 axs[1].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
 
         else:
-     
             lines1, labels1 = axs[1].get_legend_handles_labels()
             lines2, labels2 = axtwin.get_legend_handles_labels()
             plt.legend(lines1 + lines2, labels1 + labels2, loc=4)
      
-
         new_lim1, new_lim2 = align_yaxis(axs[1], axtwin)
         axs[1].set_ylim(new_lim1)
         axtwin.set_ylim(new_lim2)
 
-
-
-        if file_1:
+        if INPUT_FILE_1:
             if (min(chain(ao0, ao1)) <-5) or (max(chain(ao0, ao1)) >5):
                 axs[0].autoscale(enable=True, axis='y')
         elif (min(ao0) <-5) or (max(ao0) >5):
@@ -973,26 +912,16 @@ if __name__ == "__main__":
         if ovdylim == 1:
             axs[0].set_ylim(*ovdylimvalue)
 
-
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
      
-
-
-        if file_1:
+        if INPUT_FILE_1:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
-
-        
-
-
             axs[0].legend([("#0000ff", "-", "#ff0000", "-"),],
                        ['Freq Response'],
                        handler_map={tuple: AnyObjectHandler()},loc=4)
-     
-           
 
         else:
             axs[0].legend(loc=4)     
-
 
         axs[0].set_ylabel("Amplitude (dB)")
         axs[1].set_ylabel("Amplitude (dB)")
@@ -1003,18 +932,13 @@ if __name__ == "__main__":
         axs[0].set_position(gs[0].get_position(fig))
         axs[1].set_position(gs[1].get_position(fig))
 
-
-
-
     if plotstyle == 5:
         fig, axs = plt.subplots(1, 1, figsize=(14,3))
         axs = np.ravel([axs])
 
-
         axs[0].set_ylim(-5,5)
 
-
-        if file_1:
+        if INPUT_FILE_1:
             if (min(chain(ao0, ao1)) <-5) or (max(chain(ao0, ao1)) >5):
                 axs[0].autoscale(enable=True, axis='y')
         elif (min(ao0) <-5) or (max(ao0) >5):
@@ -1023,28 +947,19 @@ if __name__ == "__main__":
         if ovdylim == 1:
             axs[0].set_ylim(*ovdylimvalue)
 
-
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
 
-
-        if file_1:
+        if INPUT_FILE_1:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
-
-
-
             axs[0].legend([("#0000ff", "-", "#ff0000", "-"),],
                        ['Freq Response'],
                        handler_map={tuple: AnyObjectHandler()},loc=4)
 
-
         else:
             axs[0].legend(loc=4)
     
-
         axs[0].set_ylabel("Amplitude (dB)")
         axs[0].set_xlabel("Frequency (Hz)")
-
-
 
 
     for i, ax in enumerate(axs.flat):
@@ -1070,22 +985,18 @@ if __name__ == "__main__":
         ax.set_xticklabels(['0','20','50','100','500','1k','5k','10k','20k','50k','100k'])
 
 
-
     bbox_args = dict(boxstyle="round", color='b', fc='w', ec='b', alpha=1, pad=.15)
     axs[0].annotate('+' + str(deltah0) + ', ' + u"\u2212" + str(deltal0) + ' dB',color = 'b',\
              xy=(fo0[0],(ao0[0]-1)), xycoords='data', \
              xytext=(-10, -20), textcoords='offset points', \
              ha="left", va="center", bbox=bbox_args)
 
-    if file_1:
+    if INPUT_FILE_1:
         bbox_args = dict(boxstyle="round", color='b', fc='w', ec='r', alpha=1, pad=.15)
         axs[0].annotate('+' + str(deltah1) + ', ' + u"\u2212" + str(deltal1) + ' dB',color = 'r',\
                  xy=(fo0[0],(ao0[0]-1)), xycoords='data', \
                  xytext=(-10, -34.5), textcoords='offset points', \
                  ha="left", va="center", bbox=bbox_args)
-
-     
-
 
     plt.autoscale(enable=True, axis='x')
 
@@ -1094,20 +1005,17 @@ if __name__ == "__main__":
 
     now = datetime.now()
 
-    if file_1:
-        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + INPUT_FILE + "\n" + file_1 + "\n" + \
+    if INPUT_FILE_1:
+        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
             now.strftime("%b %d, %Y %H:%M"), fontsize=6)
     else:
-        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + file_0 + "\n" + \
+        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + INPUT_FILE_0 + "\n" + \
             now.strftime("%b %d, %Y %H:%M"), fontsize=6)
 
-
-
     plt.figtext(.125, 0, equipinfo, alpha=.75, fontsize=8)
-
      
     plt.savefig(infoline.replace(' / ', '_') +'.png', bbox_inches='tight', pad_inches=.5, dpi=96)
 
     plt.show()
 
-    print('\nDone!')
+    logger.info(f"Done!")
