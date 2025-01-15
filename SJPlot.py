@@ -426,6 +426,8 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
         audio_2 = audio_2.T
     else:
         audio = audio.T
+        audio_2 = None
+
 
     if riaamode != 0:
         audio = riaaiir(audio, Fs, riaamode, riaainv)
