@@ -57,7 +57,7 @@ endf =              0 - highest frequency to plot
 
 '''
 
-swversion = "18.0.1"
+swversion = "18.2.1"
 
 
 
@@ -109,7 +109,6 @@ endf = 20000
 
 ovdylim = 0
 ovdylimvalue = [-5,5]
-
 
 #end Edit
 
@@ -180,84 +179,66 @@ def find_nearest(array, value):
     return idx
 
 
-def createplotdata(insig, Fs):
-    fout = []
-    aout = []
-    foutx = []
-    aoutx = []
-    fout2 = []
-    aout2 = []
-    fout3 = []
-    aout3 = []
+def createplotdata(signal, Fs):
+
     global norm
 
+
     def interpolate(f, a, minf, maxf, fstep):
-        f_out = []
-        a_out = []
-        amp = 0
-        count = 0
-        for x in range(minf,(maxf)+1,fstep):
-            for y in range(0,len(f)):
-                if f[y] == x:
-                    amp = amp + a[y]
-                    count = count + 1
-            if count != 0:
-                f_out.append(x)
-                a_out.append(20*np.log10(amp/count))
-            amp = 0
-            count = 0
+        # Ensure inputs are NumPy arrays
+        f = np.array(f)
+        a = np.array(a)
+
+        bins = np.arange(minf, maxf + fstep, fstep)  # Define bin edges
+        indices = np.digitize(f, bins) - 1  # Find the bin index for each frequency
+        f_out, a_out = [], []
+
+        for i, bin_center in enumerate(bins):
+            mask = (indices == i)  # Select frequencies that fall into the current bin
+            if np.any(mask):  # Check if any values are in the bin
+                avg_amp = np.mean(a[mask])  # Compute the average amplitude
+                f_out.append(bin_center)
+                a_out.append(20 * np.log10(avg_amp))
+        
         return f_out, a_out
 
  
-    def rfft(insig, Fs, minf, maxf, fstep):
-        freq = []
-        amp = []
-        freqx = []
-        ampx = []
-        freq2h = []
-        amp2h = []
-        freq3h = []
-        amp3h = []
+    def rfft(signal, Fs, minf, maxf, fstep):
 
+        freq, amp, freqx, ampx, freq2h, amp2h, freq3h, amp3h = [], [], [], [], [], [], [], []
+
+        
         F = int(Fs/fstep)
         win = ft_window(F)
 
-        if chinfile == 1:
-            for x in range(0,len(insig)-F,F):
-                y = abs(np.fft.rfft(insig[x:x+F]*win))
-                f = np.argmax(y) #use largest bin
-                if f >=minf/fstep and f <=maxf/fstep:
-                    freq.append(f*fstep)
-                    amp.append(y[f])
-                if 2*f<F/2-2 and f > minf/fstep and f < maxf/fstep:
-                    f2 = np.argmax(y[(2*f)-2:(2*f)+2])
-                    freq2h.append(f*fstep)
-                    amp2h.append(y[2*f-2+f2])
-                if 3*f<F/2-2 and f > minf/fstep and f < maxf/fstep:
-                    f3 = np.argmax(y[(3*f)-2:(3*f)+2])
-                    freq3h.append(f*fstep)
-                    amp3h.append(y[3*f-2+f3])
+        if len(signal.shape) == 1: # mono signal
+            signal = np.expand_dims(signal, axis=0)
+            
+        for x in range(0, signal.shape[1] - F,F):
 
+            y0 = abs(np.fft.rfft(signal[0, x:x + F] * win))
+            f0 = np.argmax(y0) #use largest bin
+            if f0 >=minf/fstep and f0 <=maxf/fstep:
+                freq.append(f0*fstep)
+                amp.append(y0[f0])
+            if 2*f0<F/2-2 and f0 > minf/fstep and f0 < maxf/fstep:
+                f2 = np.argmax(y0[(2*f0)-2:(2*f0)+2])
+                freq2h.append(f0*fstep)
+                amp2h.append(y0[2*f0-2+f2])
+            if 3*f0<F/2-2 and f0 > minf/fstep and f0 < maxf/fstep:
+                f3 = np.argmax(y0[(3*f0)-2:(3*f0)+2])
+                freq3h.append(f0*fstep)
+                amp3h.append(y0[3*f0-2+f3])
 
-        else:
-            for x in range(0,len(insig[0])-F,F):
-                y0 = abs(np.fft.rfft(insig[0,x:x+F]*win))
-                y1 = abs(np.fft.rfft(insig[1,x:x+F]*win))
-                f0 = np.argmax(y0) #use largest bin
+            if signal.shape[0] > 1: # Process second channel if stereo
+                y1 = abs(np.fft.rfft(signal[1, x:x + F] * win))
                 f1 = np.argmax(y1) #use largest bin
-                if f0 >=minf/fstep and f0 <=maxf/fstep:
-                    freq.append(f0*fstep)
+                if f0 >=minf/fstep and f0 <=maxf/fstep: # use primary sweep f range
                     freqx.append(f1*fstep)
-                    amp.append(y0[f0])
                     ampx.append(y1[f1])
-                if 2*f0<F/2-2 and f0 > minf/fstep and f0 < maxf/fstep:
-                    f2 = np.argmax(y0[(2*f0)-2:(2*f0)+2])
-                    freq2h.append(f0*fstep)
-                    amp2h.append(y0[2*f0-2+f2])
-                if 3*f0<F/2-2 and f0 > minf/fstep and f0 < maxf/fstep:
-                    f3 = np.argmax(y0[(3*f0)-2:(3*f0)+2])
-                    freq3h.append(f0*fstep)
-                    amp3h.append(y0[3*f0-2+f3])
+            else:
+                ampx = 0  # No secondary channel for mono
+                freqx = 0
 
         return freq, amp, freqx, ampx, freq2h, amp2h, freq3h, amp3h
 
@@ -271,45 +252,54 @@ def createplotdata(insig, Fs):
         return a
 
 
-    def chunk(insig, Fs, fmin, fmax, step, offset):
-        f, a, fx, ax, f2, a2, f3, a3 = rfft(insig, Fs, fmin, fmax, step)
+    def chunk(signal, Fs, fmin, fmax, step, offset):
+        # Perform FFT analysis
+        f, a, fx, ax, f2, a2, f3, a3 = rfft(signal, Fs, fmin, fmax, step)
+
+        # Interpolate frequencies and amplitudes
         f, a = interpolate(f, a, fmin, fmax, step)
         fx, ax = interpolate(fx, ax, fmin, fmax, step)
         f2, a2 = interpolate(f2, a2, fmin, fmax, step)
         f3, a3 = interpolate(f3, a3, fmin, fmax, step)
-        a = [x - offset for x in a]
-        ax = [x - offset for x in ax]
-        a2 = [x - offset for x in a2]
-        a3 = [x - offset for x in a3]
+
+        # Normalize amplitudes in a single line
+        a, ax, a2, a3 = [
+            [amp_val - offset for amp_val in amp_list]
+            for amp_list in (a, ax, a2, a3)
+        ]
 
         return f, a, fx, ax, f2, a2, f3, a3
  
 
     def concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3):
-        fout = fout + f
-        aout = aout + a
-        foutx = foutx + fx
-        aoutx = aoutx + ax
-        fout2 = fout2 + f2
-        aout2 = aout2 + a2
-        fout3 = fout3 + f3
-        aout3 = aout3 + a3
+        # Use list.extend for efficiency and clarity
+        fout.extend(f)
+        aout.extend(a)
+        foutx.extend(fx)
+        aoutx.extend(ax)
+        fout2.extend(f2)
+        aout2.extend(a2)
+        fout3.extend(f3)
+        aout3.extend(a3)
 
         return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 
- 
+    # Helper function to handle chunking and concatenation
+    def process_chunk(signal, Fs, fmin, fmax, step, offset, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3):
+        f, a, fx, ax, f2, a2, f3, a3 = chunk(signal, Fs, fmin, fmax, step, offset)
+        return concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
+
+
+    # Initialize output variables
+    fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
+
+    # Process frequency chunks
     if onekfstart == 0:
-        f, a, fx, ax, f2, a2, f3, a3 = chunk(insig, Fs, 20, 45, 5, 26.03)
-        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
+        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 20, 45, 5, 26.03, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
+        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 50, 90, 10, 19.995, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
+        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 100, 980, 20, 13.99, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
 
-        f, a, fx, ax, f2, a2, f3, a3 = chunk(insig, Fs, 50, 90, 10, 19.995)
-        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
-
-        f, a, fx, ax, f2, a2, f3, a3 = chunk(insig, Fs, 100, 980, 20, 13.99)
-        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
-
-    f, a, fx, ax, f2, a2, f3, a3 = chunk(insig, Fs, 1000, endf, 100, 0)
-    fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
+    fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 1000, endf, 100, 0, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
 
     if str100 == 1:
         aout = normstr100(fout, aout)
@@ -325,18 +315,20 @@ def createplotdata(insig, Fs):
         i = find_nearest(fout, normalize)
         norm = aout[i]
 
-    aout = aout-norm #amplitude is in dB so normalize by subtraction at [i]
-    aoutx = aoutx-norm
-    aout2 = aout2-norm
-    aout3 = aout3-norm
+    
+    # Apply amplitude normalization
+    i = find_nearest(fout, normalize)
+    norm = aout[i] if fout else 0  # Handle empty case gracefully
+    aout, aoutx, aout2, aout3 = [amp - norm for amp in (aout, aoutx, aout2, aout3)]
  
-    sos = iirfilter(3,.5, btype='lowpass', output='sos') #filter some noise
-    aout = sosfiltfilt(sos,aout)
-    aout2 = sosfiltfilt(sos,aout2)
-    aout3 = sosfiltfilt(sos,aout3)
+    # Apply low-pass filter
+    sos = iirfilter(3, 0.5, btype='lowpass', output='sos')  # Low-pass filter
+    aout = sosfiltfilt(sos, aout)
+    aout2 = sosfiltfilt(sos, aout2)
+    aout3 = sosfiltfilt(sos, aout3)
+    if chinfile == 2 and aoutx.size > 0:
+        aoutx = sosfiltfilt(sos, aoutx)
 
-    if chinfile == 2 and len(aoutx) >1:
-        aoutx = sosfiltfilt(sos,aoutx)
 
     return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 
@@ -426,8 +418,6 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
         audio_2 = audio_2.T
     else:
         audio = audio.T
-        audio_2 = None
-
 
     if riaamode != 0:
         audio = riaaiir(audio, Fs, riaamode, riaainv)
@@ -435,6 +425,8 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
             audio_2 = riaaiir(audio_2, Fs, riaamode, riaainv)
         except NameError:
             audio_2 = None
+    elif split_input_file != 1:
+        audio_2 = None
 
     if xg7001 == 1:
         audio = normxg7001(audio, Fs)
@@ -442,6 +434,9 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
             audio_2 = normxg7001(audio_2, Fs)
         except NameError:
             audio_2 = None
+    elif split_input_file != 1:
+        audio_2 = None
+
 
     if len(audio.shape) == 2:
         chinfile = 2
@@ -1016,3 +1011,4 @@ if __name__ == "__main__":
     plt.show()
 
     logger.info(f"Done!")
+
