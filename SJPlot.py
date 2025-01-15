@@ -97,8 +97,8 @@ plotstyle = 4
 plotdataout = 0
 roundlvl = 1
 
-riaamode = 1
-riaainv = 0
+riaamode = 2
+riaainv = 1
 str100 = 0
 xg7001 = 0
 
