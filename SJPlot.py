@@ -57,7 +57,7 @@ endf =              0 - highest frequency to plot
 
 '''
 
-swversion = "18.0"
+swversion = "18.0.1"
 
 
 
