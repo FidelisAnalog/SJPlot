@@ -386,7 +386,7 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
         Fs = 96000
 
     if split_input_file == 1:
-        logger.info(f"Extracting sweeps from audio files...")
+        logger.info(f"Extracting sweeps from audio file...")
         audio, audio_2 = slice_audio(audio, Fs, test_record)
 
         if save_split_files == 1:
