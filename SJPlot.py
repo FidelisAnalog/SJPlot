@@ -57,7 +57,7 @@ endf =              0 - highest frequency to plot
 
 '''
 
-swversion = "18.2.1"
+swversion = "18.3.0"
 
 
 
@@ -103,7 +103,7 @@ str100 = 0
 xg7001 = 0
 
 normalize = 1000
-file0norm = 0
+file0norm = 1
 onekfstart = 0
 endf = 20000
 
@@ -121,8 +121,6 @@ fh.setFormatter(fh_formatter)
 logger.addHandler(fh)
 logger.propagate = False
 
-
-fileopenidx = 0
 
 # Write Output WAV File
 def write_file(output_file, data, Fs):
@@ -179,10 +177,7 @@ def find_nearest(array, value):
     return idx
 
 
-def createplotdata(signal, Fs):
-
-    global norm
-
+def createplotdata(signal, Fs, iteration=[0], norm=[0]):
 
     def interpolate(f, a, minf, maxf, fstep):
         # Ensure inputs are NumPy arrays
@@ -301,58 +296,53 @@ def createplotdata(signal, Fs):
 
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 1000, endf, 100, 0, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
 
+
+
     if str100 == 1:
         aout = normstr100(fout, aout)
         aout2 = normstr100(fout2, aout2)
         aout3 = normstr100(fout3, aout3)
-        if chinfile == 2:
+        if aoutx:
             aoutx = normstr100(foutx, aoutx)
 
-    if file0norm == 1 and fileopenidx == 1:
+    if file0norm == 1 and iteration[0] == 0:
         i = find_nearest(fout, normalize)
-        norm = aout[i]
+        norm[0] = aout[i]
     elif file0norm == 0:
         i = find_nearest(fout, normalize)
-        norm = aout[i]
-
-    
-    # Apply amplitude normalization
-    i = find_nearest(fout, normalize)
-    norm = aout[i] if fout else 0  # Handle empty case gracefully
-    aout, aoutx, aout2, aout3 = [amp - norm for amp in (aout, aoutx, aout2, aout3)]
+        norm[0] = aout[i]
+    aout, aoutx, aout2, aout3 = [amp - norm[0] for amp in (aout, aoutx, aout2, aout3)]
  
     # Apply low-pass filter
     sos = iirfilter(3, 0.5, btype='lowpass', output='sos')  # Low-pass filter
     aout = sosfiltfilt(sos, aout)
     aout2 = sosfiltfilt(sos, aout2)
     aout3 = sosfiltfilt(sos, aout3)
-    if chinfile == 2 and aoutx.size > 0:
+    if aoutx.size > 0:
         aoutx = sosfiltfilt(sos, aoutx)
 
+    iteration[0]+=1
 
     return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 
 
-def ordersignal(sig, Fs):
+def ordersignal(signal, Fs):
     F = int(Fs/100)
     win = ft_window(F)
 
-    if chinfile == 1:
-        y = abs(np.fft.rfft(sig[0:F]*win))
-        minf = np.argmax(y)
-        y = abs(np.fft.rfft(sig[len(sig)-F:len(sig)]*win))
-        maxf = np.argmax(y)
-    else:
-        y = abs(np.fft.rfft(sig[0,0:F]*win))
-        minf = np.argmax(y)
-        y = abs(np.fft.rfft(sig[0][len(sig[0])-F:len(sig[0])]*win))
-        maxf = np.argmax(y)
+    if len(signal.shape) == 1: # mono signal
+        signal = np.expand_dims(signal, axis=0)
 
+    y = abs(np.fft.rfft(signal[0,0:F]*win))
+    minf = np.argmax(y)
+    y = abs(np.fft.rfft(signal[0][len(signal[0])-F:len(signal[0])]*win))
+    maxf = np.argmax(y)
+                      
     if maxf < minf:
         maxf,minf = minf,maxf
-        sig = np.flipud(sig)
+        signal = np.flipud(signal)
  
-    return sig, minf, maxf
+    return signal, minf, maxf
 
 
 def riaaiir(sig, Fs, mode, inv):
@@ -374,18 +364,15 @@ def riaaiir(sig, Fs, mode, inv):
     return sig
 
 
-def normxg7001(sig, Fs):
+def normxg7001(signal, Fs):
     if Fs == 96000:
         b = [1.0080900, -0.9917285, 0]
         a = [1, -0.9998364, 0]
-        sig = signal.lfilter(b,a,sig)
-    return sig
+        sig = signal.lfilter(b,a,signal)
+    return signal
 
 
 def get_audio(input_file, split_input_file=0, test_record=None, save_split_files=0):
-    global chinfile
-    global fileopenidx
-    chinfile = 1
 
     logger.info(f"Reading: {input_file}")
     Fs, audio = read(input_file)
@@ -400,7 +387,6 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
 
     if split_input_file == 1:
         logger.info(f"Extracting sweeps from audio files...")
-        chinfile = 2
         audio, audio_2 = slice_audio(audio, Fs, test_record)
 
         if save_split_files == 1:
@@ -438,15 +424,10 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
         audio_2 = None
 
 
-    if len(audio.shape) == 2:
-        chinfile = 2
-
     audio, minf, maxf = ordersignal(audio, Fs)
     
     logger.info(f"Sweep minimum frequency: {minf * 100:.0f}Hz")
     logger.info(f"Sweep maximum frequency: {maxf * 100:.0f}Hz")
-   
-    fileopenidx +=1
  
     return audio, audio_2, Fs, minf, maxf
 
