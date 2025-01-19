@@ -29,7 +29,7 @@ import argparse
 import configparser
 
 
-__version__ = "18.3.5"
+__version__ = "18.3.6"
 
 
 
@@ -57,10 +57,10 @@ def get_config():
     parser.add_argument("--test_record", type=str, choices=['TRS1007', 'TRS1005', 'STR100'], help="Test record for extracting sweeps.", metavar ="{STR100,TRS1007,TRS1005}")
     parser.add_argument("--info_line", type=str, help="See README for more information.", metavar ="")
     parser.add_argument("--equip_info", type=str, help="See README for more information.", metavar ="")
-    parser.add_argument("--plot_style", choices=['1', '2', '3', '4', '5'], help="The plot style to output.")
+    parser.add_argument("--plot_style", type=int, choices=[1, 2, 3, 4, 5], help="The plot style to output.")
     parser.add_argument("--plot_data_out", default=None, action="store_true", help="Output plot data.")
     parser.add_argument("--round_level", type=int, help="{integer} Rounding level.", metavar ="")
-    parser.add_argument("--riaa_mode", choices=['0', '1', '2', '3'], help="0 = none, 1 = bass, 2 = treble, 3 = both.")
+    parser.add_argument("--riaa_mode", type=int, choices=[0, 1, 2, 3], help="0 = none, 1 = bass, 2 = treble, 3 = both.")
     parser.add_argument("--riaa_inverse", default=None, action="store_true", help="Invert RIAA filter(s).")
     parser.add_argument("--str100", default=None, action="store_true", help="Apply STR100 correction.")
     parser.add_argument("--xg7001", default=None, action="store_true", help="Apply XG7001 correction.")
