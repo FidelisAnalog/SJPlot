@@ -113,6 +113,7 @@ log_level = info
 ### Command-Line Arguments
 Command-line arguments will override default parameters, and any parameters in the config file.  In fact, you can use the script with only the command-line and omit the configuration file entirely.  The command-line parameters are the same as listed in the Configuraiton Parameters table above, except the for the command-line they are prefixed with "--", and then followed by a space before the argument. 
 
+NOTE: For boolean (True/False) arguments on the command-line, you can only pass the argument without a value, which will make it True.  For example, to enable save_sweeps, you'd only pass `--save_sweeps`.
 
 ### Running the Script
 To run the script without any commnand-line arguments using the default configuration file:
