@@ -1,64 +1,15 @@
 '''
 PLEASE READ
-To use this script you need to edit the user parameters section. The .wav file can be any
-monotonic frequency sweep either up or down in frequency but it must be trimmed at both
-ends to remove any leading silence.
 
-The info_line should be alpha-numeric with entries separated by " / " only.  The script
-will save a .png file that is named from the info line, replacing " / " with "_".  As
-example "this / is / a / test" will create a file named "this_is_a_test.png".
+DO NOT EDIT THIS SCRIPT!
 
-INPUT_FILE_0 =      The first (L) file to plot, or the only file to plot, or the file you want
-                    to extract sweeps from. 
+Configuration is now stored in a separate file with the default name "SJPlot.cfg"  This file should be in
+the same directory that this script is run from.
 
-INPUT_FILE_1 =      The second (R) file to plot.  If using one file change to = ''.  If you're
-                    extracting sweeps, this parameter is ignored.
+You can also pass the configuration via the command line: "python3 sjplot.py --help" for syntax.
 
-SPLIT_INPUT_FILE =  0 - Do not process the file for extraction of sweeps
-                    1 - Extract the sweeps from INPUT_FILE_0.
-
-SAVE_SPLIT_FILES =  0 - Do not save files
-                    1 - The extract sweeps will be saved, appending either an "_L" or "_R" to the
-                        INPUT_FILE_0 filename for the left and right sweeps, respectively.
-
-TEST_RECORD =       If extracting sweeps, you must specify what test record the audio was captured
-                    from.  Supported records are STR100, TRS1007 (CA or JVC), and TRS1005. 
-                    
-plotstyle =         1 - traditional
-                    2 - dual axis (twinx)
-                    3 - dual plot FR and distortion
-                    4 - dual plot FR zoom and dual axis (twinx)
-                    5 - small plot FR only
-
-riaamode =          0 - off
-                    1 - bass emphasis
-                    2 - trebel de-emphasis
-                    3 - both
-
-riaainv =           0 - disable
-                    1 - inverse RIAA EQ per riaamode setting
-
-str100 =            0 - disable
-                    1 - enable 6dB/oct correction from 500Hz to 40Hz
-
-xg7001 =            0 - disable
-                    1 - custom bass filter for Denon XG-7001 sweep (@stereoplay filter)
-
-normalize =         Frequency in Hz to set as 0dB in the plot
-
-file0norm =         0 - normalize both files independently
-                    1 - normalize both files to file 0 level
-
-onekfstart =        0 - disable
-                    1 - start plot from 1kHz
-
-endf =              0 - highest frequency to plot
-               
-
+Details in the README here: https://github.com/FidelisAnalog/SJPlot/tree/Splitter
 '''
-
-swversion = "18.3.0"
-
 
 
 from scipy.signal import find_peaks, sosfiltfilt, iirfilter, lfilter, resample
@@ -74,43 +25,13 @@ from matplotlib.gridspec import GridSpec
 import numpy as np
 import os
 import logging
+import argparse
+import configparser
 
 
-
-#edit user parameters
-
+__version__ = "18.3.5"
 
 
-INPUT_FILE_0 = 'myfirstwavfile.wav'
-INPUT_FILE_1 = 'mysecondwavfile.wav'
-
-SPLIT_INPUT_FILE = 0
-SAVE_SPLIT_FILES = 0
-
-TEST_RECORD = 'STR100'  # Options: TRS1007, TRS1005, STR100
-
-infoline = 'Cart / Load / Record'
-
-equipinfo = 'Arm -> Phonostage -> ADC'
-
-plotstyle = 4
-plotdataout = 0
-roundlvl = 1
-
-riaamode = 2
-riaainv = 1
-str100 = 0
-xg7001 = 0
-
-normalize = 1000
-file0norm = 1
-onekfstart = 0
-endf = 20000
-
-ovdylim = 0
-ovdylimvalue = [-5,5]
-
-#end Edit
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -122,9 +43,108 @@ logger.addHandler(fh)
 logger.propagate = False
 
 
+def get_config():
+    # Default configuration file name
+    default_config_file = "SJPlot.cfg"
+
+    # Argument parser setup
+    parser = argparse.ArgumentParser(description="Process parameters for SJPlot.")
+    parser.add_argument("--config", default=default_config_file, type=str, help="Path to configuration file.", metavar ="")
+    parser.add_argument("--input_file_0", type=str, help="Path to the first input WAV file.", metavar ="")
+    parser.add_argument("--input_file_1", type=str, help="Path to the second input WAV file.", metavar ="")
+    parser.add_argument("--extract_sweeps", default=None, action="store_true", help="Extract sweeps from first input file.")
+    parser.add_argument("--save_sweeps", default=None, action="store_true", help="Save extracted sweep files.")
+    parser.add_argument("--test_record", type=str, choices=['TRS1007', 'TRS1005', 'STR100'], help="Test record for extracting sweeps.", metavar ="{STR100,TRS1007,TRS1005}")
+    parser.add_argument("--info_line", type=str, help="See README for more information.", metavar ="")
+    parser.add_argument("--equip_info", type=str, help="See README for more information.", metavar ="")
+    parser.add_argument("--plot_style", choices=['1', '2', '3', '4', '5'], help="The plot style to output.")
+    parser.add_argument("--plot_data_out", default=None, action="store_true", help="Output plot data.")
+    parser.add_argument("--round_level", type=int, help="{integer} Rounding level.", metavar ="")
+    parser.add_argument("--riaa_mode", choices=['0', '1', '2', '3'], help="0 = none, 1 = bass, 2 = treble, 3 = both.")
+    parser.add_argument("--riaa_inverse", default=None, action="store_true", help="Invert RIAA filter(s).")
+    parser.add_argument("--str100", default=None, action="store_true", help="Apply STR100 correction.")
+    parser.add_argument("--xg7001", default=None, action="store_true", help="Apply XG7001 correction.")
+    parser.add_argument("--normalize", type=int, help="{integer} Frequency in Hz to normalize at.", metavar = "")
+    parser.add_argument("--file0norm", default=None, action="store_true", help="Normalize both files to file_0.")
+    parser.add_argument("--onekfstart", default=None, action="store_true", help="Start the plot at 1kHz.")
+    parser.add_argument("--end_f", type=int, help="{integer} End frequency in Hz.", metavar = "")
+    parser.add_argument("--override_y_limit_value", nargs=2, type=int, help="Override Y limit values as two integers, ex: {-10 10}", metavar = "{int}")
+    parser.add_argument('--version', action='version', version='SJPlot ' + __version__)
+    parser.add_argument("--log_level", default=None, type=str, choices=['info', 'debug'], help="Change console logging level to DEBUG.")
+
+
+    # Parse command-line arguments
+    args = vars(parser.parse_args())
+
+
+    # Load configuration from INI file
+    config_file = args.get("config", default_config_file)
+    config = configparser.ConfigParser()
+    if os.path.exists(config_file):
+        config.read(config_file)
+    else:
+        logger.info(f"No configuration file. Using default values.")
+    
+    # Set default values for missing parameters
+    defaults = {
+        "input_file_0": "",
+        "input_file_1": "",
+        "extract_sweeps": False,
+        "save_sweeps": False,
+        "test_record": "",
+        "info_line": "Cart / Load / Record",
+        "equip_info": "Arm -> Phonostage -> ADC",
+        "plot_style": 4,
+        "plot_data_out": False,
+        "round_level": 1,
+        "riaa_mode": 2,
+        "riaa_inverse": False,
+        "str100": False,
+        "xg7001": False,
+        "normalize": 1000,
+        "file0norm": False,
+        "onekfstart": False,
+        "end_f": 20000,
+        "override_y_limit": False,
+        "override_y_limit_value": [-0, 0],
+        "log_level": "info",
+    }
+
+    # Start with defaults
+    combined_config = {**defaults}
+
+
+    # Apply INI configuration (if present)
+    for section in config.sections():
+        for key, value in config.items(section):
+            if key in combined_config:
+                # Convert types to match defaults
+                if isinstance(defaults[key], bool):
+                    combined_config[key] = config.getboolean(section, key)
+                elif isinstance(defaults[key], int):
+                    combined_config[key] = config.getint(section, key)
+                elif isinstance(defaults[key], list):
+                    combined_config[key] = [int(i) for i in value.split(",")]
+                else:
+                    combined_config[key] = value
+
+
+    # Apply command-line arguments, giving precedence to command-line input
+    for key, value in args.items():
+        if value is not None:  # Only apply non-None values
+            combined_config[key] = value
+  
+    # Automatically set override_y_limit to 1 if override_y_limit_value is provided
+    if combined_config["override_y_limit_value"] != defaults["override_y_limit_value"]:
+        combined_config["override_y_limit"] = 1
+
+
+    return combined_config
+
+
 # Write Output WAV File
-def write_file(output_file, data, Fs):
-    write(output_file, Fs, data)
+def write_file(file, data, Fs):
+    write(file, Fs, data)
 
 def align_yaxis(ax1, ax2):
     y_lims = np.array([ax.get_ylim() for ax in [ax1, ax2]])
@@ -202,7 +222,6 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0]):
 
         freq, amp, freqx, ampx, freq2h, amp2h, freq3h, amp3h = [], [], [], [], [], [], [], []
 
-        
         F = int(Fs/fstep)
         win = ft_window(F)
 
@@ -289,27 +308,27 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0]):
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
 
     # Process frequency chunks
-    if onekfstart == 0:
+    if ONEKFSTART == 0:
         fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 20, 45, 5, 26.03, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
         fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 50, 90, 10, 19.995, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
         fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 100, 980, 20, 13.99, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
 
-    fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 1000, endf, 100, 0, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
+    fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 1000, END_F, 100, 0, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
 
 
 
-    if str100 == 1:
+    if STR100 == 1:
         aout = normstr100(fout, aout)
         aout2 = normstr100(fout2, aout2)
         aout3 = normstr100(fout3, aout3)
         if aoutx:
             aoutx = normstr100(foutx, aoutx)
 
-    if file0norm == 1 and iteration[0] == 0:
-        i = find_nearest(fout, normalize)
+    if FILE0NORM == 0 and iteration[0] == 0:
+        i = find_nearest(fout, NORMALIZE)
         norm[0] = aout[i]
-    elif file0norm == 0:
-        i = find_nearest(fout, normalize)
+    elif FILE0NORM == 1:
+        i = find_nearest(fout, NORMALIZE)
         norm[0] = aout[i]
     aout, aoutx, aout2, aout3 = [amp - norm[0] for amp in (aout, aoutx, aout2, aout3)]
  
@@ -330,7 +349,7 @@ def ordersignal(signal, Fs):
     F = int(Fs/100)
     win = ft_window(F)
 
-    if len(signal.shape) == 1: # mono signal
+    if len(signal.shape) == 1: # if mono signal
         signal = np.expand_dims(signal, axis=0)
 
     y = abs(np.fft.rfft(signal[0,0:F]*win))
@@ -372,11 +391,10 @@ def normxg7001(signal, Fs):
     return signal
 
 
-def get_audio(input_file, split_input_file=0, test_record=None, save_split_files=0):
+def get_audio(input_file, extract_sweeps=0, test_record=None, save_sweeps=0):
 
     logger.info(f"Reading: {input_file}")
     Fs, audio = read(input_file)
-    logger.debug(f"WavFileWarning raised")
 
     logger.info(f"Sample Rate: {Fs}")
 
@@ -385,11 +403,11 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
         audio = resample(audio, int(len(audio) * 96000 / Fs))
         Fs = 96000
 
-    if split_input_file == 1:
+    if extract_sweeps == 1:
         logger.info(f"Extracting sweeps from audio file...")
         audio, audio_2 = slice_audio(audio, Fs, test_record)
 
-        if save_split_files == 1:
+        if save_sweeps == 1:
 
             output_file_left = os.path.splitext(input_file)[0] + '_L.wav'
             output_file_right = os.path.splitext(input_file)[0] + '_R.wav'
@@ -405,31 +423,31 @@ def get_audio(input_file, split_input_file=0, test_record=None, save_split_files
     else:
         audio = audio.T
 
-    if riaamode != 0:
-        audio = riaaiir(audio, Fs, riaamode, riaainv)
+    if RIAA_MODE != 0:
+        audio = riaaiir(audio, Fs, RIAA_MODE, RIAA_INVERSE)
         try:
-            audio_2 = riaaiir(audio_2, Fs, riaamode, riaainv)
+            audio_2 = riaaiir(audio_2, Fs, RIAA_MODE, RIAA_INVERSE)
         except NameError:
             audio_2 = None
-    elif split_input_file != 1:
+    elif extract_sweeps != 1:
         audio_2 = None
 
-    if xg7001 == 1:
+    if XG7001 == 1:
         audio = normxg7001(audio, Fs)
         try:
             audio_2 = normxg7001(audio_2, Fs)
         except NameError:
             audio_2 = None
-    elif split_input_file != 1:
+    elif extract_sweeps != 1:
         audio_2 = None
 
 
     audio, minf, maxf = ordersignal(audio, Fs)
     
-    logger.info(f"Sweep minimum frequency: {minf * 100:.0f}Hz")
-    logger.info(f"Sweep maximum frequency: {maxf * 100:.0f}Hz")
+    logger.info(f"Raw sweep from {minf * 100:.0f}Hz to {maxf * 100:.0f}Hz")
+    #logger.info(f"Raw sweep maximum frequency: {maxf * 100:.0f}Hz")
  
-    return audio, audio_2, Fs, minf, maxf
+    return audio, audio_2, Fs
 
 
 def slice_audio(signal, Fs, test_record):
@@ -500,7 +518,7 @@ def slice_audio(signal, Fs, test_record):
         end_sample = np.argmax(signal) + sample_offset_start
 
         logger.debug(f"End Sample (Global Index): {end_sample}")
-        logger.debug(f"Sample Offset Start: {sample_offset_start}, Sample Offset End: {sample_offset_end}")
+        logger.debug(f"Sample Offset Start: {sample_offset_start}, End: {sample_offset_end}")
         logger.debug(f"End Sample (Relative Index): {end_sample - sample_offset_start}")
         
         return end_sample
@@ -518,10 +536,8 @@ def slice_audio(signal, Fs, test_record):
 
     params = record_params[test_record]
 
-
     left = signal[:, 0]
     right = signal[:, 1]
-
 
     logger.info(f"Test Record: {test_record}")
 
@@ -587,56 +603,100 @@ def slice_audio(signal, Fs, test_record):
 
 if __name__ == "__main__":
 
+
+
+    config = get_config()
+
+    INPUT_FILE_0 = config["input_file_0"]
+    INPUT_FILE_1 = config["input_file_1"]
+    EXTRACT_SWEEPS = config["extract_sweeps"]
+    SAVE_SWEEPS = config["save_sweeps"]
+    TEST_RECORD = config["test_record"]
+    INFO_LINE = config["info_line"]
+    EQUIP_INFO = config["equip_info"]
+    PLOT_STYLE = config["plot_style"]
+    PLOT_DATA_OUT = config["plot_data_out"]
+    ROUND_LEVEL = config["round_level"]
+    RIAA_MODE = config["riaa_mode"]
+    RIAA_INVERSE = config["riaa_inverse"]
+    STR100 = config["str100"]
+    XG7001 = config["xg7001"]
+    NORMALIZE = config["normalize"]
+    FILE0NORM = config["file0norm"]
+    ONEKFSTART = config["onekfstart"]
+    END_F = config["end_f"]
+    OVERRIDE_Y_LIMIT = config["override_y_limit"]
+    OVERRIDE_Y_LIMIT_VALUE = config["override_y_limit_value"]
+    LOG_LEVEL = config["log_level"]
+
+    if LOG_LEVEL.upper() == 'DEBUG':
+        logger.setLevel(level=logging.DEBUG)
+    if LOG_LEVEL.upper() == 'INFO':
+        logger.setLevel(level=logging.INFO)
+
+
+
+    if logging.getLogger(__name__).isEnabledFor(logging.DEBUG):
+        logger.debug(f"Configuration Parameters:")
+        for key, value in config.items():
+            logger.debug(f"  {key}: {value}")
+
+
+
+    logger.info(f"SJPlot {__version__}")
+
+
     
 
-    if SPLIT_INPUT_FILE == 1:
-        input_sig_1, input_sig_2, Fs, minf, maxf = get_audio(INPUT_FILE_0, SPLIT_INPUT_FILE, TEST_RECORD, SAVE_SPLIT_FILES)
+
+    if EXTRACT_SWEEPS == 1:
+        input_sig_1, input_sig_2, Fs = get_audio(INPUT_FILE_0, EXTRACT_SWEEPS, TEST_RECORD, SAVE_SWEEPS)
         fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig_1, Fs)
 
-        deltaadj = ao0[find_nearest(fo0, normalize)]
-        deltah0 = round((max(ao0 - deltaadj)), roundlvl)
-        deltal0 = abs(round((min(ao0 - deltaadj)), roundlvl))
+        deltaadj = ao0[find_nearest(fo0, NORMALIZE)]
+        deltah0 = round((max(ao0 - deltaadj)), ROUND_LEVEL)
+        deltal0 = abs(round((min(ao0 - deltaadj)), ROUND_LEVEL))
 
         logger.info(f"Left crosstalk @1kHz: {aox0[find_nearest(fox0, 1000)]:.2f}dB")
 
         fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig_2, Fs)
  
-        deltaadj = ao1[find_nearest(fo1, normalize)]
-        deltah1 = round((max(ao1 - deltaadj)), roundlvl)
-        deltal1 = abs(round((min(ao1 - deltaadj)), roundlvl))
+        deltaadj = ao1[find_nearest(fo1, NORMALIZE)]
+        deltah1 = round((max(ao1 - deltaadj)), ROUND_LEVEL)
+        deltal1 = abs(round((min(ao1 - deltaadj)), ROUND_LEVEL))
 
         logger.info(f"Right crosstalk @1kHz: {aox1[find_nearest(fox1, 1000)]:.2f}dB")
 
-        INPUT_FILE_1 = 'x'
+        INPUT_FILE_1 = '_'
 
 
     else:
 
 
-        input_sig, _, Fs, minf, maxf = get_audio(INPUT_FILE_0)
+        input_sig, _, Fs = get_audio(INPUT_FILE_0)
         fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig, Fs)
 
-        deltaadj = ao0[find_nearest(fo0, normalize)]
-        deltah0 = round((max(ao0 - deltaadj)), roundlvl)
-        deltal0 = abs(round((min(ao0 - deltaadj)), roundlvl))
+        deltaadj = ao0[find_nearest(fo0, NORMALIZE)]
+        deltah0 = round((max(ao0 - deltaadj)), ROUND_LEVEL)
+        deltal0 = abs(round((min(ao0 - deltaadj)), ROUND_LEVEL))
 
         if aox0.size > 0:
             logger.info(f"Left crosstalk @1kHz: {aox0[find_nearest(fox0, 1000)]:.2f}dB")
 
 
         if INPUT_FILE_1:
-            input_sig, _, Fs, minf, maxf = get_audio(INPUT_FILE_1)
+            input_sig, _, Fs = get_audio(INPUT_FILE_1)
             fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig, Fs)
      
-            deltaadj = ao1[find_nearest(fo1, normalize)]
-            deltah1 = round((max(ao1 - deltaadj)), roundlvl)
-            deltal1 = abs(round((min(ao1 - deltaadj)), roundlvl))
+            deltaadj = ao1[find_nearest(fo1, NORMALIZE)]
+            deltah1 = round((max(ao1 - deltaadj)), ROUND_LEVEL)
+            deltal1 = abs(round((min(ao1 - deltaadj)), ROUND_LEVEL))
 
             if aox1.size > 0:
                 logger.info(f"Right crosstalk @1kHz: {aox1[find_nearest(fox1, 1000)]:.2f}dB")
 
 
-    if plotdataout == 1:
+    if PLOT_DATA_OUT == 1:
 
         dao0 = [*ao0, *[''] * (len(fo0) - len(ao0))]
         daox0 = [*aox0, *[''] * (len(fo0) - len(aox0))]
@@ -665,7 +725,7 @@ if __name__ == "__main__":
     plt.rcParams["xtick.minor.visible"] =  True
     plt.rcParams["ytick.minor.visible"] =  True
 
-    if plotstyle == 1:
+    if PLOT_STYLE == 1:
         fig, axs = plt.subplots(1, 1, figsize=(14,6))
         axs = np.ravel([axs])
 
@@ -700,11 +760,11 @@ if __name__ == "__main__":
 
         plt.autoscale(enable=True, axis='y')
 
-        if ovdylim == 1:
-            axs[0].set_ylim(*ovdylimvalue)
+        if OVERRIDE_Y_LIMIT == 1:
+            axs[0].set_ylim(*OVERRIDE_Y_LIMIT_VALUE)
  
 
-    if plotstyle == 2:
+    if PLOT_STYLE == 2:
         fig, axs = plt.subplots(1, sharex=True, figsize=(14,6))
         axs = np.ravel([axs])
         axtwin = axs[0].twinx()
@@ -731,8 +791,8 @@ if __name__ == "__main__":
             else:
                 axs[0].set_ylim((min(aox0) -2), (max(ao0) +2))
  
-        if ovdylim == 1:
-            axs[0].set_ylim(*ovdylimvalue)
+        if OVERRIDE_Y_LIMIT == 1:
+            axs[0].set_ylim(*OVERRIDE_Y_LIMIT_VALUE)
 
  
         axs[0].semilogx(fo0,ao0, color = '#0000ff', label = 'Freq Response')
@@ -773,7 +833,7 @@ if __name__ == "__main__":
         axs[0].set_xlabel("Frequency (Hz)")
 
 
-    if plotstyle == 3:
+    if PLOT_STYLE == 3:
         fig, axs = plt.subplots(2, 1, sharex=True, figsize=(14,6))
 
         axs[0].set_ylim(-5,5)
@@ -784,8 +844,8 @@ if __name__ == "__main__":
         elif (min(ao0) <-5) or (max(ao0) >5):
                 axs[0].autoscale(enable=True, axis='y')
 
-        if ovdylim == 1:
-            axs[0].set_ylim(*ovdylimvalue)
+        if OVERRIDE_Y_LIMIT == 1:
+            axs[0].set_ylim(*OVERRIDE_Y_LIMIT_VALUE)
 
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
         axs[1].semilogx(fo2h0,ao2h0,color = '#0080ff', label = '2nd Harmonic')
@@ -815,7 +875,7 @@ if __name__ == "__main__":
         axs[1].set_xlabel("Frequency (Hz)")
 
 
-    if plotstyle == 4:
+    if PLOT_STYLE == 4:
         fig, axs = plt.subplots(2, 1, sharex=True, figsize=(14,10))
         axtwin = axs[1].twinx()
 
@@ -839,8 +899,8 @@ if __name__ == "__main__":
             else:
                 axs[1].set_ylim((min(aox0) -2), (max(ao0) +2))
  
-        if ovdylim == 1:
-            axs[1].set_ylim(*ovdylimvalue)
+        if OVERRIDE_Y_LIMIT == 1:
+            axs[1].set_ylim(*OVERRIDE_Y_LIMIT_VALUE)
 
  
         axs[1].semilogx(fo0,ao0, color = '#0000ff', label = 'Freq Response')
@@ -882,8 +942,8 @@ if __name__ == "__main__":
         elif (min(ao0) <-5) or (max(ao0) >5):
                 axs[0].autoscale(enable=True, axis='y')
 
-        if ovdylim == 1:
-            axs[0].set_ylim(*ovdylimvalue)
+        if OVERRIDE_Y_LIMIT == 1:
+            axs[0].set_ylim(*OVERRIDE_Y_LIMIT_VALUE)
 
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
      
@@ -905,7 +965,7 @@ if __name__ == "__main__":
         axs[0].set_position(gs[0].get_position(fig))
         axs[1].set_position(gs[1].get_position(fig))
 
-    if plotstyle == 5:
+    if PLOT_STYLE == 5:
         fig, axs = plt.subplots(1, 1, figsize=(14,3))
         axs = np.ravel([axs])
 
@@ -917,8 +977,8 @@ if __name__ == "__main__":
         elif (min(ao0) <-5) or (max(ao0) >5):
                 axs[0].autoscale(enable=True, axis='y')
 
-        if ovdylim == 1:
-            axs[0].set_ylim(*ovdylimvalue)
+        if OVERRIDE_Y_LIMIT == 1:
+            axs[0].set_ylim(*OVERRIDE_Y_LIMIT_VALUE)
 
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
 
@@ -937,12 +997,12 @@ if __name__ == "__main__":
 
     for i, ax in enumerate(axs.flat):
  
-        if file0norm == 1:
-            if  not (plotstyle == 3 and i != 0):
-                ax.axline((normalize, 0), (normalize, 1), color = 'm', lw = 1)
-        elif file0norm == 0:
-            if not (plotstyle == 3 and i != 0):
-                ax.plot(normalize, 0, marker = 'x', color = 'm')
+        if FILE0NORM == 0:
+            if  not (PLOT_STYLE == 3 and i != 0):
+                ax.axline((NORMALIZE, 0), (NORMALIZE, 1), color = 'm', lw = 1)
+        elif FILE0NORM == 1:
+            if not (PLOT_STYLE == 3 and i != 0):
+                ax.plot(NORMALIZE, 0, marker = 'x', color = 'm')
         
         anchored_text = AnchoredText('SJ', 
                             frameon=False, borderpad=0, pad=0.03, 
@@ -973,23 +1033,22 @@ if __name__ == "__main__":
 
     plt.autoscale(enable=True, axis='x')
 
-    axs[0].set_title(infoline + "\n", fontsize=16)
+    axs[0].set_title(INFO_LINE + "\n", fontsize=16)
 
 
     now = datetime.now()
 
     if INPUT_FILE_1:
-        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
+        plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
             now.strftime("%b %d, %Y %H:%M"), fontsize=6)
     else:
-        plt.figtext(.17, .118, "SJPlot v" + swversion + "\n" + INPUT_FILE_0 + "\n" + \
+        plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + \
             now.strftime("%b %d, %Y %H:%M"), fontsize=6)
 
-    plt.figtext(.125, 0, equipinfo, alpha=.75, fontsize=8)
+    plt.figtext(.125, 0, EQUIP_INFO, alpha=.75, fontsize=8)
      
-    plt.savefig(infoline.replace(' / ', '_') +'.png', bbox_inches='tight', pad_inches=.5, dpi=96)
+    plt.savefig(INFO_LINE.replace(' / ', '_') +'.png', bbox_inches='tight', pad_inches=.5, dpi=192)
 
     plt.show()
 
     logger.info(f"Done!")
-
