@@ -6,7 +6,7 @@ DO NOT EDIT THIS SCRIPT!
 Configuration is now stored in a separate file with the default name "SJPlot.cfg"  This file should be in
 the same directory that this script is run from.
 
-You can also pass the configuration via the command line: "python3 sjplot.py --help" for syntax.
+You can also pass the configuration via the command line: "python sjplot.py --help" for syntax.
 
 Details in the README here: https://github.com/FidelisAnalog/SJPlot/tree/Splitter
 '''
