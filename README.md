@@ -63,7 +63,7 @@ For clarity, the configuraiton precdence is command line arguents first, then th
 | str100           |`false`|<p>`false`: Disable,<br>`true`: Enable 6dB/oct correction from 500Hz to 40Hz.         |
 | xg7001           |`false`|<p>`false`: Disable,<br>`true`: Custom bass filter for Denon XG-7001 sweep (stereoplay filter). |
 | plot_data_out    |`false`|<p>`false`: Disable,<br>`true`: Output the plot data to the console.                  |
-| log_level        |`info`|<p>`info`: Standard logging level,<br>`debug`: Verbose logging intended for debugging issues. |
+| log_level        |`info`|`info`: Standard logging level,<br>`debug`: Verbose logging intended for debugging issues. |
 
 
 
