@@ -68,9 +68,9 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | xg7001           |`False`|`True`: custom bass filter for Denon XG-7001 sweep (stereoplay filter)<br>`False`: disable |
 | plot_data_out    |`False`|`True`: output the plot data to the console<br>`False`}$$: disable                  |
 | log_level        |`info`|`info`: standard logging level<br>`debug`: verbose logging intended for debugging issues. |
-| version          | |Command-line only. Output sofware version and exit. |
-| help             | |Command-line only. Display the help contents. |
-| config           | |Command-line only. Use an alternate configuration file and exit. | 
+| version          | |Command-line only - output sofware version and exit. |
+| help             | |Command-line only - display the help contents and exit. |
+| config           | |Command-line only - use an alternate configuration file. | 
 
 
 
