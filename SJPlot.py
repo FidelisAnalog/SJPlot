@@ -29,7 +29,7 @@ import argparse
 import configparser
 
 
-__version__ = "18.3.6"
+__version__ = "18.3.7"
 
 
 
@@ -54,7 +54,7 @@ def get_config():
     parser.add_argument("--input_file_1", type=str, help="Path to the second input WAV file.", metavar ="")
     parser.add_argument("--extract_sweeps", default=None, action="store_true", help="Extract sweeps from first input file.")
     parser.add_argument("--save_sweeps", default=None, action="store_true", help="Save extracted sweep files.")
-    parser.add_argument("--test_record", type=str, choices=['TRS1007', 'TRS1005', 'STR100'], help="Test record for extracting sweeps.", metavar ="{STR100,TRS1007,TRS1005}")
+    parser.add_argument("--test_record", type=str, help="Test record for extracting sweeps.")
     parser.add_argument("--info_line", type=str, help="See README for more information.", metavar ="")
     parser.add_argument("--equip_info", type=str, help="See README for more information.", metavar ="")
     parser.add_argument("--plot_style", type=int, choices=[1, 2, 3, 4, 5], help="The plot style to output.")
@@ -387,7 +387,7 @@ def normxg7001(signal, Fs):
     if Fs == 96000:
         b = [1.0080900, -0.9917285, 0]
         a = [1, -0.9998364, 0]
-        sig = signal.lfilter(b,a,signal)
+        signal = lfilter(b,a,signal)
     return signal
 
 
@@ -436,8 +436,10 @@ def get_audio(input_file, extract_sweeps=0, test_record=None, save_sweeps=0):
         audio = normxg7001(audio, Fs)
         try:
             audio_2 = normxg7001(audio_2, Fs)
+            print('norm 0')
         except NameError:
             audio_2 = None
+            print('norm 1')
     elif extract_sweeps != 1:
         audio_2 = None
 
@@ -481,7 +483,7 @@ def slice_audio(signal, Fs, test_record):
         
         # Define burst region
         is_ = int(start_sample + (1 * Fs))  # Start 1s after the first peak
-        ie = int(start_sample + (12 * Fs))  # End 12s after
+        ie = int(start_sample + (14 * Fs))  # End 14s after
 
         # Extract and smooth burst region
         cut_burst = signal[is_:ie]
@@ -529,12 +531,21 @@ def slice_audio(signal, Fs, test_record):
         'TRS1007': {'sweep_offset': 74, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
         'TRS1005': {'sweep_offset': 32, 'sweep_end_min': 26, 'sweep_end_max': 34, 'sweep_start_detect': 1},
         'STR100': {'sweep_offset': 74, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
+        'STR120': {'sweep_offset': 58, 'sweep_end_min': 45, 'sweep_end_max': 50, 'sweep_start_detect': 0},
+        'STR130': {'sweep_offset': 82, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
+        'STR170': {'sweep_offset': 75, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
+        'QR2009': {'sweep_offset': 80, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+        'QR2010': {'sweep_offset': 24, 'sweep_end_min': 15, 'sweep_end_max': 18, 'sweep_start_detect': 0},
+        'XG7001': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+        'XG7002': {'sweep_offset': 74, 'sweep_end_min': 26, 'sweep_end_max': 30, 'sweep_start_detect': 1},
+        'XG7005': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+
     }
 
-    if test_record not in record_params:
+    if test_record.upper() not in record_params:
         raise ValueError("Invalid test record.")
 
-    params = record_params[test_record]
+    params = record_params[test_record.upper()]
 
     left = signal[:, 0]
     right = signal[:, 1]
