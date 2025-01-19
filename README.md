@@ -55,11 +55,11 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | input_file_1     | |The second (R) file to plot. If using one file, leave this blank. If you're extracting sweeps, this parameter is ignored. |
 | plot_info        | |Alpha-numeric entries separated by " / ". The script will save a PNG file named from the plot_info argument, replacing " / " with "_". For example, "Cart / Load / Record" will create a file named "Cart_Load_Record.png". |
 | equip_info       | |This argument is placed on the bottom left of the plot image to describe the capture chain. The recommended format is "Arm -> Phonostage -> ADC". |
-| extract_sweeps   |`false`|`true`: extract the sweeps from **INPUT_FILE_0**<br>`false`: do not process the file for extraction of sweeps.<br> |
-| save_sweeps      |`false`|`true`: save the extracted sweeps<br>`false`: do not save files |
+| extract_sweeps   |`False`|`True`: extract the sweeps from **INPUT_FILE_0**<br>`False`: do not process the file for extraction of sweeps.<br> |
+| save_sweeps      |`False`|`True`: save the extracted sweeps<br>`False`: do not save files |
 | test_record      | |If extracting sweeps, specify what test record the audio was captured from. Supported records are `STR100`, `TRS1007` (CA or JVC), and `TRS1005`. |
 | plot_style       |`4`|`1`: traditional<br>`2`: dual axis (twinx)<br>`3`: dual plot FR and distortion<br>`4`: dual plot FR zoom and dual axis (twinx)<br>`5`: small plot FR only |
-| file0norm        |`false`|`true`: normalize both files to file_0 level, shown as a magenta "x" on the plot<br>`false`: normalize both files independently, shown as a magenta line on the plot |
+| file0norm        |`False`|`True`: normalize both files to file_0 level, shown as a magenta "x" on the plot<br>`False`: normalize both files independently, shown as a magenta line on the plot |
 | end_f            |`20000`|Highest frequency to plot in Hz.                                                |
 | onekfstart       |`False`|`True`: start plot from 1 kHz<br>`False`: disable                               |
 | normalize        |`1000`|Frequency in Hz to set as 0dB in the plot                                      |
@@ -134,6 +134,10 @@ To run the script using an alternate configuration file:
 python sjplot.py --config someotherconfig.cfg
 ```
 
+If the argument you're passing has spaces or special characters in it, you'll need to capture it in quotes:
+```bash
+python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
+```
 
 ## Example Output
 
@@ -141,7 +145,7 @@ python sjplot.py --config someotherconfig.cfg
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_1.png" alt="Example Plot.">
     <p><b>Figure 1 - Plot Style 1</b></p>
-    <p>"Traditional" plot with a single X-axis.</p>
+    <p>"Traditional" plot with a single x-axis.</p>
 </div>
 <br/>
 
@@ -149,7 +153,7 @@ python sjplot.py --config someotherconfig.cfg
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_2.png" alt="Example Plot.">
     <p><b>Figure 2 - Plot Style 2</b></p>
-    <p>Dual-axis (twin-x) plot with Amplitude on the left X-axis, and Distortion on the right X-axis.</p>
+    <p>Dual-axis (twin-x) plot with Amplitude on the left x-axis, and Distortion on the right x-axis.</p>
 </div>
 <br/>
 
@@ -157,7 +161,7 @@ python sjplot.py --config someotherconfig.cfg
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_3.png" alt="Example Plot.">
     <p><b>Figure 3 - Plot Style 3</b></p>
-    <p>Dual plot with Amplitude in the upper plot, and distortion in the lower plot. This plot does not show x-talk.</p>
+    <p>Dual plot with Amplitude in the upper plot, and distortion in the lower plot. This plot does not show cross-talk.</p>
 </div>
 <br/>
 
