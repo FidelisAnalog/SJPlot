@@ -58,7 +58,7 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | save_sweeps      |`false`|`true`: save the extracted sweeps<br>`false`: do not save files |
 | test_record      | |If extracting sweeps, specify what test record the audio was captured from. Supported records are `STR100`, `TRS1007` (CA or JVC), and `TRS1005`. |
 | plot_style       |`4`|`1`: traditional<br>`2`: dual axis (twinx)<br>`3`: dual plot FR and distortion<br>`4`: dual plot FR zoom and dual axis (twinx)<br>`5`: small plot FR only |
-| file0norm        |`false`|`true`: normalize both files to file_0 level<br>`false`: normalize both files independently |
+| file0norm        |`false`|`true`: normalize both files to file_0 level, shown as a magenta "x" on the plot<br>`false`: normalize both files independently, shown as a magenta line on the plot |
 | end_f            |`20000`|Highest frequency to plot in Hz.                                                |
 | onekfstart       |`False`|`True`: start plot from 1 kHz<br>`False`: disable                               |
 | normalize        |`1000`|Frequency in Hz to set as 0dB in the plot                                      |
@@ -139,36 +139,40 @@ python sjplot.py --config someotherconfig.cfg
 <br/>
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_1.png" alt="Example Plot.">
-    <p><b>Figure 1 - Example "traditional" plot</b></p>
+    <p><b>Figure 1 - Plot Style 1</b></p>
+    <p>"Traditional" plot with a single X-axis.</p>
 </div>
 <br/>
 
 <br/>
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_2.png" alt="Example Plot.">
-    <p><b>Figure 2 - Example dual-axis (twin-x) plot</b></p>
+    <p><b>Figure 2 - Plot Style 2</b></p>
+    <p>Dual-axis (twin-x) plot with Amplitude on the left X-axis, and Distortion on the right X-axis.</p>
 </div>
 <br/>
 
 <br/>
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_3.png" alt="Example Plot.">
-    <p><b>Figure 3 - Example dual FR and distortion plot</b></p>
+    <p><b>Figure 3 - Plot Style 3</b></p>
+    <p>Dual plot with Amplitude in the upper plot, and distortion in the lower plot. This plot does not show x-talk.</p>
 </div>
 <br/>
 
 <br/>
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_4.png" alt="Example Plot.">
-    <p><b>Figure 4 - Example dual plot FR zoom and dual-axis (twin-x) plot</b></p>
-    <p>This is the default and recommended plot style.</p>
+    <p><b>Figure 4 - Plot Style 4</b></p>
+    <p>Dual plot with zoomed-in frequency response in the upper plot, and the lower plot being dual-axis as in style 2.  This is the default and recommended plot style to use.</p>
 </div>
 <br/>
 
 <br/>
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_5.png" alt="Example Plot.">
-    <p><b>Figure 5 - Example FR zoom only plot</b></p>
+    <p><b>Figure 5 - Plot Style 5</b></p>
+    <p>Zoomed-in frequency response only plot.</p>
 </div>
 <br/>
 
