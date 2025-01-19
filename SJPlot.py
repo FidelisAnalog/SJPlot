@@ -138,6 +138,9 @@ def get_config():
     if combined_config["override_y_limit_value"] != defaults["override_y_limit_value"]:
         combined_config["override_y_limit"] = 1
 
+    # Automatically set str100 to 1 if test_record = str100 is provided
+    if combined_config["test_record"].casefold() == "str100".casefold():
+        combined_config["str100"] = 1
 
     return combined_config
 
