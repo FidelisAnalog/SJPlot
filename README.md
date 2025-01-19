@@ -50,20 +50,20 @@ For clarity, the configuraiton precdence is command line arguents first, then th
 | input_file_1     | |The second (R) file to plot. If using one file, leave this blank. If you're extracting sweeps, this parameter is ignored. |
 | plot_info        | |Alpha-numeric entries separated by " / ". The script will save a PNG file named from the plot_info argument, replacing " / " with "_". For example, "Cart / Load / Record" will create a file named "Cart_Load_Record.png". |
 | equip_info       | |This argument is placed on the bottom left of the plot image to describe the capture chain. The recommended format is "Arm -> Phonostage -> ADC". |
-| extract_sweeps   |`false`|<p>`false`: Do not process the file for extraction of sweeps.<br>`true`: Extract the sweeps from **INPUT_FILE_0**. |
-| save_sweeps      |`false`|<p>`false`: Do not save files.<br>`true`: The extracted sweeps will be saved, appending either "_L" or "_R" to the **INPUT_FILE_0** filename for left and right sweeps, respectively. |
+| extract_sweeps   |`false`|`false`: Do not process the file for extraction of sweeps.<br>`true`: Extract the sweeps from **INPUT_FILE_0**. |
+| save_sweeps      |`false`|`false`: Do not save files.<br>`true`: The extracted sweeps will be saved, appending either "_L" or "_R" to the **INPUT_FILE_0** filename for left and right sweeps, respectively. |
 | test_record      | |If extracting sweeps, specify what test record the audio was captured from. Supported records are **STR100**, **TRS1007** (CA or JVC), and **TRS1005**. |
-| plot_style       |4|<p>`1`: Traditional<br><p>`2`: Dual axis (twinx)<br><p>`3`: Dual plot FR and distortion<br><p>`4`: Dual plot FR zoom and dual axis (twinx)<br><p>`5`: Small plot FR only |
-| file0norm        |`false`|<p>`false`: Normalize both files independently.<br>`true`: Normalize both files to file 0 level. |
+| plot_style       |4|`1`: Traditional<br>`2`: Dual axis (twinx)<br>`3`: Dual plot FR and distortion<br>`4`: Dual plot FR zoom and dual axis (twinx)<br>`5`: Small plot FR only |
+| file0norm        |`false`|`false`: Normalize both files independently.<br>`true`: Normalize both files to file 0 level. |
 | end_f            |20000|Highest frequency to plot in Hz.                                                |
-| onekfstart       |`false`|<p>`false`: Disable,<br>`true`: Start plot from 1 kHz.                               |
-| normalize        |1000|Frequency in Hz to set as 0dB in the plot.                                      |
+| onekfstart       |`False`|`False`: disable<br>`True`: Start plot from 1 kHz                               |
+| normalize        |1000|Frequency in Hz to set as 0dB in the plot                                      |
 | riaa_mode        |2|<p>`0`: Off<br><p>`1`: Bass emphasis<br><p>`2`: Treble de-emphasis,<br><p>`3`: Both               |
-| riaa_inverse     |`true`|<p>`false`: Disable,<br>`true`: Inverse RIAA EQ per **riaa_mode** setting.            |
-| str100           |`false`|<p>`false`: Disable,<br>`true`: Enable 6dB/oct correction from 500Hz to 40Hz.         |
-| xg7001           |`false`|<p>`false`: Disable,<br>`true`: Custom bass filter for Denon XG-7001 sweep (stereoplay filter). |
-| plot_data_out    |`false`|<p>`false`: Disable,<br>`true`: Output the plot data to the console.                  |
-| log_level        |`info`|`info`: Standard logging level,<br>`debug`: Verbose logging intended for debugging issues. |
+| riaa_inverse     |`True`|`True`: inverse RIAA EQ per **riaa_mode** setting<br>`False`: disable            |
+| str100           |`False`|`True`: enable 6dB/oct correction from 500Hz to 40Hz<br>`False`: disable         |
+| xg7001           |`False`|`True`: custom bass filter for Denon XG-7001 sweep (stereoplay filter)<br>`False`: disable |
+| plot_data_out    |`False`|`True`: output the plot data to the console<br>`False`: disable                  |
+| log_level        |`info`|`info`: standard logging level<br>`debug`: verbose logging intended for debugging issues. |
 
 
 
