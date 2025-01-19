@@ -145,7 +145,7 @@ python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_1.png" alt="Example Plot.">
     <p><b>Figure 1 - Plot Style 1</b></p>
-    <p>"Traditional" plot with a single X-axis.</p>
+    <p>"Traditional" plot with a single x-axis.</p>
 </div>
 <br/>
 
@@ -153,7 +153,7 @@ python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_2.png" alt="Example Plot.">
     <p><b>Figure 2 - Plot Style 2</b></p>
-    <p>Dual-axis (twin-x) plot with Amplitude on the left X-axis, and Distortion on the right X-axis.</p>
+    <p>Dual-axis (twin-x) plot with Amplitude on the left x-axis, and Distortion on the right x-axis.</p>
 </div>
 <br/>
 
@@ -161,7 +161,7 @@ python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
 <div align="center" style="padding: 20px 0;">
     <img src="images/figure_3.png" alt="Example Plot.">
     <p><b>Figure 3 - Plot Style 3</b></p>
-    <p>Dual plot with Amplitude in the upper plot, and distortion in the lower plot. This plot does not show x-talk.</p>
+    <p>Dual plot with Amplitude in the upper plot, and distortion in the lower plot. This plot does not show cross-talk.</p>
 </div>
 <br/>
 
