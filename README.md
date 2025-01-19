@@ -134,6 +134,10 @@ To run the script using an alternate configuration file:
 python sjplot.py --config someotherconfig.cfg
 ```
 
+If the argument you're passing has spaces or special characters in it, you'll need to capture it in quotes:
+```bash
+python sjplot.py --plot_info " Some Cart / Some Load / STR-100"
+```
 
 ## Example Output
 
