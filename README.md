@@ -59,7 +59,7 @@ For clarity, the configuraiton precdence is command line arguents first, then th
 | onekfstart       |`false`|`false`: Disable, `true`: Start plot from 1 kHz.                               |
 | normalize        |1000|Frequency in Hz to set as 0dB in the plot.                                      |
 | riaa_mode        |2|`0`: Off, `1`: Bass emphasis, `2`: Treble de-emphasis, `3`: Both.               |
-| riaa_inverse     |`true`|`false`: Disable, \\\n`true`: Inverse RIAA EQ per **riaa_mode** setting.            |
+| riaa_inverse     |`true`|`false`: Disable,  `true`: Inverse RIAA EQ per **riaa_mode** setting.            |
 | str100           |`false`|`false`: Disable, `true`: Enable 6dB/oct correction from 500Hz to 40Hz.         |
 | xg7001           |`false`|`false`: Disable, `true`: Custom bass filter for Denon XG-7001 sweep (stereoplay filter). |
 | plot_data_out    |`false`|`false`: Disable, `true`: Output the plot data to the console.                  |
@@ -68,15 +68,7 @@ For clarity, the configuraiton precdence is command line arguents first, then th
 
 
 
-+---------------+---------------+--------------------+
-| Fruit         | Price         | Advantages         |
-+===============+===============+====================+
-| Bananas       | $1.34         | - built-in wrapper |
-|               |               | - bright color     |
-+---------------+---------------+--------------------+
-| Oranges       | $2.10         | - cures scurvy     |
-|               |               | - tasty            |
-+---------------+---------------+--------------------+
+
 
 
 
