@@ -25,13 +25,53 @@ This python script was originally conceived by Scott Wurcer as a tool to accurat
 2. Install the required Python libraries using pip:
 
 ```bash
-pip install numpy scipy matplotlib librosa
+pip install numpy scipy matplotlib
 ```
 
 ## Usage
-1. After recording the test record sweep tracks, you need to create a file each for the left and right sweeps.  If you don't want to plot the crosstalk the file can be mono, otherwise the script expects the first channel of each file (Left) to be the sweep and the second channel (Right) to be the crosstalk.  The file cannot have any "silent" parts - it must begin at the start of the tone and end right when the tone stops.  The file should be in WAV format. 
-2. Edit the SJPlot.py script file "#edit user parameters" section to include the wav filenames, information, and script settings.
-3. Run the script to process the files.  A PNG image file of the plot will be created in the same directory as the script.
+There are several options to provide the captured audio to the script:
+  - If your sweep record is an STR-100, TRS-1007 (CA or JVC/Victor), or TRS-1005, you can provide a single stereo file that is from a few seconds before the first pilot tone, to a few seconds past the end of the second sweep, without any edits between.  The script can automatically extract the the sweeps from the file for processing.
+  - You can manually process the audio and provide either one or two files to the script.  This audio file must not have any "silent" parts - it must begin at the start of the sweep and end when the sweep stops.  If you want to ploy the crosstalk these files must be stereo, otherwise they can be mono.
+  - These files may be 16 or 24 bit wav and up to 96kHz sampling rate if you want to use the script's built-in RIAA filters.  If you don't need to use the built-in RIAA filters, they can be up to 384kHz.  
+
+## Configuration
+
+The script configuration may be provided by a configuration file (default: SJPlot.cfg) or via the command line. The configuration precedence works in the following order:
+
+1. **Default values**: These are the built-in defaults, hardcoded into the script.
+2. **Configuration file**: If you provide a configuration file, the values in that file will override the default values.
+3. **Command-line arguments**: These take the highest precedence. If a command-line argument is provided, it will override both the default and the config file values.
+
+For clarity, the configuraiton precdence is command line arguents first, then the configuration file values, and last the hard-coded default values.
+
+| **Parameter**       | **Default** | **Description**                                                   |
+|---------------------|-------------|-------------------------------------------------------------------|
+| **input_file_0**     | The first (L) file to plot, or the only file to plot, or the file you want to extract sweeps from. |
+| **input_file_1**     | The second (R) file to plot. If using one file, leave this blank. If you're extracting sweeps, this parameter is ignored. |
+| **plot_info**        | Alpha-numeric entries separated by " / ". The script will save a PNG file named from the plot_info argument, replacing " / " with "_". For example, "Cart / Load / Record" will create a file named "Cart_Load_Record.png". |
+| **equip_info**       | This argument is placed on the bottom left of the plot image to describe the capture chain. The recommended format is "Arm -> Phonostage -> ADC". |
+| **extract_sweeps**   | `false`: Do not process the file for extraction of sweeps. `true`: Extract the sweeps from **INPUT_FILE_0**. |
+| **save_sweeps**      | `false`: Do not save files. `true`: The extracted sweeps will be saved, appending either "_L" or "_R" to the **INPUT_FILE_0** filename for left and right sweeps, respectively. |
+| **test_record**      | If extracting sweeps, specify what test record the audio was captured from. Supported records are **STR100**, **TRS1007** (CA or JVC), and **TRS1005**. |
+| **plot_style**       | `1`: Traditional, `2`: Dual axis (twinx), `3`: Dual plot FR and distortion, `4`: Dual plot FR zoom and dual axis (twinx), `5`: Small plot FR only. |
+| **file0norm**        | `false`: Normalize both files independently. `true`: Normalize both files to file 0 level. |
+| **end_f**            | Highest frequency to plot in Hz.                                                |
+| **onekfstart**       | `false`: Disable, `true`: Start plot from 1 kHz.                               |
+| **normalize**        | Frequency in Hz to set as 0dB in the plot.                                      |
+| **riaa_mode**        | `0`: Off, `1`: Bass emphasis, `2`: Treble de-emphasis, `3`: Both.               |
+| **riaa_inverse**     | `false`: Disable, `true`: Inverse RIAA EQ per **riaa_mode** setting.            |
+| **str100**           | `false`: Disable, `true`: Enable 6dB/oct correction from 500Hz to 40Hz.         |
+| **xg7001**           | `false`: Disable, `true`: Custom bass filter for Denon XG-7001 sweep (stereoplay filter). |
+| **plot_data_out**    | `false`: Disable, `true`: Output the plot data to the console.                  |
+| **log_level**        | `info`: Standard logging level, `debug`: Verbose logging intended for debugging issues. |
+
+
+
+
+
+
+
+
 
 ```bash
 python3 SJPlot.py
