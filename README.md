@@ -66,7 +66,7 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | riaa_inverse     |`True`|`True`: inverse RIAA EQ per **riaa_mode** setting<br>`False`: disable            |
 | str100           |`False`|`True`: enable 6dB/oct correction from 500Hz to 40Hz<br>`False`: disable         |
 | xg7001           |`False`|`True`: custom bass filter for Denon XG-7001 sweep (stereoplay filter)<br>`False`: disable |
-| plot_data_out    |`False`|`True`: output the plot data to the console<br>`False`}$$: disable                  |
+| plot_data_out    |`False`|`True`: output the plot data to the console<br>`False`: disable                  |
 | log_level        |`info`|`info`: standard logging level<br>`debug`: verbose logging intended for debugging issues. |
 | version          | |Command-line only - output sofware version and exit. |
 | help             | |Command-line only - display the help contents and exit. |
