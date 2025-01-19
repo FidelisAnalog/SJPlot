@@ -138,10 +138,40 @@ python sjplot.py --config someotherconfig.cfg
 
 <br/>
 <div align="center" style="padding: 20px 0;">
-    <img src="images/ExamplePlot.png" alt="Example Plot.">
-    <p><b>Example dual-axis plot.</b></p>
+    <img src="images/figure_1.png" alt="Example Plot.">
+    <p><b>Figure 1 - Example "traditional" plot</b></p>
 </div>
 <br/>
+
+<br/>
+<div align="center" style="padding: 20px 0;">
+    <img src="images/figure_2.png" alt="Example Plot.">
+    <p><b>Figure 2 - Example dual-axis (twin-x) plot</b></p>
+</div>
+<br/>
+
+<br/>
+<div align="center" style="padding: 20px 0;">
+    <img src="images/figure_3.png" alt="Example Plot.">
+    <p><b>Figure 3 - Example dual FR and distortion plot</b></p>
+</div>
+<br/>
+
+<br/>
+<div align="center" style="padding: 20px 0;">
+    <img src="images/figure_4.png" alt="Example Plot.">
+    <p><b>Figure 4 - Example dual plot FR zoom and dual-axis (twin-x) plot</b></p>
+    <p>This is the default and recommended plot style.</p>
+</div>
+<br/>
+
+<br/>
+<div align="center" style="padding: 20px 0;">
+    <img src="images/figure_5.png" alt="Example Plot.">
+    <p><b>Figure 5 - Example FR zoom only plot</b></p>
+</div>
+<br/>
+
 
 
 ## How It Works
