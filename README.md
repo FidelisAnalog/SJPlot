@@ -57,7 +57,7 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | equip_info       | |This argument is placed on the bottom left of the plot image to describe the capture chain. The recommended format is "Arm -> Phonostage -> ADC". |
 | extract_sweeps   |`False`|`True`: extract the sweeps from **INPUT_FILE_0**<br>`False`: do not process the file for extraction of sweeps.<br> |
 | save_sweeps      |`False`|`True`: save the extracted sweeps<br>`False`: do not save files |
-| test_record      | |If extracting sweeps, specify what test record the audio was captured from. [Supported records can be found here](https://github.com/FidelisAnalog/SJPlot/edit/Splitter/README.md#supported-test-records-for-sweep-extraction). |
+| test_record      | |If extracting sweeps, specify what test record the audio was captured from. [Supported records can be found here](https://github.com/FidelisAnalog/SJPlot/tree/Splitter?tab=readme-ov-file#supported-test-records-for-sweep-extraction). |
 | plot_style       |`4`|`1`: traditional<br>`2`: dual axis (twinx)<br>`3`: dual plot FR and distortion<br>`4`: dual plot FR zoom and dual axis (twinx)<br>`5`: small plot FR only |
 | file0norm        |`False`|`True`: normalize both files to file_0 level, shown as a magenta "x" on the plot<br>`False`: normalize both files independently, shown as a magenta line on the plot |
 | end_f            |`20000`|Highest frequency to plot in Hz.                                                |
