@@ -57,7 +57,7 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | equip_info       | |This argument is placed on the bottom left of the plot image to describe the capture chain. The recommended format is "Arm -> Phonostage -> ADC". |
 | extract_sweeps   |`False`|`True`: extract the sweeps from **INPUT_FILE_0**<br>`False`: do not process the file for extraction of sweeps.<br> |
 | save_sweeps      |`False`|`True`: save the extracted sweeps<br>`False`: do not save files |
-| test_record      | |If extracting sweeps, specify what test record the audio was captured from. Supported records are `STR100`, `TRS1007` (CA or JVC), and `TRS1005`. |
+| test_record      | |If extracting sweeps, specify what test record the audio was captured from. [Supported records can be found here](https://github.com/FidelisAnalog/SJPlot/edit/Splitter/README.md#supported-test-records-for-sweep-extraction). |
 | plot_style       |`4`|`1`: traditional<br>`2`: dual axis (twinx)<br>`3`: dual plot FR and distortion<br>`4`: dual plot FR zoom and dual axis (twinx)<br>`5`: small plot FR only |
 | file0norm        |`False`|`True`: normalize both files to file_0 level, shown as a magenta "x" on the plot<br>`False`: normalize both files independently, shown as a magenta line on the plot |
 | end_f            |`20000`|Highest frequency to plot in Hz.                                                |
@@ -138,6 +138,25 @@ If the argument you're passing has spaces or special characters in it, you'll ne
 ```bash
 python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
 ```
+
+
+## Supported Test Records for Sweep Extraction
+
+| **Test Record** | **Parameter** | **Description** |
+|-----------------|---------------|-----------------|
+| TRS-1007        | `TRS1007`     | JVC/Victor - Frequency Response Test 20Hz-20kHz |
+| CA-TRS-1007     | `TRS1007`     | clearaudio - Frequency Response Test Record 20Hz - 20kHz |
+| TRS-1005        | `TRS1005`     | JVC/Victor - High Frequency Response Test 1kHz - 50kHz |
+| STR-100         | `STR100`      | CBS Laboratories - Professional Test Record (40Hz - 20kHz) |
+| STR-120         | `STR120`      | CBS Laboratories - Wide Range Pickup Test (500Hz - 50kHz) |
+| STR-130         | `STR130`      | CBS Laboratories - RIAA System Response Test (40Hz - 20kHz) |
+| STR-170         | `STR170`      | CBS Laboratories - 318-Microsecond Frequency Response Test (40Hz - 20kHz) |
+| QR 2009         | `QR2009`      | Brüel & Kjær - Stereophonic Gliding Frequency Record 20-20 000 Hz |
+| QR 2010         | `QR2010`      | Brüel & Kjær - Stereo Test Record 5 Hz - 45 kHz |
+| XG-7001         | `XG7001`      | Denon - Denon Technical Test Record (20Hz - 20kHz) |
+| XG-7002         | `XG7002`      | Denon - Denon Audio Technical Test Record - Pick Up Test I (1kHz - 50kHz) |
+| XG-7005         | `XG7005`      | Denon - Denon Audio Technical Test Record - RIAA System Test (20Hz - 20kHz) |
+
 
 ## Example Output
 
