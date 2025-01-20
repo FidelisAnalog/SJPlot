@@ -33,7 +33,7 @@ pip install numpy scipy matplotlib
 
 ## Usage
 There are several options to provide the captured audio to the script:
-  - If your sweep record is an STR-100, TRS-1007 (CA or JVC/Victor), or TRS-1005, you can provide a single stereo file that is from a few seconds before the first pilot tone, to a few seconds past the end of the second sweep, without any edits between. The script can automatically extract the the sweeps from the file for processing.
+  - If your sweep record is [listed in this table](https://github.com/FidelisAnalog/SJPlot/tree/Splitter?tab=readme-ov-file#supported-test-records-for-sweep-extraction), you can provide a single stereo file that is from a few seconds before the first pilot tone, to a few seconds past the end of the second sweep, without any edits between. The script can automatically extract the sweeps from the file for processing.
   - You can manually process the audio and provide either one or two files to the script. This audio file must not have any "silent" parts - it must begin at the start of the sweep and end when the sweep stops. If you want to plot the crosstalk these files must be stereo, otherwise they can be mono.
   - These files may be 16 or 24 bit wav and up to 96kHz sampling rate if you want to use the script's built-in RIAA filters. If you don't need to use the built-in RIAA filters, they can be up to 384kHz.  
 
