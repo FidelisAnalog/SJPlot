@@ -50,7 +50,7 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 ### Configuration Parameters
 
 | **Parameter**       | **Default** | **Description**                                                   |
-|---------------------|-------------|-------------------------------------------------------------------|
+|---------------------| :---: |-------------------------------------------------------------------|
 | input_file_0     | |The first (L) file to plot, or the only file to plot, or the file you want to extract sweeps from. |
 | input_file_1     | |The second (R) file to plot. If using one file, leave this blank. If you're extracting sweeps, this parameter is ignored. |
 | plot_info        | |Alpha-numeric entries separated by " / ". The script will save a PNG file named from the plot_info argument, replacing " / " with "_". For example, "Cart / Load / Record" will create a file named "Cart_Load_Record.png". |
@@ -143,7 +143,7 @@ python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
 ## Supported Test Records for Sweep Extraction
 
 | **Test Record** | **Parameter** | **Description** |
-|-----------------|---------------|-----------------|
+|-----------------| :---: |-----------------|
 | TRS-1007        | `TRS1007`     | JVC/Victor - Frequency Response Test 20Hz-20kHz |
 | CA-TRS-1007     | `TRS1007`     | clearaudio - Frequency Response Test Record 20Hz - 20kHz |
 | TRS-1005        | `TRS1005`     | JVC/Victor - High Frequency Response Test 1kHz - 50kHz |
