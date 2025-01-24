@@ -98,7 +98,7 @@ def get_config():
         "plot_data_out": False,
         "round_level": 1,
         "riaa_mode": 2,
-        "riaa_inverse": False,
+        "riaa_inverse": True,
         "str100": False,
         "xg7001": False,
         "normalize": 1000,
