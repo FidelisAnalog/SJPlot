@@ -29,7 +29,7 @@ import argparse
 import configparser
 
 
-__version__ = "18.3.7"
+__version__ = "18.3.8"
 
 
 
@@ -50,12 +50,12 @@ def get_config():
     # Argument parser setup
     parser = argparse.ArgumentParser(description="Process parameters for SJPlot.")
     parser.add_argument("--config", default=default_config_file, type=str, help="Path to configuration file.", metavar ="")
-    parser.add_argument("--input_file_0", type=str, help="Path to the first input WAV file.", metavar ="")
-    parser.add_argument("--input_file_1", type=str, help="Path to the second input WAV file.", metavar ="")
+    parser.add_argument("--file_0", type=str, help="Path to the first input WAV file.", metavar ="")
+    parser.add_argument("--file_1", type=str, help="Path to the second input WAV file.", metavar ="")
     parser.add_argument("--extract_sweeps", default=None, action="store_true", help="Extract sweeps from first input file.")
     parser.add_argument("--save_sweeps", default=None, action="store_true", help="Save extracted sweep files.")
     parser.add_argument("--test_record", type=str, help="Test record for extracting sweeps.")
-    parser.add_argument("--info_line", type=str, help="See README for more information.", metavar ="")
+    parser.add_argument("--plot_info", type=str, help="See README for more information.", metavar ="")
     parser.add_argument("--equip_info", type=str, help="See README for more information.", metavar ="")
     parser.add_argument("--plot_style", type=int, choices=[1, 2, 3, 4, 5], help="The plot style to output.")
     parser.add_argument("--plot_data_out", default=None, action="store_true", help="Output plot data.")
@@ -87,12 +87,12 @@ def get_config():
     
     # Set default values for missing parameters
     defaults = {
-        "input_file_0": "",
-        "input_file_1": "",
+        "file_0": "",
+        "file_1": "",
         "extract_sweeps": False,
         "save_sweeps": False,
         "test_record": "",
-        "info_line": "Cart / Load / Record",
+        "plot_info": "Cart / Load / Record",
         "equip_info": "Arm -> Phonostage -> ADC",
         "plot_style": 4,
         "plot_data_out": False,
@@ -621,12 +621,12 @@ if __name__ == "__main__":
 
     config = get_config()
 
-    INPUT_FILE_0 = config["input_file_0"]
-    INPUT_FILE_1 = config["input_file_1"]
+    INPUT_FILE_0 = config["file_0"]
+    INPUT_FILE_1 = config["file_1"]
     EXTRACT_SWEEPS = config["extract_sweeps"]
     SAVE_SWEEPS = config["save_sweeps"]
     TEST_RECORD = config["test_record"]
-    INFO_LINE = config["info_line"]
+    PLOT_INFO = config["plot_info"]
     EQUIP_INFO = config["equip_info"]
     PLOT_STYLE = config["plot_style"]
     PLOT_DATA_OUT = config["plot_data_out"]
@@ -1047,7 +1047,7 @@ if __name__ == "__main__":
 
     plt.autoscale(enable=True, axis='x')
 
-    axs[0].set_title(INFO_LINE + "\n", fontsize=16)
+    axs[0].set_title(PLOT_INFO + "\n", fontsize=16)
 
 
     now = datetime.now()
@@ -1061,7 +1061,7 @@ if __name__ == "__main__":
 
     plt.figtext(.125, 0, EQUIP_INFO, alpha=.75, fontsize=8)
      
-    plt.savefig(INFO_LINE.replace(' / ', '_') +'.png', bbox_inches='tight', pad_inches=.5, dpi=192)
+    plt.savefig(PLOT_INFO.replace(' / ', '_') +'.png', bbox_inches='tight', pad_inches=.5, dpi=192)
 
     plt.show()
 
