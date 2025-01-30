@@ -1,5 +1,5 @@
 # SJPlot
-18.3.7
+18.3.8
 
 ## Overview
 This python script was originally conceived by Scott Wurcer as a tool to accurately plot the frequency response of phono cartridges using the logarithmic sweep tracks found on common (and some not so common) test records.
@@ -51,9 +51,9 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 
 | **Parameter**       | **Default** | **Description**                                                   |
 |---------------------| :---: |-------------------------------------------------------------------|
-| input_file_0     | |The first (L) file to plot, or the only file to plot, or the file you want to extract sweeps from. |
-| input_file_1     | |The second (R) file to plot. If using one file, leave this blank. If you're extracting sweeps, this parameter is ignored. |
-| info_line        | |Alpha-numeric entries separated by " / ". The script will save a PNG file named from the plot_info argument, replacing " / " with "_". For example, "Cart / Load / Record" will create a file named "Cart_Load_Record.png". |
+| file_0           | |The first (L) file to plot, or the only file to plot, or the file you want to extract sweeps from. |
+| file_1           | |The second (R) file to plot. If using one file, leave this blank. If you're extracting sweeps, this parameter is ignored. |
+| plot_info        | |Alpha-numeric entries separated by " / ". The script will save a PNG file named from the plot_info argument, replacing " / " with "_". For example, "Cart / Load / Record" will create a file named "Cart_Load_Record.png". |
 | equip_info       | |This argument is placed on the bottom left of the plot image to describe the capture chain. The recommended format is "Arm -> Phonostage -> ADC". |
 | extract_sweeps   |`False`|`True`: extract the sweeps from **INPUT_FILE_0**<br>`False`: do not process the file for extraction of sweeps.<br> |
 | save_sweeps      |`False`|`True`: save the extracted sweeps<br>`False`: do not save files |
@@ -80,11 +80,11 @@ The configuration file is in INI format, and must be in the same directory the s
 
 ```ini
 [Files to Process]
-input_file_0 = 
-input_file_1 =
+file_0 = 
+file_1 =
 
 [Metadata]
-info_line = Cart / Load / Record
+plot_info = Cart / Load / Record
 equip_info = Arm -> Phonostage -> ADC
 
 [Sweep Extraction]
@@ -125,7 +125,7 @@ python sjplot.py
 
 To run the script from the command-line, using the default configuration file but with command line arguments to extract sweeps from a capture of an STR-100 test record:
 ```bash
-python sjplot.py --input_file_0 MyAudioFile.wav --extract_sweeps --test_record STR100
+python sjplot.py --file_0 MyAudioFile.wav --extract_sweeps --test_record STR100
 ```
 
 
@@ -136,7 +136,7 @@ python sjplot.py --config someotherconfig.cfg
 
 If the argument you're passing has spaces or special characters in it, you'll need to capture it in quotes:
 ```bash
-python sjplot.py --info_line "Some Cart / Some Load / STR-100"
+python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
 ```
 
 
