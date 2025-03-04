@@ -157,7 +157,7 @@ python sjplot.py --plot_info "Some Cart / Some Load / STR-100"
 | XG-7002         | `XG7002`      | Denon - Denon Audio Technical Test Record - Pick Up Test I (1kHz - 50kHz) |
 | XG-7005         | `XG7005`      | Denon - Denon Audio Technical Test Record - RIAA System Test (20Hz - 20kHz) |
 | DIN 45 543      |  `DIN45543`   | DIN - Frequenzgang - Und Übersprech-Mess-Schallplatte (20Hz - 20kHz) |
-
+| ИЗМ33С0327      |  `ИЗМ33С0327` | Пластинка для измерения частотных характеристик, разделения между стереоканалами и чувствительности стереозвукоснимателей | 
 
 ## Example Output
 
