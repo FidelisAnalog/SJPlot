@@ -1,5 +1,5 @@
 # SJPlot
-18.3.8
+18.3.9
 
 ## Overview
 This python script was originally conceived by Scott Wurcer as a tool to accurately plot the frequency response of phono cartridges using the logarithmic sweep tracks found on common (and some not so common) test records.
