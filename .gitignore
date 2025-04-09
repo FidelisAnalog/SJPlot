@@ -65,3 +65,7 @@ fp-info-cache
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# VS Code
+
+.code-workspace
