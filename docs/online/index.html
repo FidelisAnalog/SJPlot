@@ -224,8 +224,8 @@
         }
         .download-icon {
             position: absolute;
-            top: 30px;
-            right: 30px;
+            top: 5px;
+            right: 5px;
             padding: 6px 10px;
             background: rgba(255,255,255,0.9);
             color: #333;
@@ -348,15 +348,15 @@
             <div class="spinner"></div>
             <p><strong>Processing...</strong></p>
         </div>
-        <div id="output"></div>
-        
-        <button class="download-icon" id="downloadBtn" onclick="downloadPlot()" title="Download plot">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-        </button>
+        <div id="output" style="position: relative;">
+            <button class="download-icon" id="downloadBtn" onclick="downloadPlot()" title="Download plot">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+            </button>
+        </div>
         
         <div class="footer">
             <p><a href="https://github.com/FidelisAnalog/SJPlot">SJPlot</a> by JP Jones, conceived by Scott Wurcer</p>
