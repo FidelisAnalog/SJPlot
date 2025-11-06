@@ -719,7 +719,7 @@ window.pyProcessAudio = process_audio_if_ready
             
             // Get the plot info for filename, sanitize for filesystem
             let plotInfo = document.getElementById('plotInfo').value || 'SJPlot';
-            let filename = plotInfo.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').replace(/\s+/g, '_') + '.png';
+            let filename = plotInfo.replace(/ \/ /g, '_').replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') + '.png';
             
             // Create download link
             const link = document.createElement('a');
