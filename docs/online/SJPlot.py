@@ -1245,16 +1245,17 @@ def main():
         if cta_elem:
             cta_elem.classList.add('show')
         
-        # Position and show download button over the image
-        download_btn = window.document.getElementById('downloadBtn')
+        # Add download button to output div
         output_div = window.document.getElementById('output')
-        if download_btn and output_div:
-            # Get the position of the output div
-            rect = output_div.getBoundingClientRect()
-            download_btn.style.display = 'flex'
-            download_btn.style.position = 'fixed'
-            download_btn.style.top = f'{rect.top + 5}px'
-            download_btn.style.left = f'{rect.right - 40}px'
+        if output_div:
+            download_html = '''<button class="download-icon" id="downloadBtn" onclick="downloadPlot()" title="Download plot" style="position: absolute; top: 5px; right: 5px; padding: 6px 10px; background: rgba(255,255,255,0.9); color: #333; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; display: flex; align-items: center; transition: opacity 0.2s; z-index: 10;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+            </button>'''
+            output_div.innerHTML = output_div.innerHTML + download_html
         
         # Re-enable analyze button
         window.document.getElementById('analyzeBtn').disabled = False
