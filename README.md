@@ -1,6 +1,6 @@
 # SJPlot
 
-> 🌐 **Try it online instantly!** No installation required: [sjplot.com/online](https://sjplot.com/online)
+🌐 **Try it online instantly!** No installation required: [sjplot.com/online](https://sjplot.com/online)
 
 18.3.9
 
