@@ -75,6 +75,33 @@
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
         }
+        
+        /* Two-column layout for larger screens */
+        @media (min-width: 768px) {
+            .config-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            
+            /* Text inputs on left 50% */
+            .text-input-item {
+                flex: 0 0 calc(50% - 10px);
+                order: 1;
+            }
+            
+            /* Dropdowns on right 50% */
+            .dropdown-item {
+                flex: 0 0 calc(50% - 10px);
+                order: 2;
+            }
+            
+            /* Checkbox items span full width and go last */
+            .checkbox-item {
+                flex: 0 0 100%;
+                order: 3;
+            }
+        }
         .config-item { display: flex; flex-direction: column; }
         .config-item label {
             color: #333;
@@ -223,16 +250,17 @@
             display: none;
         }
         .download-icon {
-            position: absolute;
-            padding: 6px 10px;
-            background: rgba(255,255,255,0.9);
-            color: #333;
+            display: none;
+            margin: 10px auto;
+            padding: 10px 15px;
+            background: #007acc;
+            color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 1em;
-            display: none;
             align-items: center;
+            gap: 8px;
             transition: opacity 0.2s;
             z-index: 10;
             pointer-events: auto;
@@ -268,15 +296,15 @@
         <div class="config-section">
             <h3 style="margin-bottom: 20px;">⚙️ Configuration</h3>
             <div class="config-grid">
-                <div class="config-item">
+                <div class="config-item text-input-item">
                     <label>Plot Info</label>
                     <input type="text" id="plotInfo" placeholder="Cart / Load / Record" autocomplete="off" />
                 </div>
-                <div class="config-item">
+                <div class="config-item text-input-item">
                     <label>Equipment Info</label>
                     <input type="text" id="equipInfo" placeholder="Arm -> Phonostage -> ADC" />
                 </div>
-                <div class="config-item">
+                <div class="config-item dropdown-item">
                     <label>Test Record</label>
                     <select id="testRecord">
                         <option value="STR100" selected>STR 100</option>
@@ -292,14 +320,14 @@
                         <option value="DIN45543">DIN 45543</option>
                     </select>
                 </div>
-                <div class="config-item">
+                <div class="config-item dropdown-item">
                     <label>Recording Type</label>
                     <select id="recordingType">
                         <option value="withRIAA" selected>With RIAA</option>
                         <option value="withoutRIAA">Without RIAA</option>
                     </select>
                 </div>
-                <div class="config-item">
+                <div class="config-item dropdown-item">
                     <label>Plot Style</label>
                     <select id="plotStyle">
                         <option value="1">Style 1 - Single Plot</option>
@@ -309,7 +337,7 @@
                         <option value="5">Style 5 - Minimal</option>
                     </select>
                 </div>
-                <div class="config-item">
+                <div class="config-item dropdown-item">
                     <label>RIAA Mode (Auto)</label>
                     <select id="riaaMode" disabled>
                         <option value="0">None</option>
@@ -322,7 +350,7 @@
                     <input type="checkbox" id="riaaInverse" checked disabled />
                     <label>Inverse RIAA (Auto)</label>
                 </div>
-                <div class="config-item">
+                <div class="config-item text-input-item">
                     <label>Normalize (Hz)</label>
                     <input type="number" id="normalize" value="1000" />
                 </div>
