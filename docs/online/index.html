@@ -607,22 +607,22 @@ window.pyProcessAudio = process_audio_if_ready
         
         // Callback functions for Python to update UI
         function updateUIWithResults(html) {
+            console.log('updateUIWithResults called');
             document.getElementById('output').innerHTML = html;
             const statusEl = document.getElementById('status');
             statusEl.textContent = '✅ Complete!';
             statusEl.className = 'success';
             document.getElementById('loading').classList.remove('active');
             
-            // Show the contribute CTA after a brief delay
-            setTimeout(() => {
-                const ctaEl = document.getElementById('contributeCta');
-                if (ctaEl) {
-                    ctaEl.classList.add('show');
-                    console.log('CTA shown');
-                } else {
-                    console.error('CTA element not found');
-                }
-            }, 100);
+            // Show the contribute CTA
+            const ctaEl = document.getElementById('contributeCta');
+            console.log('Looking for CTA element:', ctaEl);
+            if (ctaEl) {
+                ctaEl.classList.add('show');
+                console.log('CTA show class added');
+            } else {
+                console.error('CTA element not found');
+            }
             
             updateAnalyzeButtonState();
         }
