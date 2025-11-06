@@ -762,6 +762,7 @@ window.pyProcessAudio = process_audio_if_ready
             const statusEl = document.getElementById('status');
             statusEl.className = '';
             statusEl.innerHTML = '';
+            document.getElementById('contributeCta').classList.remove('show');
             
             const fileName = file.name.toLowerCase();
             
