@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SJPlot Online</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2025.8.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 2.5em; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 1.1em; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+        .header-left {
+            flex: 1;
+        }
+        .header-logo {
+            height: 70px;
+            width: auto;
+            flex-shrink: 0;
+            margin-top: -10px;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        .upload-area.drag-over {
+            background-color: #e8ecff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .config-section {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .config-item { display: flex; flex-direction: column; }
+        .config-item label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        .config-item select, .config-item input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .config-item select:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .checkbox-item { display: flex; align-items: center; gap: 10px; }
+        .checkbox-item input[type="checkbox"] { width: 20px; height: 20px; }
+        .checkbox-item input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 50px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+        }
+        .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        #status.info { background: #e3f2fd; color: #1976d2; display: block; }
+        #status.processing { background: #fff3e0; color: #f57c00; display: block; }
+        #status.success { background: #e8f5e9; color: #388e3c; display: block; }
+        #status.error { background: #ffebee; color: #c62828; display: block; }
+        .file-info {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+            min-height: 68px; /* Fixed height: 15px (text line) + 10px (margin-top) + 8px (bar height) + padding */
+            box-sizing: border-box;
+        }
+        .file-info.ready {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 30%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            animation: progressMove 1.5s ease-in-out infinite;
+        }
+        @keyframes progressMove {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(350%); }
+            100% { transform: translateX(-100%); }
+        }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.active { display: block; }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #output { 
+            margin-top: 30px; 
+            text-align: center;
+        }
+        #output img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>SJPlot Online</h1>
+                <p class="subtitle">Phono Cartridge Frequency Response Analysis</p>
+            </div>
+            <img src="images/myhifi_lockup.svg" alt="MyHiFi" class="header-logo">
+        </div>
+        
+        <div class="upload-area">
+            <h3>📁 Upload Audio File</h3>
+            <input type="file" id="fileInput0" style="display:none" accept=".wav" />
+            <button class="upload-btn" onclick="document.getElementById('fileInput0').click()">
+                📄 Select WAV File
+            </button>
+            <div id="fileInfo" class="file-info" style="display: none;"></div>
+        </div>
+        
+        <div class="config-section">
+            <h3 style="margin-bottom: 20px;">⚙️ Configuration</h3>
+            <div class="config-grid">
+                <div class="config-item">
+                    <label>Plot Info</label>
+                    <input type="text" id="plotInfo" placeholder="Cart / Load / Record" />
+                </div>
+                <div class="config-item">
+                    <label>Equipment Info</label>
+                    <input type="text" id="equipInfo" placeholder="Arm -> Phonostage -> ADC" />
+                </div>
+                <div class="config-item">
+                    <label>Test Record</label>
+                    <select id="testRecord">
+                        <option value="STR100" selected>STR 100</option>
+                        <option value="TRS1007">TRS-1007</option>
+                        <option value="TRS1005">TRS-1005</option>
+                        <option value="STR120">STR 120</option>
+                        <option value="STR130">STR 130</option>
+                        <option value="QR2009">QR 2009</option>
+                        <option value="QR2010">QR 2010</option>
+                        <option value="XG7001">XG-7001</option>
+                        <option value="XG7002">XG-7002</option>
+                        <option value="XG7005">XG-7005</option>
+                        <option value="DIN45543">DIN 45543</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>Recording Type</label>
+                    <select id="recordingType">
+                        <option value="withRIAA" selected>With RIAA</option>
+                        <option value="withoutRIAA">Without RIAA</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>Plot Style</label>
+                    <select id="plotStyle">
+                        <option value="1">Style 1 - Single Plot</option>
+                        <option value="2">Style 2 - Dual Y-Axis</option>
+                        <option value="3">Style 3 - Stacked Plots</option>
+                        <option value="4" selected>Style 4 - Dual + Zoom</option>
+                        <option value="5">Style 5 - Minimal</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>RIAA Mode (Auto)</label>
+                    <select id="riaaMode" disabled>
+                        <option value="0">None</option>
+                        <option value="1">Bass Only</option>
+                        <option value="2">Treble Only</option>
+                        <option value="3" selected>Both</option>
+                    </select>
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="riaaInverse" checked disabled />
+                    <label>Inverse RIAA (Auto)</label>
+                </div>
+                <div class="config-item">
+                    <label>Normalize (Hz)</label>
+                    <input type="number" id="normalize" value="1000" />
+                </div>
+            </div>
+        </div>
+        
+        <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()" disabled>
+            ⏳ Loading PyScript...
+        </button>
+        
+        <div id="pyscriptStatus" style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9em;">
+            Initializing Python environment...
+        </div>
+        
+        <div id="status"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p><strong>Processing...</strong></p>
+        </div>
+        <div id="output"></div>
+        
+        <div class="footer">
+            <p><a href="https://github.com/FidelisAnalog/SJPlot">SJPlot</a> by JP Jones, conceived by Scott Wurcer</p>
+        </div>
+    </div>
+
+    <py-config>
+        packages = ["numpy", "scipy", "matplotlib"]
+        [files]
+            "./SJPlot.py" = "./SJPlot.py"
+
+
+    </py-config>
+
+    <py-script>
+import sys
+from js import console, window
+
+# Import SJPlot module
+import SJPlot
+
+def process_audio_if_ready():
+    try:
+        # Check if file data is available
+        if not hasattr(window, 'js_file0_data') or window.js_file0_data is None:
+            console.error("File 0 data is missing. Cannot process audio.")
+            window.updateUIWithError("No file data available")
+            return
+
+        # Call the main function from SJPlot module
+        SJPlot.main()
+    except Exception as e:
+        console.error(f"Error processing audio: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        console.error(error_details)
+        
+        # Update UI using existing function
+        error_msg = str(e) if str(e) else "An unknown error occurred"
+        window.updateUIWithError(error_msg, error_details)
+
+# Attach the function to the window object for manual invocation
+window.pyProcessAudio = process_audio_if_ready
+
+    </py-script>
+
+    <script>
+        let file0Data = null, file1Data = null;
+        let pyScriptReady = false;
+        
+        // LocalStorage helper functions
+        function savePreference(key, value) {
+            try {
+                localStorage.setItem('sjplot_' + key, value);
+                console.log(`Saved ${key}: ${value}`);
+            } catch (e) {
+                console.error('Error saving to localStorage:', e);
+            }
+        }
+        
+        function loadPreference(key, defaultValue = null) {
+            try {
+                const value = localStorage.getItem('sjplot_' + key);
+                return value !== null ? value : defaultValue;
+            } catch (e) {
+                console.error('Error loading from localStorage:', e);
+                return defaultValue;
+            }
+        }
+        
+        // Update file input accept attribute based on browser
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput0');
+            if (fileInput) {
+                fileInput.accept = '.wav';
+                console.log('File input accepts: .wav only');
+            }
+            
+            // Load saved preferences
+            const savedEquipInfo = loadPreference('equipInfo');
+            if (savedEquipInfo) {
+                document.getElementById('equipInfo').value = savedEquipInfo;
+            }
+            
+            const savedTestRecord = loadPreference('testRecord');
+            if (savedTestRecord) {
+                document.getElementById('testRecord').value = savedTestRecord;
+            }
+            
+            const savedRecordingType = loadPreference('recordingType');
+            if (savedRecordingType) {
+                document.getElementById('recordingType').value = savedRecordingType;
+                // Trigger change event to update RIAA settings
+                document.getElementById('recordingType').dispatchEvent(new Event('change'));
+            }
+            
+            const savedPlotStyle = loadPreference('plotStyle');
+            if (savedPlotStyle) {
+                document.getElementById('plotStyle').value = savedPlotStyle;
+            }
+            
+            const savedNormalize = loadPreference('normalize');
+            if (savedNormalize) {
+                document.getElementById('normalize').value = savedNormalize;
+            }
+            
+            console.log('Loaded saved preferences');
+        });
+        
+        // Save preferences when they change
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('equipInfo').addEventListener('input', function() {
+                savePreference('equipInfo', this.value);
+            });
+            
+            document.getElementById('testRecord').addEventListener('change', function() {
+                savePreference('testRecord', this.value);
+            });
+            
+            document.getElementById('recordingType').addEventListener('change', function() {
+                savePreference('recordingType', this.value);
+            });
+            
+            document.getElementById('plotStyle').addEventListener('change', function() {
+                savePreference('plotStyle', this.value);
+            });
+            
+            document.getElementById('normalize').addEventListener('change', function() {
+                savePreference('normalize', this.value);
+            });
+        });
+        
+        // Test network connectivity to PyScript CDN
+        function testPyScriptCDN() {
+            fetch('https://pyscript.net/releases/2024.8.2/core.js', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('PyScript CDN is reachable');
+                        document.getElementById('pyscriptStatus').textContent = 'PyScript loading, please wait...';
+                    } else {
+                        console.error('PyScript CDN returned error:', response.status);
+                        document.getElementById('pyscriptStatus').innerHTML = `
+                            PyScript CDN error: ${response.status}<br>
+                            <a href="javascript:location.reload()">Try refreshing the page</a>
+                        `;
+                        document.getElementById('pyscriptStatus').style.color = 'red';
+                    }
+                })
+                .catch(error => {
+                    console.error('Cannot reach PyScript CDN:', error);
+                    document.getElementById('pyscriptStatus').innerHTML = `
+                        Cannot reach PyScript CDN. Check your internet connection.<br>
+                        <a href="javascript:location.reload()">Try refreshing the page</a>
+                    `;
+                    document.getElementById('pyscriptStatus').style.color = 'red';
+                });
+        }
+        
+        // Test CDN connectivity first
+        testPyScriptCDN();
+        
+        // Listen for PyScript events properly
+        document.addEventListener('py:ready', function() {
+            console.log('py:ready event fired - PyScript is ready!');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+            // Stop any ongoing polling
+            pollCount = 999; 
+        });
+        
+        document.addEventListener('py:all-done', function() {
+            console.log('py:all-done event fired - PyScript is ready!');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+            // Stop any ongoing polling
+            pollCount = 999;
+        });
+        
+        // Also listen for other possible events
+        document.addEventListener('pyscript:ready', function() {
+            console.log('pyscript:ready event fired');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, starting PyScript checks...');
+        });
+        
+        // More aggressive polling approach with detailed logging
+        let pollCount = 0;
+        function pollForPyScript() {
+            // If events already fired, stop polling
+            if (pyScriptReady) {
+                console.log('PyScript already ready, stopping poll');
+                return;
+            }
+            
+            pollCount++;
+            console.log(`Poll ${pollCount}: Checking PyScript status...`);
+            console.log('window.pyscript exists:', !!window.pyscript);
+            
+            // Check for newer PyScript API
+            if (window.pyscript) {
+                console.log('window.pyscript keys:', Object.keys(window.pyscript));
+                // In newer versions, just having pyscript object means it's ready
+                console.log('PyScript object found - assuming ready!');
+                pyScriptReady = true;
+                updateAnalyzeButtonState();
+                return;
+            }
+            
+            // Check for Pyodide directly
+            if (window.pyodide && window.pyodide.runPython) {
+                console.log('Pyodide runPython available - PyScript is ready!');
+                pyScriptReady = true;
+                updateAnalyzeButtonState();
+                return;
+            }
+            
+            if (pollCount < 15) { // Reduced to 15 seconds since events should fire
+                setTimeout(pollForPyScript, 1000);
+            } else {
+                console.error('PyScript polling timed out, but events may have fired');
+                if (!pyScriptReady) {
+                    document.getElementById('pyscriptStatus').innerHTML = `
+                        PyScript polling timed out, but it may still be working.<br>
+                        <a href="javascript:forcePyScriptReady()">Force Ready (recommended)</a> or 
+                        <a href="javascript:location.reload()">Refresh page</a>
+                    `;
+                    document.getElementById('pyscriptStatus').style.color = 'orange';
+                }
+            }
+        }
+        
+        // Also try the window load event as a fallback
+        window.addEventListener('load', function() {
+            console.log('Window loaded, starting PyScript polling in 3 seconds...');
+            setTimeout(pollForPyScript, 3000); // Start polling after 3 seconds
+        });
+        
+        // Add a manual override for testing
+        window.forcePyScriptReady = function() {
+            console.log('Forcing PyScript ready state...');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+            document.getElementById('pyscriptStatus').style.display = 'none';
+            console.log('PyScript manually marked as ready');
+        };
+        
+        // Also add a debug function
+        window.debugPyScript = function() {
+            console.log('=== PyScript Debug Info ===');
+            console.log('pyScriptReady:', pyScriptReady);
+            console.log('window.pyscript:', window.pyscript);
+            console.log('window.pyodide:', window.pyodide);
+            if (window.pyscript) {
+                console.log('pyscript keys:', Object.keys(window.pyscript));
+            }
+            console.log('========================');
+        };
+        
+        function updateAnalyzeButtonState() {
+            const btn = document.getElementById('analyzeBtn');
+            const statusDiv = document.getElementById('pyscriptStatus');
+            
+            if (file0Data && pyScriptReady) {
+                btn.disabled = false;
+                btn.textContent = '🔬 Analyze Audio';
+                statusDiv.style.display = 'none';
+            } else if (!pyScriptReady) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Loading PyScript...';
+                statusDiv.style.display = 'block';
+                statusDiv.style.color = '#666';
+            } else {
+                btn.disabled = true;
+                btn.textContent = '🔬 Analyze Audio';
+                statusDiv.textContent = 'Upload a WAV file to begin';
+                statusDiv.style.display = 'block';
+                statusDiv.style.color = '#666';
+            }
+        }
+        
+        // Callback functions for Python to update UI
+        function updateUIWithResults(html) {
+            document.getElementById('output').innerHTML = html;
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = '✅ Complete!';
+            statusEl.className = 'success';
+            document.getElementById('loading').classList.remove('active');
+            updateAnalyzeButtonState();
+        }
+        
+        function updateUIWithError(errorMessage, traceback = null) {
+            // Clear the output div
+            document.getElementById('output').innerHTML = '';
+            
+            // Build status message with optional traceback
+            const statusEl = document.getElementById('status');
+            let statusHtml = `❌ ${errorMessage}`;
+            
+            if (traceback) {
+                // Escape traceback for safe HTML insertion
+                const escapedTraceback = traceback.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                
+                statusHtml += `
+                    <br><br>
+                    <details style="margin-top:10px; text-align:center;">
+                        <summary style="cursor:pointer; font-weight:bold; color:#c00; list-style:revert;">Show Technical Details</summary>
+                        <div style="position:relative; text-align:left; margin-top:10px;">
+                            <button onclick="
+                                const pre = this.nextElementSibling;
+                                const text = pre.textContent;
+                                navigator.clipboard.writeText(text).then(() => {
+                                    this.style.opacity = '0.6';
+                                    setTimeout(() => this.style.opacity = '1', 200);
+                                }).catch(err => console.error('Copy failed:', err));
+                            " 
+                                    style="position:absolute; top:5px; right:5px; padding:6px 10px; background:rgba(255,255,255,0.9); color:#333; border:none; border-radius:4px; cursor:pointer; font-size:0.85em; display:flex; align-items:center; transition:opacity 0.2s;" 
+                                    title="Copy to clipboard">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                                </svg>
+                            </button>
+                            <pre style="margin:0; padding:10px 10px 10px 10px; font-size:0.85em; overflow:auto; background:#fff; border-radius:4px; border:1px solid #ddd; color:#333; text-align:left;">${escapedTraceback}</pre>
+                        </div>
+                    </details>
+                `;
+            }
+            
+            statusEl.innerHTML = statusHtml;
+            statusEl.className = 'error';
+            document.getElementById('loading').classList.remove('active');
+            updateAnalyzeButtonState();
+        }
+        
+        // Make functions globally available for Python to call
+        window.updateAnalyzeButtonState = updateAnalyzeButtonState;
+        window.updateUIWithResults = updateUIWithResults;
+        window.updateUIWithError = updateUIWithError;
+        
+        // Function for Python to update progress status (works across worker boundary)
+        window.updateProgressStatus = function(statusText) {
+            const element = document.getElementById('progressStatus');
+            if (element) {
+                element.innerHTML = statusText;
+            }
+        };
+        
+        // Test Record RIAA Settings Mapping
+        const testRecordRIAASettings = {
+            'STR100':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
+            'TRS1007':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
+            'TRS1005':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
+            'STR120':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
+            'STR130':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false} },
+            'QR2009':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
+            'QR2010':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
+            'XG7001':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
+            'XG7002':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
+            'XG7005':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false} },
+            'DIN45543':  { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} }
+        };
+        
+        // Function to update RIAA settings based on test record and recording type
+        function updateRIAASettings() {
+            const testRecord = document.getElementById('testRecord').value;
+            const recordingType = document.getElementById('recordingType').value;
+            const settings = testRecordRIAASettings[testRecord][recordingType];
+            
+            document.getElementById('riaaMode').value = settings.mode;
+            document.getElementById('riaaInverse').checked = settings.inverse;
+        }
+        
+        // Initialize UI event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up file input and drag-and-drop handlers...');
+            
+            // Initialize RIAA settings on page load
+            updateRIAASettings();
+            
+            document.getElementById('fileInput0').addEventListener('change', e => handleFile(e.target.files[0], 0));
+            
+            // Handle Test Record dropdown to auto-update RIAA settings
+            document.getElementById('testRecord').addEventListener('change', updateRIAASettings);
+            
+            // Handle Recording Type dropdown to auto-update RIAA settings
+            document.getElementById('recordingType').addEventListener('change', updateRIAASettings);
+            
+            // Drag and drop functionality
+            const uploadArea = document.querySelector('.upload-area');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+            
+            uploadArea.addEventListener('dragleave', (e) => {
+                // Only remove if we're leaving the upload area itself, not a child element
+                if (e.target === uploadArea) {
+                    uploadArea.classList.remove('drag-over');
+                }
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFile(file, 0);
+                }
+            });
+            
+            console.log('File input and drag-and-drop handlers ready!');
+        });
+        
+        function handleFile(file, index) {
+            if (!file) {
+                alert('No file selected');
+                return;
+            }
+            
+            // Clear previous output and status when new file is selected
+            document.getElementById('output').innerHTML = '';
+            const statusEl = document.getElementById('status');
+            statusEl.className = '';
+            statusEl.innerHTML = '';
+            
+            const fileName = file.name.toLowerCase();
+            
+            // Only accept WAV files
+            if (!fileName.endsWith('.wav')) {
+                alert('Only WAV files are supported.\n\nFor measurement accuracy, this tool requires uncompressed WAV audio files.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fileInfoDiv = document.getElementById('fileInfo');
+                try {
+                    // Direct WAV file - use as is
+                    const wavBytes = new Uint8Array(e.target.result);
+                    console.log(`Loaded WAV file: ${file.name} (${wavBytes.length} bytes)`);
+                    
+                    if (index === 0) file0Data = {name: file.name, bytes: wavBytes};
+                    
+                    fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
+                    fileInfoDiv.className = 'file-info ready';
+                    fileInfoDiv.style.display = 'block';
+                    updateAnalyzeButtonState();
+                } catch (error) {
+                    fileInfoDiv.style.display = 'none';
+                    console.error('File processing error:', error);
+                    alert(error.message || 'Error processing WAV file');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function startAnalysis() {
+            if (!file0Data) { alert('Upload a file first'); return; }
+            
+            // Check if PyScript is ready
+            if (!pyScriptReady) {
+                alert('PyScript is still loading. Please wait a moment and try again.');
+                return;
+            }
+            
+            // Check if Python function is available
+            if (!window.pyProcessAudio) {
+                alert('Python environment not ready. Please wait a moment and try again.');
+                return;
+            }
+            
+            // Hide previous status banner and show loading
+            const statusEl = document.getElementById('status');
+            statusEl.className = '';
+            statusEl.textContent = '';
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('analyzeBtn').disabled = true;
+            
+            // Clear previous output
+            document.getElementById('output').innerHTML = '';
+            
+            // Force UI update before starting Python processing
+            setTimeout(() => {
+                const config = {
+                    plot_info: document.getElementById('plotInfo').value || "Cart / Load / Record",
+                    equip_info: document.getElementById('equipInfo').value || "Arm -> Phonostage -> ADC",
+                    plot_style: parseInt(document.getElementById('plotStyle').value),
+                    riaa_mode: parseInt(document.getElementById('riaaMode').value),
+                    riaa_inverse: document.getElementById('riaaInverse').checked ? 1 : 0,
+                    normalize: parseInt(document.getElementById('normalize').value),
+                    extract_sweeps: 1, // Always enabled
+                    test_record: document.getElementById('testRecord').value
+                };
+                
+                try {
+                    console.log('Calling Python function directly...');
+                    
+                    // Set global JS variables that Python can access
+                    window.js_file0_data = file0Data.bytes;
+                    window.js_file1_data = null; // Always null since we removed File 1 input
+                    window.js_config = config;
+                    
+                    // Call the Python function asynchronously to allow UI updates
+                    window.pyProcessAudio();
+                    
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    document.getElementById('status').textContent = '❌ Error: ' + error.message;
+                    document.getElementById('status').className = 'error';
+                    document.getElementById('loading').classList.remove('active');
+                    updateAnalyzeButtonState();
+                }
+            }, 100);  // Allow UI to render loading state first
+        }
+    </script>
+</body>
+</html>
