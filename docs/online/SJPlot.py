@@ -1226,7 +1226,7 @@ def main():
         import base64
 
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=192, pad_inches=.5)
+        plt.savefig(buf, format='png', dpi=192, bbox_inches='tight',pad_inches=.5)
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode()
         buf.close()
@@ -1248,106 +1248,6 @@ def main():
         plt.show()
 
     logger.info(f"Done!")
-
-'''
-def process_audio_web():
-    try:
-        # Retrieve file data from JavaScript variables
-        from js import window, console
-        import io
-        import base64
-        import numpy as np
-        from scipy.io.wavfile import read
-        import matplotlib.pyplot as plt
-
-        start_time = time.time()
-
-        # Convert JsProxy to bytes
-        file0_bytes = bytes(window.js_file0_data.to_py())
-        file1_bytes = bytes(window.js_file1_data.to_py()) if window.js_file1_data is not None else None
-
-        # Debugging: Log the received data
-        console.log("Processing file0_bytes:", len(file0_bytes))
-        if file1_bytes is not None:
-            console.log("Processing file1_bytes:", len(file1_bytes))
-
-        # Convert file0_bytes to audio data
-        with io.BytesIO(file0_bytes) as wav_io:
-            Fs, audio0 = read(wav_io)
-
-        # Convert file1_bytes to audio data if it exists
-        if file1_bytes is not None:
-            with io.BytesIO(file1_bytes) as wav_io:
-                Fs1, audio1 = read(wav_io)
-        else:
-            audio1 = None  # Handle the absence of the second file
-
-        # Ensure audio data is in NumPy array format
-        audio0 = np.array(audio0)
-        if audio1 is not None:
-            audio1 = np.array(audio1)
-
-        # Debugging: Log the audio data shapes
-        console.log("Audio0 shape:", audio0.shape)
-        if audio1 is not None:
-            console.log("Audio1 shape:", audio1.shape)
-
-        # Measure time for audio processing
-        processing_start = time.time()
-
-        # Process audio and generate plots
-        # ...existing processing logic...
-
-        processing_end = time.time()
-        console.log("Audio processing time:", processing_end - processing_start)
-
-        # Convert plot to base64 for web output
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        img_data = base64.b64encode(buf.read()).decode()
-
-        # Update the web interface with results
-        window.document.getElementById('output').innerHTML = f'<img src="data:image/png;base64,{img_data}" />'
-
-        end_time = time.time()
-        console.log("Total processing time:", end_time - start_time)
-
-    except Exception as e:
-        console.error(f"Error processing audio: {e}")
-
-def handle_file_input(file_data, environment):
-    """
-    Handle file input based on the environment.
-    - In standalone mode, file_data is a file path.
-    - In web mode, file_data is a byte stream.
-    """
-    import io
-    from scipy.io.wavfile import read
-
-    if environment == 'web':
-        with io.BytesIO(file_data) as wav_io:
-            Fs, audio = read(wav_io)
-    else:  # Standalone mode
-        Fs, audio = read(file_data)
-
-    return Fs, audio
-
-def convert_plot_to_base64(fig):
-    """
-    Convert a matplotlib figure to a base64-encoded string.
-    """
-    import io
-    import base64
-
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png', dpi=192, bbox_inches='tight')
-    buf.seek(0)
-    img_data = base64.b64encode(buf.read()).decode()
-    buf.close()
-
-    return img_data
-'''
 
 
 if __name__ == "__main__":
