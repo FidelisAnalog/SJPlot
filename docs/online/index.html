@@ -723,7 +723,7 @@ window.pyProcessAudio = process_audio_if_ready
             
             // Convert data URL to blob for better browser compatibility
             const dataURL = img.src;
-            console.log('Data URL type:', dataURL.substring(0, 50));
+            let blobURL;
             
             try {
                 const byteString = atob(dataURL.split(',')[1]);
@@ -734,8 +734,7 @@ window.pyProcessAudio = process_audio_if_ready
                     ia[i] = byteString.charCodeAt(i);
                 }
                 const blob = new Blob([ab], { type: mimeString });
-                const blobURL = URL.createObjectURL(blob);
-                console.log('Blob URL created:', blobURL);
+                blobURL = URL.createObjectURL(blob);
             } catch (error) {
                 console.error('Blob conversion failed:', error);
                 // Fallback to original method
