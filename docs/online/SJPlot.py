@@ -1247,10 +1247,17 @@ def main():
         
 
         
-        # Show download button
+        # Position and show download button over the image
         download_btn = window.document.getElementById('downloadBtn')
-        if download_btn:
-            download_btn.style.display = 'flex'
+        output_div = window.document.getElementById('output')
+        if download_btn and output_div:
+            img = output_div.querySelector('img')
+            if img:
+                img_rect = img.getBoundingClientRect()
+                output_rect = output_div.getBoundingClientRect()
+                download_btn.style.display = 'flex'
+                download_btn.style.top = f'{output_rect.top + 5}px'
+                download_btn.style.left = f'{output_rect.right - 45}px'
         
         # Re-enable analyze button
         window.document.getElementById('analyzeBtn').disabled = False
