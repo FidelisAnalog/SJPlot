@@ -205,6 +205,9 @@
             font-size: 0.95em;
             display: none;
         }
+        .contribute-cta.show {
+            display: block;
+        }
         .contribute-cta a {
             color: #667eea;
             text-decoration: none;
@@ -609,7 +612,18 @@ window.pyProcessAudio = process_audio_if_ready
             statusEl.textContent = '✅ Complete!';
             statusEl.className = 'success';
             document.getElementById('loading').classList.remove('active');
-            document.getElementById('contributeCta').style.display = 'block';
+            
+            // Show the contribute CTA after a brief delay
+            setTimeout(() => {
+                const ctaEl = document.getElementById('contributeCta');
+                if (ctaEl) {
+                    ctaEl.classList.add('show');
+                    console.log('CTA shown');
+                } else {
+                    console.error('CTA element not found');
+                }
+            }, 100);
+            
             updateAnalyzeButtonState();
         }
         
@@ -799,7 +813,7 @@ window.pyProcessAudio = process_audio_if_ready
             const statusEl = document.getElementById('status');
             statusEl.className = '';
             statusEl.textContent = '';
-            document.getElementById('contributeCta').style.display = 'none';
+            document.getElementById('contributeCta').classList.remove('show');
             document.getElementById('loading').classList.add('active');
             document.getElementById('analyzeBtn').disabled = true;
             
