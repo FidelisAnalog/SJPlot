@@ -216,6 +216,12 @@
         .contribute-cta a:hover {
             text-decoration: underline;
         }
+        /* Hide advanced controls for now */
+        .config-item:has(#riaaMode),
+        .config-item:has(#riaaInverse), 
+        .config-item:has(#normalize) {
+            display: none;
+        }
     </style>
 </head>
 <body>
