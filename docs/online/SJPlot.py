@@ -1245,9 +1245,16 @@ def main():
         if cta_elem:
             cta_elem.classList.add('show')
         
+        # Position and show download button over the image
         download_btn = window.document.getElementById('downloadBtn')
-        if download_btn:
+        output_div = window.document.getElementById('output')
+        if download_btn and output_div:
+            # Get the position of the output div
+            rect = output_div.getBoundingClientRect()
             download_btn.style.display = 'flex'
+            download_btn.style.position = 'fixed'
+            download_btn.style.top = f'{rect.top + 5}px'
+            download_btn.style.left = f'{rect.right - 40}px'
         
         # Re-enable analyze button
         window.document.getElementById('analyzeBtn').disabled = False
