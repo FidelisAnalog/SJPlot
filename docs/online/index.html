@@ -721,13 +721,43 @@ window.pyProcessAudio = process_audio_if_ready
             let plotInfo = document.getElementById('plotInfo').value || 'SJPlot';
             let filename = plotInfo.replace(/ \/ /g, '_').replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') + '.png';
             
-            // Create download link
+            // Convert data URL to blob for better browser compatibility
+            const dataURL = img.src;
+            console.log('Data URL type:', dataURL.substring(0, 50));
+            
+            try {
+                const byteString = atob(dataURL.split(',')[1]);
+                const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                const blob = new Blob([ab], { type: mimeString });
+                const blobURL = URL.createObjectURL(blob);
+                console.log('Blob URL created:', blobURL);
+            } catch (error) {
+                console.error('Blob conversion failed:', error);
+                // Fallback to original method
+                const link = document.createElement('a');
+                link.href = dataURL;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+            }
+            
+            // Create download link with blob URL
             const link = document.createElement('a');
-            link.href = img.src;
+            link.href = blobURL;
             link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            
+            // Clean up the blob URL
+            URL.revokeObjectURL(blobURL);
         }
         
         // Make functions globally available for Python to call
