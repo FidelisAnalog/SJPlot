@@ -1240,6 +1240,11 @@ def main():
         status_elem.textContent = '✅ Analysis Complete!'
         status_elem.className = 'success'
         
+        # Show the contribute CTA
+        cta_elem = window.document.getElementById('contributeCta')
+        if cta_elem:
+            cta_elem.classList.add('show')
+        
         # Re-enable analyze button
         window.document.getElementById('analyzeBtn').disabled = False
 
