@@ -222,6 +222,29 @@
         .config-item:has(#normalize) {
             display: none;
         }
+        .download-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        .download-btn svg {
+            width: 18px;
+            height: 18px;
+        }
     </style>
 </head>
 <body>
@@ -326,6 +349,13 @@
             <p><strong>Processing...</strong></p>
         </div>
         <div id="output"></div>
+        
+        <button class="download-btn" id="downloadBtn" onclick="downloadPlot()">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 15.5l-5-5h3V4h4v6.5h3l-5 5zM5 18v2h14v-2H5z"/>
+            </svg>
+            Download Plot
+        </button>
         
         <div class="footer">
             <p><a href="https://github.com/FidelisAnalog/SJPlot">SJPlot</a> by JP Jones, conceived by Scott Wurcer</p>
@@ -677,6 +707,29 @@ window.pyProcessAudio = process_audio_if_ready
             updateAnalyzeButtonState();
         }
         
+        // Function to download the plot image
+        function downloadPlot() {
+            const outputDiv = document.getElementById('output');
+            const img = outputDiv.querySelector('img');
+            
+            if (!img) {
+                alert('No plot available to download');
+                return;
+            }
+            
+            // Get the plot info for filename, sanitize for filesystem
+            let plotInfo = document.getElementById('plotInfo').value || 'SJPlot';
+            let filename = plotInfo.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').replace(/\s+/g, '_') + '.png';
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
         // Make functions globally available for Python to call
         window.updateAnalyzeButtonState = updateAnalyzeButtonState;
         window.updateUIWithResults = updateUIWithResults;
@@ -769,6 +822,7 @@ window.pyProcessAudio = process_audio_if_ready
             statusEl.className = '';
             statusEl.innerHTML = '';
             document.getElementById('contributeCta').classList.remove('show');
+            document.getElementById('downloadBtn').style.display = 'none';
             
             const fileName = file.name.toLowerCase();
             
@@ -821,6 +875,7 @@ window.pyProcessAudio = process_audio_if_ready
             statusEl.className = '';
             statusEl.textContent = '';
             document.getElementById('contributeCta').classList.remove('show');
+            document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('loading').classList.add('active');
             document.getElementById('analyzeBtn').disabled = true;
             

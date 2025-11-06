@@ -1240,10 +1240,14 @@ def main():
         status_elem.textContent = '✅ Analysis Complete!'
         status_elem.className = 'success'
         
-        # Show the contribute CTA
+        # Show the contribute CTA and download button
         cta_elem = window.document.getElementById('contributeCta')
         if cta_elem:
             cta_elem.classList.add('show')
+        
+        download_btn = window.document.getElementById('downloadBtn')
+        if download_btn:
+            download_btn.style.display = 'flex'
         
         # Re-enable analyze button
         window.document.getElementById('analyzeBtn').disabled = False
