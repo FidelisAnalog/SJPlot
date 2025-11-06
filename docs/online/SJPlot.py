@@ -1257,7 +1257,7 @@ def main():
                 output_rect = output_div.getBoundingClientRect()
                 download_btn.style.display = 'flex'
                 download_btn.style.top = f'{output_rect.top + 5}px'
-                download_btn.style.left = f'{output_rect.right - 45}px'
+                download_btn.style.left = f'{output_rect.right - 75}px'
         
         # Re-enable analyze button
         window.document.getElementById('analyzeBtn').disabled = False
