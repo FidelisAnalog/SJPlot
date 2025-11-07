@@ -640,13 +640,19 @@ window.pyProcessAudio = process_audio_if_ready
                 setTimeout(pollForPyScript, 1000);
             } else {
                 console.error('PyScript polling timed out, but events may have fired');
-                if (!pyScriptReady) {
-                    document.getElementById('pyscriptStatus').innerHTML = `
-                        PyScript polling timed out, but it may still be working.<br>
-                        <a href="javascript:forcePyScriptReady()">Force Ready (recommended)</a> or 
-                        <a href="javascript:location.reload()">Refresh page</a>
-                    `;
-                    document.getElementById('pyscriptStatus').style.color = 'orange';
+                document.getElementById('pyscriptStatus').innerHTML = `
+                    PyScript polling timed out, but it may still be working.<br>
+                    <a href="javascript:forcePyScriptReady()">Force Ready (recommended)</a> or 
+                    <a href="javascript:location.reload()">Refresh page</a>
+                `;
+                document.getElementById('pyscriptStatus').style.color = 'orange';
+                
+                // Google Analytics event: PyScript error (timeout)
+                if (typeof gtag === 'function') {
+                    gtag('event', 'pyscript_error', {
+                        'event_category': 'Error',
+                        'event_label': 'PyScript polling timed out'
+                    });
                 }
             }
         }
