@@ -802,6 +802,14 @@ window.pyProcessAudio = process_audio_if_ready
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            
+            // Google Analytics event: plot download
+            if (typeof gtag === 'function') {
+                gtag('event', 'plot_download', {
+                    'event_category': 'Download',
+                    'event_label': filename
+                });
+            }
         }
         
         // Make functions globally available for Python to call
