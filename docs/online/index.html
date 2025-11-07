@@ -866,6 +866,42 @@ window.pyProcessAudio = process_audio_if_ready
                 }
             });
             
+            const testRecordSelect = document.getElementById('testRecord');
+            if (testRecordSelect) {
+                testRecordSelect.addEventListener('change', function() {
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'test_record_selected', {
+                            'event_category': 'Config',
+                            'event_label': this.value
+                        });
+                    }
+                });
+            }
+
+            const plotStyleSelect = document.getElementById('plotStyle');
+            if (plotStyleSelect) {
+                plotStyleSelect.addEventListener('change', function() {
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'plot_style_selected', {
+                            'event_category': 'Config',
+                            'event_label': this.value
+                        });
+                    }
+                });
+            }
+
+            const recordingTypeSelect = document.getElementById('recordingType');
+            if (recordingTypeSelect) {
+                recordingTypeSelect.addEventListener('change', function() {
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'recording_type_selected', {
+                            'event_category': 'Config',
+                            'event_label': this.value
+                        });
+                    }
+                });
+            }
+            
             console.log('File input and drag-and-drop handlers ready!');
         });
         
@@ -927,6 +963,14 @@ window.pyProcessAudio = process_audio_if_ready
             if (!window.pyProcessAudio) {
                 alert('Python environment not ready. Please wait a moment and try again.');
                 return;
+            }
+            
+            // Google Analytics event: Analyze Audio button clicked
+            if (typeof gtag === 'function') {
+                gtag('event', 'analyze_audio_click', {
+                  'event_category': 'Interaction',
+                  'event_label': 'Analyze Audio Button'
+                });
             }
             
             // Hide previous status banner and show loading
