@@ -658,7 +658,7 @@ def slice_audio(signal, Fs, test_record):
     record_params = {
         'TRS1007': {'sweep_offset': 74, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
         'TRS1005': {'sweep_offset': 32, 'sweep_end_min': 26, 'sweep_end_max': 34, 'sweep_start_detect': 1},
-        'STR100': {'sweep_offset': 74, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
+        'STR100': {'sweep_offset': 74, 'sweep_end_min': 64, 'sweep_end_max': 66, 'sweep_start_detect': 0},
         'STR120': {'sweep_offset': 58, 'sweep_end_min': 45, 'sweep_end_max': 50, 'sweep_start_detect': 0},
         'STR130': {'sweep_offset': 82, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
         'STR170': {'sweep_offset': 75, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
