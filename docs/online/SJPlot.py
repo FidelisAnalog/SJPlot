@@ -305,22 +305,12 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
         bins = np.arange(minf, maxf + fstep, fstep)  # Define bin edges
         indices = np.digitize(f, bins) - 1  # Find the bin index for each frequency
         f_out, a_out = [], []
-
-        '''
-        for i, bin_center in enumerate(bins):
-            mask = (indices == i)  # Select frequencies that fall into the current bin
-            if np.any(mask):  # Check if any values are in the bin
-                avg_amp = np.mean(a[mask])  # Compute the average amplitude
-                f_out.append(bin_center)
-                a_out.append(20 * np.log10(avg_amp))
-        '''
         
         for i, bin_center in enumerate(bins):
             mask = (indices == i)
             if np.any(mask):
                 f_out.append(bin_center)
                 a_out.append(20 * np.log10(np.mean(a[mask])))
-
 
         return f_out, a_out
 
@@ -374,28 +364,22 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
 
 
     def process_chunk(signal, Fs, fmin, fmax, step, offset):
-            chunk_start = time.time()
             f, a, fx, ax, f2, a2, f3, a3 = rfft(signal, Fs, fmin, fmax, step)
-            #console.log(f"    rfft_full({fmin}-{fmax}Hz) took: {time.time() - chunk_start:.3f}s")
             
-            interp_start = time.time()
             f, a = interpolate(f, a, fmin, fmax, step)
             fx, ax = interpolate(fx, ax, fmin, fmax, step)
             f2, a2 = interpolate(f2, a2, fmin, fmax, step)
             f3, a3 = interpolate(f3, a3, fmin, fmax, step)
-            #console.log(f"    interpolation took: {time.time() - interp_start:.3f}s")
             
             offset_start = time.time()
             a = [amp - offset for amp in a]
             ax = [amp - offset for amp in ax] if ax else []
             a2 = [amp - offset for amp in a2]
             a3 = [amp - offset for amp in a3]
-            #console.log(f"    offset calculation took: {time.time() - offset_start:.3f}s")
             return f, a, fx, ax, f2, a2, f3, a3
         
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
     
-    #console.log("  Processing frequency chunks...")
     for fmin, fmax, step, offset in [(20,45,5,26.03), (50,90,10,19.995), (100,980,20,13.99), (1000,20000,100,0)]:
         console.log(f"  Processing chunk {fmin}-{fmax}Hz...")
         f, a, fx, ax, f2, a2, f3, a3 = process_chunk(signal, Fs, fmin, fmax, step, offset)
@@ -416,7 +400,6 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
     elif file0norm == 1:
         i = find_nearest(fout, normalize)
         norm[0] = aout[i]
-    #aout, aoutx, aout2, aout3 = [amp - norm[0] for amp in (aout, aoutx, aout2, aout3)]
  
     aout = [a - norm[0] for a in aout]
     aoutx = [a - norm[0] for a in aoutx] if aoutx else []
