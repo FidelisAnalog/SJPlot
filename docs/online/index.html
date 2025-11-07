@@ -763,6 +763,15 @@ window.pyProcessAudio = process_audio_if_ready
             statusEl.innerHTML = statusHtml;
             statusEl.className = 'error';
             document.getElementById('loading').classList.remove('active');
+            
+            // Google Analytics event: script error
+            if (typeof gtag === 'function') {
+                gtag('event', 'script_error', {
+                    'event_category': 'Error',
+                    'event_label': errorMessage
+                });
+            }
+            
             updateAnalyzeButtonState();
         }
         
@@ -1035,5 +1044,33 @@ window.pyProcessAudio = process_audio_if_ready
         // Make the function globally available for Python to call
         window.updateUIWithPlotImage = updateUIWithPlotImage;
     </script>
+    <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Track CTA link click
+                const ctaLink = document.querySelector('.contribute-cta a');
+                if (ctaLink) {
+                    ctaLink.addEventListener('click', function() {
+                        if (typeof gtag === 'function') {
+                            gtag('event', 'cta_library_click', {
+                                'event_category': 'Link',
+                                'event_label': 'ASR Phono Cartridge Library'
+                            });
+                        }
+                    });
+                }
+                // Track help link click
+                const helpLink = document.querySelector('.footer a[href*="phono-cartridge-response-measurement-script"]');
+                if (helpLink) {
+                    helpLink.addEventListener('click', function() {
+                        if (typeof gtag === 'function') {
+                            gtag('event', 'help_link_click', {
+                                'event_category': 'Link',
+                                'event_label': 'ASR Help Thread'
+                            });
+                        }
+                    });
+                }
+            });
+        </script>
 </body>
 </html>
