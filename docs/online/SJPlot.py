@@ -1205,6 +1205,9 @@ def main():
         import io
         import base64
 
+        plt.figtext(.17, .118, "sjplot.com/online" + "\n" + "SJPlot v" + __version__  + "\n" + \
+            now.strftime("%b %d, %Y %H:%M"), fontsize=6)
+
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=192, bbox_inches='tight', pad_inches=.5)
         buf.seek(0)
