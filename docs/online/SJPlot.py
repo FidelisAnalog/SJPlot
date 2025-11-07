@@ -125,6 +125,7 @@ def get_config():
     parser.add_argument("--test_record", type=str, help="Test record for extracting sweeps.")
     parser.add_argument("--plot_info", type=str, help="See README for more information.", metavar ="")
     parser.add_argument("--equip_info", type=str, help="See README for more information.", metavar ="")
+    parser.add_argument("--author", type=str, help="See README for more information.", metavar ="")
     parser.add_argument("--plot_style", type=int, choices=[1, 2, 3, 4, 5], help="The plot style to output.")
     parser.add_argument("--plot_data_out", default=None, action="store_true", help="Output plot data.")
     parser.add_argument("--round_level", type=int, help="{integer} Rounding level.", metavar ="")
@@ -162,6 +163,7 @@ def get_config():
         "test_record": "",
         "plot_info": "Cart / Load / Record",
         "equip_info": "Arm -> Phonostage -> ADC",
+        "author": "",
         "plot_style": 4,
         "plot_data_out": False,
         "round_level": 1,
@@ -735,6 +737,7 @@ def main():
     TEST_RECORD = config["test_record"]
     PLOT_INFO = config["plot_info"]
     EQUIP_INFO = config["equip_info"]
+    AUTHOR = config["author"]
     PLOT_STYLE = config["plot_style"]
     PLOT_DATA_OUT = config["plot_data_out"]
     ROUND_LEVEL = config["round_level"]
@@ -1190,16 +1193,9 @@ def main():
 
     now = datetime.now()
 
-    '''
-    if INPUT_FILE_1:
-        plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
-            now.strftime("%b %d, %Y %H:%M"), fontsize=6)
-    else:
-        plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + \
-            now.strftime("%b %d, %Y %H:%M"), fontsize=6)
-    '''
+    plt.figtext(.125, 0, EQUIP_INFO, alpha=.75, fontsize=10, ha='left')
+    plt.figtext(.9, 0, AUTHOR, alpha=.75, fontsize=10, ha='right')
 
-    plt.figtext(.125, 0, EQUIP_INFO, alpha=.75, fontsize=8)
 
     if environment == 'web':
         import io
@@ -1221,6 +1217,14 @@ def main():
         return img_data
 
     else:
+
+        if INPUT_FILE_1:
+            plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
+                now.strftime("%b %d, %Y %H:%M"), fontsize=6)
+        else:
+            plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + \
+                now.strftime("%b %d, %Y %H:%M"), fontsize=6)
+
         plt.savefig(PLOT_INFO.replace(' / ', '_') + '.png', bbox_inches='tight', pad_inches=.5, dpi=192)
         plt.show()
 

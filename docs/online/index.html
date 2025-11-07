@@ -354,6 +354,10 @@
                     <label>Normalize (Hz)</label>
                     <input type="number" id="normalize" value="1000" />
                 </div>
+                <div class="config-item text-input-item" style="order: 999;">
+                    <label>Author</label>
+                    <input type="text" id="author" placeholder="Author Name" autocomplete="off"/>
+                </div>
             </div>
         </div>
         
@@ -368,7 +372,7 @@
         <div id="status"></div>
         
         <div id="contributeCta" class="contribute-cta">
-            📚 Help build the community! Consider <a href="https://www.audiosciencereview.com/forum/index.php?threads/introducing-the-phono-cartridge-measurement-library.46108/" target="_blank">contributing your measurements to the Phono Cartridge Library at ASR</a>
+            📚 Help build the community! Consider <a href="https://www.audiosciencereview.com/forum/index.php?threads/introducing-the-phono-cartridge-measurement-library.46108/post-1643772" target="_blank">contributing your measurements to the Phono Cartridge Library at ASR</a>
         </div>
         
         <div class="loading" id="loading">
@@ -491,6 +495,12 @@ window.pyProcessAudio = process_audio_if_ready
                 document.getElementById('normalize').value = savedNormalize;
             }
             
+            // Load saved author from localStorage
+            const savedAuthor = localStorage.getItem('author');
+            if (savedAuthor) {
+                document.getElementById('author').value = savedAuthor;
+            }
+            
             console.log('Loaded saved preferences');
         });
         
@@ -514,6 +524,13 @@ window.pyProcessAudio = process_audio_if_ready
             
             document.getElementById('normalize').addEventListener('change', function() {
                 savePreference('normalize', this.value);
+            });
+            
+            const authorInput = document.getElementById('author');
+
+            // Save author to localStorage on input change
+            authorInput.addEventListener('input', function() {
+                localStorage.setItem('author', authorInput.value);
             });
         });
         
@@ -920,7 +937,8 @@ window.pyProcessAudio = process_audio_if_ready
                     riaa_inverse: document.getElementById('riaaInverse').checked ? 1 : 0,
                     normalize: parseInt(document.getElementById('normalize').value),
                     extract_sweeps: 1, // Always enabled
-                    test_record: document.getElementById('testRecord').value
+                    test_record: document.getElementById('testRecord').value,
+                    author: document.getElementById('author').value
                 };
                 
                 try {
