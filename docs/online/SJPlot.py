@@ -1221,45 +1221,23 @@ def main():
     plt.figtext(.125, 0, EQUIP_INFO, alpha=.75, fontsize=8)
 
     if environment == 'web':
-        from js import window
         import io
         import base64
 
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=192, bbox_inches='tight',pad_inches=.5)
+        plt.savefig(buf, format='png', dpi=192, bbox_inches='tight', pad_inches=.5)
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode()
         buf.close()
 
-        # Update the web interface with results
-        window.document.getElementById('output').innerHTML = f'<img src="data:image/png;base64,{img_data}" />'
-        
-        # Clear loading spinner and update status
-        window.document.getElementById('loading').classList.remove('active')
-        status_elem = window.document.getElementById('status')
-        status_elem.textContent = '✅ Analysis Complete!'
-        status_elem.className = 'success'
-        
-        # Show the contribute CTA and download button
-        cta_elem = window.document.getElementById('contributeCta')
-        if cta_elem:
-            cta_elem.classList.add('show')
-        
+        # Call the JavaScript function to update the UI
+        from js import window
+        window.updateUIWithPlotImage(img_data)
 
-        
-        # Position and show download button over the image
-        download_btn = window.document.getElementById('downloadBtn')
-        output_div = window.document.getElementById('output')
-        if download_btn and output_div:
-            img = output_div.querySelector('img')
-            if img:
-                download_btn.style.display = 'flex'
-        
-        # Re-enable analyze button
-        window.document.getElementById('analyzeBtn').disabled = False
+        return img_data
 
     else:
-        plt.savefig(PLOT_INFO.replace(' / ', '_') +'.png', bbox_inches='tight', pad_inches=.5, dpi=192)
+        plt.savefig(PLOT_INFO.replace(' / ', '_') + '.png', bbox_inches='tight', pad_inches=.5, dpi=192)
         plt.show()
 
     logger.info(f"Done!")

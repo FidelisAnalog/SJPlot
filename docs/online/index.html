@@ -943,6 +943,44 @@ window.pyProcessAudio = process_audio_if_ready
                 }
             }, 100);  // Allow UI to render loading state first
         }
+        
+        function updateUIWithPlotImage(imgData) {
+            // Update the output div with the plot image
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `<img src="data:image/png;base64,${imgData}" />`;
+
+            // Show the contribute CTA
+            const ctaElem = document.getElementById('contributeCta');
+            if (ctaElem) {
+                ctaElem.classList.add('show');
+            }
+
+            // Show the download button
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.style.display = 'flex';
+            }
+
+            // Update the status div
+            const statusElem = document.getElementById('status');
+            statusElem.textContent = '✅ Analysis Complete!';
+            statusElem.className = 'success';
+
+            // Hide the processing spinner
+            const loadingElem = document.getElementById('loading');
+            if (loadingElem) {
+                loadingElem.classList.remove('active');
+            }
+
+            // Re-enable the analyze button
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            if (analyzeBtn) {
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        // Make the function globally available for Python to call
+        window.updateUIWithPlotImage = updateUIWithPlotImage;
     </script>
 </body>
 </html>
