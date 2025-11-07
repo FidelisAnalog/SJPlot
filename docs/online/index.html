@@ -971,6 +971,19 @@ window.pyProcessAudio = process_audio_if_ready
                   'event_category': 'Interaction',
                   'event_label': 'Analyze Audio Button'
                 });
+                // Also fire events for current config values
+                gtag('event', 'test_record_used', {
+                  'event_category': 'Config',
+                  'event_label': document.getElementById('testRecord').value
+                });
+                gtag('event', 'plot_style_used', {
+                  'event_category': 'Config',
+                  'event_label': document.getElementById('plotStyle').value
+                });
+                gtag('event', 'recording_type_used', {
+                  'event_category': 'Config',
+                  'event_label': document.getElementById('recordingType').value
+                });
             }
             
             // Hide previous status banner and show loading
