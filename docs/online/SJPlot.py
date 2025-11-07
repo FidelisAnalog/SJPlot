@@ -265,7 +265,7 @@ class AnyObjectHandler(HandlerBase):
                            color=orig_handle[2], linestyle=orig_handle[3])
         return [l1, l2]
  
-
+'''
 def ft_window(n):       #Matlab's flat top window
     w = []
     a0 = 0.21557895
@@ -278,12 +278,18 @@ def ft_window(n):       #Matlab's flat top window
     for x in range(0,n):
         w.append(a0 - a1*np.cos(2*pi*x/(n-1)) + a2*np.cos(4*pi*x/(n-1)) - a3*np.cos(6*pi*x/(n-1)) + a4*np.cos(8*pi*x/(n-1)))
     return w
+'''
+
+def ft_window(n):
+    a0, a1, a2, a3, a4 = 0.21557895, 0.41663158, 0.277263158, 0.083578947, 0.006947368
+    x = np.arange(n)
+    w = (a0 - a1*np.cos(2*np.pi*x/(n-1)) + a2*np.cos(4*np.pi*x/(n-1)) - 
+         a3*np.cos(6*np.pi*x/(n-1)) + a4*np.cos(8*np.pi*x/(n-1)))
+    return w
 
 
 def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
+    return (np.abs(np.asarray(array) - value)).argmin()
 
 
 def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20000, str100=0, file0norm=0, normalize=1000):
@@ -294,20 +300,28 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
 
     def interpolate(f, a, minf, maxf, fstep):
         # Ensure inputs are NumPy arrays
-        f = np.array(f)
-        a = np.array(a)
+        f, a = np.array(f), np.array(a)
 
         bins = np.arange(minf, maxf + fstep, fstep)  # Define bin edges
         indices = np.digitize(f, bins) - 1  # Find the bin index for each frequency
         f_out, a_out = [], []
 
+        '''
         for i, bin_center in enumerate(bins):
             mask = (indices == i)  # Select frequencies that fall into the current bin
             if np.any(mask):  # Check if any values are in the bin
                 avg_amp = np.mean(a[mask])  # Compute the average amplitude
                 f_out.append(bin_center)
                 a_out.append(20 * np.log10(avg_amp))
+        '''
         
+        for i, bin_center in enumerate(bins):
+            mask = (indices == i)
+            if np.any(mask):
+                f_out.append(bin_center)
+                a_out.append(20 * np.log10(np.mean(a[mask])))
+
+
         return f_out, a_out
 
  
@@ -359,55 +373,34 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
         return a
 
 
-    def chunk(signal, Fs, fmin, fmax, step, offset):
-        # Perform FFT analysis
-        f, a, fx, ax, f2, a2, f3, a3 = rfft(signal, Fs, fmin, fmax, step)
-
-        # Interpolate frequencies and amplitudes
-        f, a = interpolate(f, a, fmin, fmax, step)
-        fx, ax = interpolate(fx, ax, fmin, fmax, step)
-        f2, a2 = interpolate(f2, a2, fmin, fmax, step)
-        f3, a3 = interpolate(f3, a3, fmin, fmax, step)
-
-        # Normalize amplitudes in a single line
-        a, ax, a2, a3 = [
-            [amp_val - offset for amp_val in amp_list]
-            for amp_list in (a, ax, a2, a3)
-        ]
-
-        return f, a, fx, ax, f2, a2, f3, a3
- 
-
-    def concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3):
-        # Use list.extend for efficiency and clarity
-        fout.extend(f)
-        aout.extend(a)
-        foutx.extend(fx)
-        aoutx.extend(ax)
-        fout2.extend(f2)
-        aout2.extend(a2)
-        fout3.extend(f3)
-        aout3.extend(a3)
-
-        return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
-
-    # Helper function to handle chunking and concatenation
-    def process_chunk(signal, Fs, fmin, fmax, step, offset, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3):
-        f, a, fx, ax, f2, a2, f3, a3 = chunk(signal, Fs, fmin, fmax, step, offset)
-        return concat(f, a, fx, ax, f2, a2, f3, a3, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
-
-
-    # Initialize output variables
+    def process_chunk(signal, Fs, fmin, fmax, step, offset):
+            chunk_start = time.time()
+            f, a, fx, ax, f2, a2, f3, a3 = rfft(signal, Fs, fmin, fmax, step)
+            #console.log(f"    rfft_full({fmin}-{fmax}Hz) took: {time.time() - chunk_start:.3f}s")
+            
+            interp_start = time.time()
+            f, a = interpolate(f, a, fmin, fmax, step)
+            fx, ax = interpolate(fx, ax, fmin, fmax, step)
+            f2, a2 = interpolate(f2, a2, fmin, fmax, step)
+            f3, a3 = interpolate(f3, a3, fmin, fmax, step)
+            #console.log(f"    interpolation took: {time.time() - interp_start:.3f}s")
+            
+            offset_start = time.time()
+            a = [amp - offset for amp in a]
+            ax = [amp - offset for amp in ax] if ax else []
+            a2 = [amp - offset for amp in a2]
+            a3 = [amp - offset for amp in a3]
+            #console.log(f"    offset calculation took: {time.time() - offset_start:.3f}s")
+            return f, a, fx, ax, f2, a2, f3, a3
+        
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
-
-    # Process frequency chunks
-    if onekfstart == 0:
-        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 20, 45, 5, 26.03, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
-        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 50, 90, 10, 19.995, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
-        fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 100, 980, 20, 13.99, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
-
-    fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = process_chunk(signal, Fs, 1000, end_f, 100, 0, fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3)
-
+    
+    #console.log("  Processing frequency chunks...")
+    for fmin, fmax, step, offset in [(20,45,5,26.03), (50,90,10,19.995), (100,980,20,13.99), (1000,20000,100,0)]:
+        console.log(f"  Processing chunk {fmin}-{fmax}Hz...")
+        f, a, fx, ax, f2, a2, f3, a3 = process_chunk(signal, Fs, fmin, fmax, step, offset)
+        fout.extend(f); aout.extend(a); foutx.extend(fx); aoutx.extend(ax)
+        fout2.extend(f2); aout2.extend(a2); fout3.extend(f3); aout3.extend(a3)
 
 
     if str100 == 1:
@@ -423,14 +416,19 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
     elif file0norm == 1:
         i = find_nearest(fout, normalize)
         norm[0] = aout[i]
-    aout, aoutx, aout2, aout3 = [amp - norm[0] for amp in (aout, aoutx, aout2, aout3)]
+    #aout, aoutx, aout2, aout3 = [amp - norm[0] for amp in (aout, aoutx, aout2, aout3)]
  
+    aout = [a - norm[0] for a in aout]
+    aoutx = [a - norm[0] for a in aoutx] if aoutx else []
+    aout2 = [a - norm[0] for a in aout2]
+    aout3 = [a - norm[0] for a in aout3]
+
     # Apply low-pass filter
     sos = iirfilter(3, 0.5, btype='lowpass', output='sos')  # Low-pass filter
     aout = sosfiltfilt(sos, aout)
     aout2 = sosfiltfilt(sos, aout2)
     aout3 = sosfiltfilt(sos, aout3)
-    if aoutx.size > 0:
+    if len(aoutx) > 0:
         aoutx = sosfiltfilt(sos, aoutx)
 
     iteration[0]+=1
