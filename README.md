@@ -2,7 +2,7 @@
 
 🌐 **Try it online instantly!** No installation required: [sjplot.com/online](https://sjplot.com/online)
 
-18.3.9
+18.4.1
 
 ## Overview
 This python script was originally conceived by Scott Wurcer as a tool to accurately plot the frequency response of phono cartridges using the logarithmic sweep tracks found on common (and some not so common) test records.
@@ -58,6 +58,7 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | file_1           | |The second (R) file to plot. If using one file, leave this blank. If you're extracting sweeps, this parameter is ignored. |
 | plot_info        | |Alpha-numeric entries separated by " / ". The script will save a PNG file named from the plot_info argument, replacing " / " with "_". For example, "Cart / Load / Record" will create a file named "Cart_Load_Record.png". |
 | equip_info       | |This argument is placed on the bottom left of the plot image to describe the capture chain. The recommended format is "Arm -> Phonostage -> ADC". |
+| author           | |This argument is placed on the bottom right of the plot image. Use this field to desingate the author of the plot. |
 | extract_sweeps   |`False`|`True`: extract the sweeps from **INPUT_FILE_0**<br>`False`: do not process the file for extraction of sweeps.<br> |
 | save_sweeps      |`False`|`True`: save the extracted sweeps<br>`False`: do not save files |
 | test_record      | |If extracting sweeps, specify what test record the audio was captured from. [Supported records can be found here](https://github.com/FidelisAnalog/SJPlot/tree/Splitter?tab=readme-ov-file#supported-test-records-for-sweep-extraction). |
@@ -89,6 +90,7 @@ file_1 =
 [Metadata]
 plot_info = Cart / Load / Record
 equip_info = Arm -> Phonostage -> ADC
+author = Plot Author
 
 [Sweep Extraction]
 extract_sweeps = false
