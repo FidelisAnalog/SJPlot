@@ -31,7 +31,7 @@ import io
 import base64
 
 
-__version__ = "18.4.1"
+__version__ = "18.4.0"
 
 
 # Try to import js module for web environment
