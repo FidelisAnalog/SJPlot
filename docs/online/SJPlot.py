@@ -29,8 +29,6 @@ import argparse
 import configparser
 import io
 import base64
-from js import document, console
-import time
 
 
 __version__ = "18.4.0"
@@ -267,20 +265,6 @@ class AnyObjectHandler(HandlerBase):
                            color=orig_handle[2], linestyle=orig_handle[3])
         return [l1, l2]
  
-'''
-def ft_window(n):       #Matlab's flat top window
-    w = []
-    a0 = 0.21557895
-    a1 = 0.41663158
-    a2 = 0.277263158
-    a3 = 0.083578947
-    a4 = 0.006947368
-    pi = np.pi
-
-    for x in range(0,n):
-        w.append(a0 - a1*np.cos(2*pi*x/(n-1)) + a2*np.cos(4*pi*x/(n-1)) - a3*np.cos(6*pi*x/(n-1)) + a4*np.cos(8*pi*x/(n-1)))
-    return w
-'''
 
 def ft_window(n):
     a0, a1, a2, a3, a4 = 0.21557895, 0.41663158, 0.277263158, 0.083578947, 0.006947368
@@ -294,11 +278,11 @@ def find_nearest(array, value):
     return (np.abs(np.asarray(array) - value)).argmin()
 
 
-def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20000, str100=0, file0norm=0, normalize=1000):
-    if iteration is None:
-        iteration = [0]
-    if norm is None:
-        norm = [0]
+def createplotdata(signal, Fs, iteration=[0], norm=[0], onekfstart=0, end_f=20000, str100=0, file0norm=0, normalize=1000):
+    #if iteration is None:
+    #    iteration = [0]
+    #if norm is None:
+    #    norm = [0]
 
     def interpolate(f, a, minf, maxf, fstep):
         # Ensure inputs are NumPy arrays
@@ -373,7 +357,6 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
             f2, a2 = interpolate(f2, a2, fmin, fmax, step)
             f3, a3 = interpolate(f3, a3, fmin, fmax, step)
             
-            offset_start = time.time()
             a = [amp - offset for amp in a]
             ax = [amp - offset for amp in ax] if ax else []
             a2 = [amp - offset for amp in a2]
@@ -383,7 +366,6 @@ def createplotdata(signal, Fs, iteration=None, norm=None, onekfstart=0, end_f=20
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
     
     for fmin, fmax, step, offset in [(20,45,5,26.03), (50,90,10,19.995), (100,980,20,13.99), (1000,20000,100,0)]:
-        console.log(f"  Processing chunk {fmin}-{fmax}Hz...")
         f, a, fx, ax, f2, a2, f3, a3 = process_chunk(signal, Fs, fmin, fmax, step, offset)
         fout.extend(f); aout.extend(a); foutx.extend(fx); aoutx.extend(ax)
         fout2.extend(f2); aout2.extend(a2); fout3.extend(f3); aout3.extend(a3)
@@ -728,6 +710,9 @@ def main():
     Main entry point for SJPlot analysis.
     Can be called from standalone mode or web environment.
     """
+
+    createplotdata.__defaults__ = ([0], [0], 0, 20000, 0, 0, 1000)
+
     config = get_config()
 
     INPUT_FILE_0 = config["file_0"]
