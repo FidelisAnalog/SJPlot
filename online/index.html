@@ -1034,7 +1034,12 @@ window.pyProcessAudio = process_audio_if_ready
                     const wavBytes = new Uint8Array(e.target.result);
                     console.log(`Loaded WAV file: ${file.name} (${wavBytes.length} bytes)`);
                     
-                    if (index === 0) file0Data = {name: file.name, bytes: wavBytes};
+                    if (index === 0) {
+                        file0Data = {name: file.name, bytes: wavBytes};
+                        // Reset URL flag since this is a manual upload
+                        fileLoadedViaUrl = false;
+                        console.log('File loaded manually, reset fileLoadedViaUrl flag');
+                    }
                     
                     fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
                     fileInfoDiv.className = 'file-info ready';
