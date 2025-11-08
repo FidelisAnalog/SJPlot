@@ -1060,24 +1060,18 @@ window.pyProcessAudio = process_audio_if_ready
                 
                 console.log(`Original URL: ${fileUrl}`);
                 
-                // Handle Dropbox URLs (both old and new formats)
-                // Use raw=1 instead of dl=1 for direct file access with better CORS support
-                if (fileUrl.includes('dropbox.com')) {
-                    // Old format: replace dl=0 with raw=1
-                    if (fileUrl.includes('dl=0')) {
-                        fileUrl = fileUrl.replace('dl=0', 'raw=1');
-                        console.log('Converted old Dropbox URL (dl=0 to raw=1):', fileUrl);
-                    }
-                    // Old format: replace dl=1 with raw=1  
-                    else if (fileUrl.includes('dl=1')) {
-                        fileUrl = fileUrl.replace('dl=1', 'raw=1');
-                        console.log('Converted Dropbox URL (dl=1 to raw=1):', fileUrl);
-                    }
-                    // New format: append &raw=1 if not already present
-                    else if (!fileUrl.includes('raw=1')) {
-                        fileUrl = fileUrl + '&raw=1';
-                        console.log('Added raw=1 to new Dropbox URL:', fileUrl);
-                    }
+                // Handle Dropbox URLs - convert to dl.dropboxusercontent.com for direct access with CORS support
+                if (fileUrl.includes('dropbox.com/')) {
+                    // Replace www.dropbox.com with dl.dropboxusercontent.com
+                    fileUrl = fileUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+                    fileUrl = fileUrl.replace('dropbox.com', 'dl.dropboxusercontent.com');
+                    
+                    // Remove dl=0 or dl=1 parameters as they're not needed for dropboxusercontent.com
+                    fileUrl = fileUrl.replace(/[&?]dl=0/, '');
+                    fileUrl = fileUrl.replace(/[&?]dl=1/, '');
+                    fileUrl = fileUrl.replace(/[&?]raw=1/, '');
+                    
+                    console.log('Converted Dropbox URL to direct CDN:', fileUrl);
                 }
                 
                 console.log(`Fetching file from URL: ${fileUrl}`);
@@ -1143,7 +1137,7 @@ window.pyProcessAudio = process_audio_if_ready
                     errorDetails = 'For security reasons, only HTTPS URLs can be loaded. Please use an HTTPS URL or upload the file directly.';
                 } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('CORS')) {
                     errorMessage = 'Unable to load file from URL';
-                    errorDetails = 'This could be due to:\n\n• Cross-origin restrictions (CORS) - server must allow requests\n• Invalid or expired HTTPS certificate\n• Network connectivity issues\n• File not found or moved\n\nFor Dropbox: Links are automatically converted to use raw=1 for direct access\nFor Google Drive: May not work due to CORS restrictions\n\nOtherwise, please upload the file directly.';
+                    errorDetails = 'This could be due to:\n\n• Cross-origin restrictions (CORS) - server must allow requests\n• Invalid or expired HTTPS certificate\n• Network connectivity issues\n• File not found or moved\n\nFor Dropbox: Links are automatically converted to dl.dropboxusercontent.com\nFor Google Drive: May not work due to CORS restrictions\n\nOtherwise, please upload the file directly.';
                 }
                 
                 fileInfoDiv.innerHTML = `❌ ${errorMessage}`;
