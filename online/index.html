@@ -599,7 +599,17 @@ window.pyProcessAudio = process_audio_if_ready
             
             // Check for ?file= URL parameter
             const urlParams = new URLSearchParams(window.location.search);
-            const fileUrl = urlParams.get('file');
+            let fileUrl = urlParams.get('file');
+            
+            // If there's a separate 'dl' parameter, it was likely meant for the Dropbox URL
+            // This happens when users paste unencoded URLs like: ?file=https://dropbox.com/...?rlkey=...&dl=1
+            // The browser splits it into file=... and dl=1 as separate parameters
+            const dlParam = urlParams.get('dl');
+            if (fileUrl && dlParam && fileUrl.includes('dropbox.com')) {
+                fileUrl = fileUrl + '&dl=' + dlParam;
+                console.log('Reconstructed Dropbox URL with dl parameter:', fileUrl);
+            }
+            
             if (fileUrl) {
                 console.log('File URL parameter detected:', fileUrl);
                 loadFileFromUrl(fileUrl);
@@ -1047,10 +1057,18 @@ window.pyProcessAudio = process_audio_if_ready
                 
                 console.log(`Original URL: ${fileUrl}`);
                 
-                // Auto-convert Dropbox share links to direct download links
-                if (fileUrl.includes('dropbox.com') && fileUrl.includes('dl=0')) {
-                    fileUrl = fileUrl.replace('dl=0', 'dl=1');
-                    console.log(`Converted Dropbox URL to direct download: ${fileUrl}`);
+                // Handle Dropbox URLs (both old and new formats)
+                if (fileUrl.includes('dropbox.com')) {
+                    // Old format: replace dl=0 with dl=1
+                    if (fileUrl.includes('dl=0')) {
+                        fileUrl = fileUrl.replace('dl=0', 'dl=1');
+                        console.log('Converted old Dropbox URL (dl=0 to dl=1):', fileUrl);
+                    }
+                    // New format: append &dl=1 if not already present
+                    else if (!fileUrl.includes('dl=1') && !fileUrl.includes('dl=')) {
+                        fileUrl = fileUrl + '&dl=1';
+                        console.log('Added dl=1 to new Dropbox URL:', fileUrl);
+                    }
                 }
                 
                 console.log(`Fetching file from URL: ${fileUrl}`);
