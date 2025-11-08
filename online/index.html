@@ -604,8 +604,11 @@ window.pyProcessAudio = process_audio_if_ready
             // If there's a separate 'dl' parameter, it was likely meant for the Dropbox URL
             // This happens when users paste unencoded URLs like: ?file=https://dropbox.com/...?rlkey=...&dl=1
             // The browser splits it into file=... and dl=1 as separate parameters
+            // We'll convert dl to raw for better CORS support
             const dlParam = urlParams.get('dl');
-            if (fileUrl && dlParam && fileUrl.includes('dropbox.com')) {
+            if (fileUrl && dlParam !== null && fileUrl.includes('dropbox.com')) {
+                // Don't append the dl parameter - let the Dropbox conversion logic handle it
+                // by converting to raw=1 instead
                 fileUrl = fileUrl + '&dl=' + dlParam;
                 console.log('Reconstructed Dropbox URL with dl parameter:', fileUrl);
             }
@@ -1058,16 +1061,22 @@ window.pyProcessAudio = process_audio_if_ready
                 console.log(`Original URL: ${fileUrl}`);
                 
                 // Handle Dropbox URLs (both old and new formats)
+                // Use raw=1 instead of dl=1 for direct file access with better CORS support
                 if (fileUrl.includes('dropbox.com')) {
-                    // Old format: replace dl=0 with dl=1
+                    // Old format: replace dl=0 with raw=1
                     if (fileUrl.includes('dl=0')) {
-                        fileUrl = fileUrl.replace('dl=0', 'dl=1');
-                        console.log('Converted old Dropbox URL (dl=0 to dl=1):', fileUrl);
+                        fileUrl = fileUrl.replace('dl=0', 'raw=1');
+                        console.log('Converted old Dropbox URL (dl=0 to raw=1):', fileUrl);
                     }
-                    // New format: append &dl=1 if not already present
-                    else if (!fileUrl.includes('dl=1') && !fileUrl.includes('dl=')) {
-                        fileUrl = fileUrl + '&dl=1';
-                        console.log('Added dl=1 to new Dropbox URL:', fileUrl);
+                    // Old format: replace dl=1 with raw=1  
+                    else if (fileUrl.includes('dl=1')) {
+                        fileUrl = fileUrl.replace('dl=1', 'raw=1');
+                        console.log('Converted Dropbox URL (dl=1 to raw=1):', fileUrl);
+                    }
+                    // New format: append &raw=1 if not already present
+                    else if (!fileUrl.includes('raw=1')) {
+                        fileUrl = fileUrl + '&raw=1';
+                        console.log('Added raw=1 to new Dropbox URL:', fileUrl);
                     }
                 }
                 
@@ -1134,7 +1143,7 @@ window.pyProcessAudio = process_audio_if_ready
                     errorDetails = 'For security reasons, only HTTPS URLs can be loaded. Please use an HTTPS URL or upload the file directly.';
                 } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('CORS')) {
                     errorMessage = 'Unable to load file from URL';
-                    errorDetails = 'This could be due to:\n\n• Cross-origin restrictions (CORS) - server must allow requests\n• Invalid or expired HTTPS certificate\n• Network connectivity issues\n• File not found or moved\n\nFor Dropbox: Use links with dl=1 parameter\nFor Google Drive: May not work due to CORS restrictions\n\nOtherwise, please upload the file directly.';
+                    errorDetails = 'This could be due to:\n\n• Cross-origin restrictions (CORS) - server must allow requests\n• Invalid or expired HTTPS certificate\n• Network connectivity issues\n• File not found or moved\n\nFor Dropbox: Links are automatically converted to use raw=1 for direct access\nFor Google Drive: May not work due to CORS restrictions\n\nOtherwise, please upload the file directly.';
                 }
                 
                 fileInfoDiv.innerHTML = `❌ ${errorMessage}`;
