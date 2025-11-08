@@ -8,7 +8,7 @@ the same directory that this script is run from.
 
 You can also pass the configuration via the command line: "python sjplot.py --help" for syntax.
 
-Details in the README here: https://github.com/FidelisAnalog/SJPlot/tree/Splitter
+Details in the README here: https://sjplot.com
 '''
 
 
