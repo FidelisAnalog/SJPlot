@@ -530,6 +530,7 @@ window.pyProcessAudio = process_audio_if_ready
         import { renderWaveform } from './waveform.js';
         
         let file0Data = null, file1Data = null;
+        let fileLoadedViaUrl = false;
         let pyScriptReady = false;
         
         // LocalStorage helper functions
@@ -595,6 +596,14 @@ window.pyProcessAudio = process_audio_if_ready
             }
             
             console.log('Loaded saved preferences');
+            
+            // Check for ?file= URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileUrl = urlParams.get('file');
+            if (fileUrl) {
+                console.log('File URL parameter detected:', fileUrl);
+                loadFileFromUrl(fileUrl);
+            }
         });
         
         // Save preferences when they change
@@ -1027,6 +1036,96 @@ window.pyProcessAudio = process_audio_if_ready
             reader.readAsArrayBuffer(file);
         }
         
+        async function loadFileFromUrl(fileUrl) {
+            const fileInfoDiv = document.getElementById('fileInfo');
+            
+            try {
+                // Show loading status
+                fileInfoDiv.innerHTML = `⏳ Loading file from URL...`;
+                fileInfoDiv.className = 'file-info';
+                fileInfoDiv.style.display = 'block';
+                
+                console.log(`Original URL: ${fileUrl}`);
+                
+                // Auto-convert Dropbox share links to direct download links
+                if (fileUrl.includes('dropbox.com') && fileUrl.includes('dl=0')) {
+                    fileUrl = fileUrl.replace('dl=0', 'dl=1');
+                    console.log(`Converted Dropbox URL to direct download: ${fileUrl}`);
+                }
+                
+                console.log(`Fetching file from URL: ${fileUrl}`);
+                
+                // Fetch the file
+                const response = await fetch(fileUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
+                }
+                
+                // Get the filename from URL or Content-Disposition header
+                let fileName = 'audio.wav';
+                const contentDisposition = response.headers.get('Content-Disposition');
+                if (contentDisposition) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+                    if (matches && matches[1]) {
+                        fileName = matches[1].replace(/['"]/g, '');
+                    }
+                } else {
+                    // Try to extract filename from URL
+                    const urlPath = new URL(fileUrl).pathname;
+                    const urlFileName = urlPath.split('/').pop();
+                    if (urlFileName && urlFileName.includes('.')) {
+                        fileName = urlFileName;
+                    }
+                }
+                
+                // Verify it's a WAV file
+                if (!fileName.toLowerCase().endsWith('.wav')) {
+                    throw new Error('Only WAV files are supported.\n\nFor measurement accuracy, this tool requires uncompressed WAV audio files.');
+                }
+                
+                // Get the file data
+                const arrayBuffer = await response.arrayBuffer();
+                const wavBytes = new Uint8Array(arrayBuffer);
+                
+                console.log(`Loaded WAV file from URL: ${fileName} (${wavBytes.length} bytes)`);
+                
+                // Store the file data
+                file0Data = {name: fileName, bytes: wavBytes};
+                fileLoadedViaUrl = true;
+                
+                // Update UI
+                fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
+                fileInfoDiv.className = 'file-info ready';
+                fileInfoDiv.style.display = 'block';
+                updateAnalyzeButtonState();
+                
+            } catch (error) {
+                console.error('Error loading file from URL:', error);
+                
+                // Provide more specific error messages for common issues
+                let errorMessage = error.message;
+                let errorDetails = 'Please check the URL and try again, or upload a file directly.';
+                
+                // Check for specific error types
+                const urlParams = new URLSearchParams(window.location.search);
+                const originalFileUrl = urlParams.get('file');
+                
+                if (originalFileUrl && originalFileUrl.startsWith('http://')) {
+                    errorMessage = 'HTTP URLs are not supported';
+                    errorDetails = 'For security reasons, only HTTPS URLs can be loaded. Please use an HTTPS URL or upload the file directly.';
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('CORS')) {
+                    errorMessage = 'Unable to load file from URL';
+                    errorDetails = 'This could be due to:\n\n• Cross-origin restrictions (CORS) - server must allow requests\n• Invalid or expired HTTPS certificate\n• Network connectivity issues\n• File not found or moved\n\nFor Dropbox: Use links with dl=1 parameter\nFor Google Drive: May not work due to CORS restrictions\n\nOtherwise, please upload the file directly.';
+                }
+                
+                fileInfoDiv.innerHTML = `❌ ${errorMessage}`;
+                fileInfoDiv.className = 'file-info';
+                fileInfoDiv.style.display = 'block';
+                alert(`Failed to load file from URL:\n\n${errorMessage}\n\n${errorDetails}`);
+            }
+        }
+        
         function startAnalysis() {
             if (!file0Data) { alert('Upload a file first'); return; }
             
@@ -1061,6 +1160,13 @@ window.pyProcessAudio = process_audio_if_ready
                   'event_category': 'Config',
                   'event_label': document.getElementById('recordingType').value
                 });
+                // Fire event if file was loaded via URL parameter
+                if (fileLoadedViaUrl) {
+                    gtag('event', 'file_loaded_via_url', {
+                      'event_category': 'File Source',
+                      'event_label': 'URL Parameter'
+                    });
+                }
             }
             
             // Hide previous status banner and show loading
