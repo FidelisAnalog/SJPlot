@@ -304,7 +304,7 @@ export async function renderWaveform(containerId, wavBytes) {
         // Create wrapper HTML - all in one box styled like traceback
         const waveformHtml = `
             <div style="position:relative; margin-top:15px; padding:10px; background:#fff; border-radius:4px; border:1px solid #ddd;">
-                <div style="font-size:0.75em; color:#666; margin-bottom:10px;">Input Audio Waveform (${audioData.sampleRate}Hz, ${audioData.bitDepth}-bit, ${audioData.channels}ch, ${durationSeconds.toFixed(1)}s - no resampling)</div>
+                <div style="font-size:0.75em; color:#666; margin-bottom:10px;">Audio Waveform (${audioData.sampleRate}Hz, ${audioData.bitDepth}-bit, ${audioData.channels}ch, ${durationSeconds.toFixed(1)}s)</div>
                 <button id="copy-waveform-btn" 
                         style="position:absolute; top:5px; right:40px; padding:6px 10px; background:rgba(255,255,255,0.9); color:#333; border:none; border-radius:4px; cursor:pointer; font-size:0.85em; display:flex; align-items:center; transition:opacity 0.2s;" 
                         title="Copy waveform to clipboard">
