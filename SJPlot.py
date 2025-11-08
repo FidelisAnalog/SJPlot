@@ -447,20 +447,6 @@ def normxg7001(signal, Fs):
 
 def get_audio(input_data, environment='standalone', extract_sweeps=0, test_record=None, save_sweeps=0, riaa_mode=0, riaa_inverse=False, xg7001=False):
 
-    '''
-    logger.info(f"Reading: {input_file}")
-    
-    if environment == 'web':
-        # Handle byte stream
-        logger.info(f"Reading: Byte stream input ({input_file.getbuffer().nbytes} bytes)")
-        with io.BytesIO(input_data) as wav_io:
-            Fs, audio = read(wav_io)
-    else:
-        # Handle file path
-        logger.info(f"Reading: {input_file}")
-        Fs, audio = read(input_data)
-    '''
-
     if environment == 'web':
         if not input_data:
             raise ValueError("No input data provided for web environment")
@@ -484,8 +470,6 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=WavFileWarning)
             Fs, audio = read(input_data)
-
-
 
     logger.info(f"Sample Rate: {Fs}")
 
