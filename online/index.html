@@ -1126,6 +1126,13 @@ window.pyProcessAudio = process_audio_if_ready
                 fileInfoDiv.style.display = 'block';
                 updateAnalyzeButtonState();
                 
+                // Clear the file parameter from URL so refresh doesn't reload it
+                const url = new URL(window.location);
+                url.searchParams.delete('file');
+                url.searchParams.delete('dl'); // Also remove dl if it was split from file URL
+                window.history.replaceState({}, '', url);
+                console.log('Cleared file parameter from URL');
+                
             } catch (error) {
                 console.error('Error loading file from URL:', error);
                 
