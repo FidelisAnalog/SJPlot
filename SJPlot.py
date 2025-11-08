@@ -279,10 +279,6 @@ def find_nearest(array, value):
 
 
 def createplotdata(signal, Fs, iteration=[0], norm=[0], onekfstart=0, end_f=20000, str100=0, file0norm=0, normalize=1000):
-    #if iteration is None:
-    #    iteration = [0]
-    #if norm is None:
-    #    norm = [0]
 
     def interpolate(f, a, minf, maxf, fstep):
         # Ensure inputs are NumPy arrays
