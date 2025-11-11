@@ -572,6 +572,12 @@ window.pyProcessAudio = process_audio_if_ready
     <script type="module">
         import { renderWaveform } from './waveform.js';
         
+        // Generate session ID on page load for tracking
+        const sessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        let analysisCounter = 0;
+        let currentAnalysisId = null;
+        let analysisTimeout = null;
+        
         let file0Data = null, file1Data = null;
         let fileLoadedViaUrl = false;
         let pyScriptReady = false;
@@ -795,7 +801,8 @@ window.pyProcessAudio = process_audio_if_ready
                 if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                     gtag('event', 'pyscript_error', {
                         'event_category': 'Error',
-                        'event_label': 'PyScript polling timed out'
+                        'event_label': 'PyScript polling timed out',
+                        'session_id': sessionId
                     });
                 }
             }
@@ -926,9 +933,18 @@ window.pyProcessAudio = process_audio_if_ready
             if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                 gtag('event', 'script_error', {
                     'event_category': 'Error',
-                    'event_label': errorMessage
+                    'event_label': errorMessage,
+                    'session_id': sessionId,
+                    'analysis_id': currentAnalysisId
                 });
             }
+            
+            // Clear timeout since we hit an error
+            if (analysisTimeout) {
+                clearTimeout(analysisTimeout);
+                analysisTimeout = null;
+            }
+            currentAnalysisId = null;
             
             updateAnalyzeButtonState();
             
@@ -962,7 +978,9 @@ window.pyProcessAudio = process_audio_if_ready
             if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                 gtag('event', 'plot_download', {
                     'event_category': 'Download',
-                    'event_label': 'plot_download'
+                    'event_label': 'plot_download',
+                    'session_id': sessionId,
+                    'analysis_id': currentAnalysisId
                 });
             }
         }
@@ -1217,33 +1235,64 @@ window.pyProcessAudio = process_audio_if_ready
                 return;
             }
             
+            // Generate analysis ID for this analysis
+            analysisCounter++;
+            currentAnalysisId = `${sessionId}-${analysisCounter}`;
+            console.log('Starting analysis:', currentAnalysisId);
+            
             // Google Analytics event: Analyze Audio button clicked
                         if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                                 gtag('event', 'analyze_audio_click', {
                                     'event_category': 'Interaction',
-                                    'event_label': 'Analyze Audio Button'
+                                    'event_label': 'Analyze Audio Button',
+                                    'session_id': sessionId,
+                                    'analysis_id': currentAnalysisId
                                 });
                                 // Also fire events for current config values
                                 gtag('event', 'test_record_used', {
                                     'event_category': 'Config',
-                                    'event_label': document.getElementById('testRecord').value
+                                    'event_label': document.getElementById('testRecord').value,
+                                    'session_id': sessionId,
+                                    'analysis_id': currentAnalysisId
                                 });
                                 gtag('event', 'plot_style_used', {
                                     'event_category': 'Config',
-                                    'event_label': document.getElementById('plotStyle').value
+                                    'event_label': document.getElementById('plotStyle').value,
+                                    'session_id': sessionId,
+                                    'analysis_id': currentAnalysisId
                                 });
                                 gtag('event', 'recording_type_used', {
                                     'event_category': 'Config',
-                                    'event_label': document.getElementById('recordingType').value
+                                    'event_label': document.getElementById('recordingType').value,
+                                    'session_id': sessionId,
+                                    'analysis_id': currentAnalysisId
                                 });
                                 // Fire event if file was loaded via URL parameter
                                 if (fileLoadedViaUrl) {
                                         gtag('event', 'file_loaded_via_url', {
                                             'event_category': 'File Source',
-                                            'event_label': 'URL Parameter'
+                                            'event_label': 'URL Parameter',
+                                            'session_id': sessionId,
+                                            'analysis_id': currentAnalysisId
                                         });
                                 }
                         }
+            
+            // Set timeout to detect deadlocks (30 seconds)
+            analysisTimeout = setTimeout(() => {
+                if (currentAnalysisId === `${sessionId}-${analysisCounter}`) {
+                    // Still the same analysis after 30 seconds - likely deadlock
+                    console.error('Analysis timeout detected after 30 seconds');
+                    if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                        gtag('event', 'analysis_timeout', {
+                            'event_category': 'Error',
+                            'event_label': 'Analysis exceeded 30 seconds',
+                            'session_id': sessionId,
+                            'analysis_id': currentAnalysisId
+                        });
+                    }
+                }
+            }, 30000);  // 30 second timeout
             
             // Hide previous status banner and show loading
             const statusEl = document.getElementById('status');
@@ -1294,6 +1343,12 @@ window.pyProcessAudio = process_audio_if_ready
         
         function updateUIWithPlotImage(imgData) {
 
+            // Clear the timeout since we succeeded
+            if (analysisTimeout) {
+                clearTimeout(analysisTimeout);
+                analysisTimeout = null;
+            }
+
             // Update the output div with the plot image
             const outputDiv = document.getElementById('output');
             outputDiv.innerHTML = `<img src="data:image/png;base64,${imgData}" />`;
@@ -1332,8 +1387,13 @@ window.pyProcessAudio = process_audio_if_ready
                 gtag('event', 'plot_image_displayed', {
                     'event_category': 'Plot',
                     'event_label': 'Plot image displayed successfully',
+                    'session_id': sessionId,
+                    'analysis_id': currentAnalysisId
                 });
             }
+            
+            // Clear analysis ID after successful completion
+            // (but keep it available for download button)
         }
 
         // Function to display the input waveform when errors occur
@@ -1376,7 +1436,8 @@ window.pyProcessAudio = process_audio_if_ready
                         if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                             gtag('event', 'cta_library_click', {
                                 'event_category': 'Link',
-                                'event_label': 'ASR Phono Cartridge Library'
+                                'event_label': 'ASR Phono Cartridge Library',
+                                'session_id': sessionId
                             });
                         }
                     });
@@ -1388,7 +1449,8 @@ window.pyProcessAudio = process_audio_if_ready
                         if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                             gtag('event', 'help_link_click', {
                                 'event_category': 'Link',
-                                'event_label': 'ASR Help Thread'
+                                'event_label': 'ASR Help Thread',
+                                'session_id': sessionId
                             });
                         }
                     });
