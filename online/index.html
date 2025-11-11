@@ -1,15 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-D241HHDEYS"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-D241HHDEYS');
-    </script>
+        <!-- Google tag (gtag.js) -->
+        <script>
+            // Only load GA if on sjplot.com or subdomain
+            (function() {
+                var hostOK = location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com");
+                if (hostOK) {
+                    var gaScript = document.createElement('script');
+                    gaScript.async = true;
+                    gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-D241HHDEYS";
+                    document.head.appendChild(gaScript);
+                    window.dataLayer = window.dataLayer || [];
+                    window.gtag = function(){dataLayer.push(arguments);};
+                    gtag('js', new Date());
+                    gtag('config', 'G-D241HHDEYS');
+                } else {
+                    // Define a no-op gtag to avoid errors
+                    window.gtag = function(){};
+                }
+            })();
+        </script>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -781,7 +792,7 @@ window.pyProcessAudio = process_audio_if_ready
                 document.getElementById('pyscriptStatus').style.color = 'orange';
                 
                 // Google Analytics event: PyScript error (timeout)
-                if (typeof gtag === 'function') {
+                if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                     gtag('event', 'pyscript_error', {
                         'event_category': 'Error',
                         'event_label': 'PyScript polling timed out'
@@ -912,7 +923,7 @@ window.pyProcessAudio = process_audio_if_ready
             document.getElementById('loading').classList.remove('active');
             
             // Google Analytics event: script error
-            if (typeof gtag === 'function') {
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                 gtag('event', 'script_error', {
                     'event_category': 'Error',
                     'event_label': errorMessage
@@ -948,7 +959,7 @@ window.pyProcessAudio = process_audio_if_ready
             document.body.removeChild(link);
             
             // Google Analytics event: plot download
-            if (typeof gtag === 'function') {
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                 gtag('event', 'plot_download', {
                     'event_category': 'Download',
                     'event_label': 'plot_download'
@@ -1207,32 +1218,32 @@ window.pyProcessAudio = process_audio_if_ready
             }
             
             // Google Analytics event: Analyze Audio button clicked
-            if (typeof gtag === 'function') {
-                gtag('event', 'analyze_audio_click', {
-                  'event_category': 'Interaction',
-                  'event_label': 'Analyze Audio Button'
-                });
-                // Also fire events for current config values
-                gtag('event', 'test_record_used', {
-                  'event_category': 'Config',
-                  'event_label': document.getElementById('testRecord').value
-                });
-                gtag('event', 'plot_style_used', {
-                  'event_category': 'Config',
-                  'event_label': document.getElementById('plotStyle').value
-                });
-                gtag('event', 'recording_type_used', {
-                  'event_category': 'Config',
-                  'event_label': document.getElementById('recordingType').value
-                });
-                // Fire event if file was loaded via URL parameter
-                if (fileLoadedViaUrl) {
-                    gtag('event', 'file_loaded_via_url', {
-                      'event_category': 'File Source',
-                      'event_label': 'URL Parameter'
-                    });
-                }
-            }
+                        if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                                gtag('event', 'analyze_audio_click', {
+                                    'event_category': 'Interaction',
+                                    'event_label': 'Analyze Audio Button'
+                                });
+                                // Also fire events for current config values
+                                gtag('event', 'test_record_used', {
+                                    'event_category': 'Config',
+                                    'event_label': document.getElementById('testRecord').value
+                                });
+                                gtag('event', 'plot_style_used', {
+                                    'event_category': 'Config',
+                                    'event_label': document.getElementById('plotStyle').value
+                                });
+                                gtag('event', 'recording_type_used', {
+                                    'event_category': 'Config',
+                                    'event_label': document.getElementById('recordingType').value
+                                });
+                                // Fire event if file was loaded via URL parameter
+                                if (fileLoadedViaUrl) {
+                                        gtag('event', 'file_loaded_via_url', {
+                                            'event_category': 'File Source',
+                                            'event_label': 'URL Parameter'
+                                        });
+                                }
+                        }
             
             // Hide previous status banner and show loading
             const statusEl = document.getElementById('status');
@@ -1282,6 +1293,7 @@ window.pyProcessAudio = process_audio_if_ready
         }
         
         function updateUIWithPlotImage(imgData) {
+
             // Update the output div with the plot image
             const outputDiv = document.getElementById('output');
             outputDiv.innerHTML = `<img src="data:image/png;base64,${imgData}" />`;
@@ -1313,6 +1325,14 @@ window.pyProcessAudio = process_audio_if_ready
             const analyzeBtn = document.getElementById('analyzeBtn');
             if (analyzeBtn) {
                 analyzeBtn.disabled = false;
+            }
+
+            // Fire Google Analytics event for successful plot display (only fires if on sjplot.com)
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                gtag('event', 'plot_image_displayed', {
+                    'event_category': 'Plot',
+                    'event_label': 'Plot image displayed successfully',
+                });
             }
         }
 
@@ -1353,7 +1373,7 @@ window.pyProcessAudio = process_audio_if_ready
                 const ctaLink = document.querySelector('.contribute-cta a');
                 if (ctaLink) {
                     ctaLink.addEventListener('click', function() {
-                        if (typeof gtag === 'function') {
+                        if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                             gtag('event', 'cta_library_click', {
                                 'event_category': 'Link',
                                 'event_label': 'ASR Phono Cartridge Library'
@@ -1365,7 +1385,7 @@ window.pyProcessAudio = process_audio_if_ready
                 const helpLink = document.querySelector('.footer a[href*="phono-cartridge-response-measurement-script"]');
                 if (helpLink) {
                     helpLink.addEventListener('click', function() {
-                        if (typeof gtag === 'function') {
+                        if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
                             gtag('event', 'help_link_click', {
                                 'event_category': 'Link',
                                 'event_label': 'ASR Help Thread'
