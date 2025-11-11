@@ -934,7 +934,7 @@ window.pyProcessAudio = process_audio_if_ready
                     'event_category': 'Error',
                     'event_label': errorMessage,
                     'app_session_id': sessionId,
-                    'analysis_id': currentAnalysisId
+                    'app_analysis_id': currentAnalysisId
                 });
             }
             
@@ -974,7 +974,7 @@ window.pyProcessAudio = process_audio_if_ready
                     'event_category': 'Download',
                     'event_label': 'plot_download',
                     'app_session_id': sessionId,
-                    'analysis_id': currentAnalysisId
+                    'app_analysis_id': currentAnalysisId
                 });
             }
         }
@@ -1240,26 +1240,26 @@ window.pyProcessAudio = process_audio_if_ready
                                     'event_category': 'Interaction',
                                     'event_label': 'Analyze Audio Button',
                                     'app_session_id': sessionId,
-                                    'analysis_id': currentAnalysisId
+                                    'app_analysis_id': currentAnalysisId
                                 });
                                 // Also fire events for current config values
                                 gtag('event', 'test_record_used', {
                                     'event_category': 'Config',
                                     'event_label': document.getElementById('testRecord').value,
                                     'app_session_id': sessionId,
-                                    'analysis_id': currentAnalysisId
+                                    'app_analysis_id': currentAnalysisId
                                 });
                                 gtag('event', 'plot_style_used', {
                                     'event_category': 'Config',
                                     'event_label': document.getElementById('plotStyle').value,
                                     'app_session_id': sessionId,
-                                    'analysis_id': currentAnalysisId
+                                    'app_analysis_id': currentAnalysisId
                                 });
                                 gtag('event', 'recording_type_used', {
                                     'event_category': 'Config',
                                     'event_label': document.getElementById('recordingType').value,
                                     'app_session_id': sessionId,
-                                    'analysis_id': currentAnalysisId
+                                    'app_analysis_id': currentAnalysisId
                                 });
                                 // Fire event if file was loaded via URL parameter
                                 if (fileLoadedViaUrl) {
@@ -1267,7 +1267,7 @@ window.pyProcessAudio = process_audio_if_ready
                                             'event_category': 'File Source',
                                             'event_label': 'URL Parameter',
                                             'app_session_id': sessionId,
-                                            'analysis_id': currentAnalysisId
+                                            'app_analysis_id': currentAnalysisId
                                         });
                                 }
                         }
@@ -1360,7 +1360,7 @@ window.pyProcessAudio = process_audio_if_ready
                     'event_category': 'Plot',
                     'event_label': 'Plot image displayed successfully',
                     'app_session_id': sessionId,
-                    'analysis_id': currentAnalysisId
+                    'app_analysis_id': currentAnalysisId
                 });
             }
         }
