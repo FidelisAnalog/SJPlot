@@ -421,6 +421,7 @@
                 document.getElementById('plotStyle').value = document.getElementById('plotStyleAdvanced').value;
                 document.getElementById('normalize').value = document.getElementById('normalizeAdvanced').value;
                 document.getElementById('author').value = document.getElementById('authorAdvanced').value;
+                document.getElementById('testRecord').value = document.getElementById('testRecordAdvanced').value;
 
                 standardConfig.style.display = 'block';
                 advancedConfig.style.display = 'none';
@@ -434,6 +435,7 @@
                 document.getElementById('plotStyleAdvanced').value = document.getElementById('plotStyle').value;
                 document.getElementById('normalizeAdvanced').value = document.getElementById('normalize').value;
                 document.getElementById('authorAdvanced').value = document.getElementById('author').value;
+                document.getElementById('testRecordAdvanced').value = document.getElementById('testRecord').value;
                 document.getElementById('riaaModeAdvanced').value = document.getElementById('riaaMode').value;
                 document.getElementById('riaaInverseAdvanced').checked = document.getElementById('riaaInverse').checked;
 
@@ -594,6 +596,22 @@
                 <div class="config-item text-input-item">
                     <label>Equipment Info</label>
                     <input type="text" id="equipInfoAdvanced" placeholder="Arm -> Phonostage -> ADC" />
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>Test Record</label>
+                    <select id="testRecordAdvanced">
+                        <option value="STR100" selected>STR 100</option>
+                        <option value="TRS1007">TRS-1007</option>
+                        <option value="TRS1005">TRS-1005</option>
+                        <option value="STR120">STR 120</option>
+                        <option value="STR130">STR 130</option>
+                        <option value="QR2009">QR 2009</option>
+                        <option value="QR2010">QR 2010</option>
+                        <option value="XG7001">XG-7001</option>
+                        <option value="XG7002">XG-7002</option>
+                        <option value="XG7005">XG-7005</option>
+                        <option value="DIN45543">DIN 45543</option>
+                    </select>
                 </div>
                 <div class="config-item text-input-item">
                     <label>Author</label>
@@ -1547,6 +1565,7 @@ window.pyProcessAudio = process_audio_if_ready
                         riaa_inverse: document.getElementById('riaaInverseAdvanced').checked ? 1 : 0,
                         normalize: parseInt(document.getElementById('normalizeAdvanced').value),
                         extract_sweeps: document.getElementById('extractSweeps').checked ? 1 : 0,
+                        test_record: document.getElementById('testRecordAdvanced').value,
                         author: document.getElementById('authorAdvanced').value,
                         // Advanced-only parameters
                         end_f: document.getElementById('endF').value ? parseInt(document.getElementById('endF').value) : null,
