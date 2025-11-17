@@ -158,23 +158,21 @@
                 flex-wrap: wrap;
                 gap: 20px;
             }
-            
-            /* Text inputs on left 50% */
+
+            /* Text inputs at 50% width */
             .text-input-item {
                 flex: 0 0 calc(50% - 10px);
-                order: 1;
             }
-            
-            /* Dropdowns on right 50% */
+
+            /* Dropdowns at 50% width */
             .dropdown-item {
                 flex: 0 0 calc(50% - 10px);
-                order: 2;
             }
-            
-            /* Checkbox items in compact layout on desktop */
+
+            /* Checkboxes in full-width row, flowing horizontally */
             .checkbox-item {
-                flex: 0 0 calc(33.333% - 14px);
-                order: 3;
+                flex: 0 0 auto;
+                margin-right: 30px;
             }
         }
         .config-item { display: flex; flex-direction: column; }
@@ -196,7 +194,16 @@
             cursor: not-allowed;
             opacity: 0.6;
         }
-        .checkbox-item { display: flex; align-items: center; gap: 10px; }
+        /* Checkbox items: label next to checkbox, not above */
+        .checkbox-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-item label {
+            margin-bottom: 0;
+        }
         .checkbox-item input[type="checkbox"] { width: 20px; height: 20px; }
         .checkbox-item input[type="checkbox"]:disabled {
             cursor: not-allowed;
