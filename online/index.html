@@ -393,7 +393,7 @@
         .config-tabs {
             display: flex;
             gap: 4px;
-            margin-bottom: -1px;
+            margin-bottom: -2px;
             position: relative;
             z-index: 1;
         }
@@ -418,7 +418,7 @@
             background: #f8f9ff;
             color: #667eea;
             border-color: #667eea;
-            border-bottom: 2px solid #f8f9ff;
+            border-bottom: none;
         }
         .download-icon {
             display: none;
@@ -749,14 +749,6 @@
                 <div class="config-item checkbox-item">
                     <input type="checkbox" id="riaaInverseAdvanced" checked />
                     <label>Inverse RIAA</label>
-                </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="str100" />
-                    <label>STR 100</label>
-                </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="xg7001" />
-                    <label>XG-7001</label>
                 </div>
             </div>
         </div>
@@ -1667,12 +1659,10 @@ window.pyProcessAudio = process_audio_if_ready
                         extract_sweeps: 1, // Always enabled in standard mode
                         test_record: testRecord,
                         author: document.getElementById('author').value,
-                        // Advanced-only parameters derived from test record
+                        // Advanced-only parameters
                         end_f: null,
                         file0norm: 0,
-                        onekfstart: 0,
-                        str100: testRecord === 'STR100' ? 1 : 0,
-                        xg7001: testRecord === 'XG7001' ? 1 : 0
+                        onekfstart: 0
                     };
                 } else {
                     // Advanced mode configuration
@@ -1689,9 +1679,7 @@ window.pyProcessAudio = process_audio_if_ready
                         // Advanced-only parameters
                         end_f: document.getElementById('endF').value ? parseInt(document.getElementById('endF').value) : null,
                         file0norm: document.getElementById('file0norm').checked ? 1 : 0,
-                        onekfstart: document.getElementById('onekfstart').checked ? 1 : 0,
-                        str100: document.getElementById('str100').checked ? 1 : 0,
-                        xg7001: document.getElementById('xg7001').checked ? 1 : 0
+                        onekfstart: document.getElementById('onekfstart').checked ? 1 : 0
                     };
                 }
                 
