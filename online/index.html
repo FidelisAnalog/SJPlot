@@ -584,6 +584,10 @@
                     <label>Extract Sweeps</label>
                 </div>
                 <div class="config-item checkbox-item">
+                    <input type="checkbox" id="file0norm" />
+                    <label>Normalize Both Files to File 0</label>
+                </div>
+                <div class="config-item checkbox-item">
                     <input type="checkbox" id="onekfstart" />
                     <label>1kHz Start</label>
                 </div>
@@ -1491,6 +1495,7 @@ window.pyProcessAudio = process_audio_if_ready
                         author: document.getElementById('authorAdvanced').value,
                         // Advanced-only parameters
                         end_f: document.getElementById('endF').value ? parseInt(document.getElementById('endF').value) : null,
+                        file0norm: document.getElementById('file0norm').checked ? 1 : 0,
                         onekfstart: document.getElementById('onekfstart').checked ? 1 : 0,
                         str100: document.getElementById('str100').checked ? 1 : 0,
                         xg7001: document.getElementById('xg7001').checked ? 1 : 0
