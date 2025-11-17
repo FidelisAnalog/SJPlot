@@ -1534,8 +1534,8 @@ window.pyProcessAudio = process_audio_if_ready
                         end_f: null,
                         file0norm: 0,
                         onekfstart: 0,
-                        str100: testRecord.startsWith('STR') ? 1 : 0,
-                        xg7001: testRecord.startsWith('XG') ? 1 : 0
+                        str100: testRecord === 'STR100' ? 1 : 0,
+                        xg7001: testRecord === 'XG7001' ? 1 : 0
                     };
                 } else {
                     // Advanced mode configuration
