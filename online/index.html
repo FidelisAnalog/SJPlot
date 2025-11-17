@@ -1446,22 +1446,18 @@ window.pyProcessAudio = process_audio_if_ready
 
                         // Update status in advanced mode
                         const file0Status = document.getElementById('file0Status');
-                        if (file0Status) {
-                            file0Status.innerHTML = `✅ ${file0Data.name}`;
-                            file0Status.className = 'file-info ready';
-                            file0Status.style.display = 'block';
-                        }
+                        file0Status.innerHTML = `✅ ${file0Data.name}`;
+                        file0Status.className = 'file-info ready';
+                        file0Status.style.display = 'block';
                     } else if (index === 1) {
                         file1Data = {name: file.name, bytes: wavBytes};
                         console.log('File 1 loaded');
 
                         // Update status in advanced mode
                         const file1Status = document.getElementById('file1Status');
-                        if (file1Status) {
-                            file1Status.innerHTML = `✅ ${file1Data.name}`;
-                            file1Status.className = 'file-info ready';
-                            file1Status.style.display = 'block';
-                        }
+                        file1Status.innerHTML = `✅ ${file1Data.name}`;
+                        file1Status.className = 'file-info ready';
+                        file1Status.style.display = 'block';
                     }
 
                     updateAnalyzeButtonState();
