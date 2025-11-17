@@ -122,11 +122,13 @@
             gap: 8px;
             justify-content: center;
         }
+        .advanced-upload-container {
+            margin-bottom: 30px;
+        }
         .advanced-upload-grid {
             display: flex;
             gap: 20px;
             flex-direction: column;
-            margin-bottom: 20px;
         }
         @media (min-width: 768px) {
             .advanced-upload-grid {
@@ -447,7 +449,8 @@
         window.switchConfigMode = function(mode) {
             const standardConfig = document.getElementById('standardConfig');
             const advancedConfig = document.getElementById('advancedConfig');
-            const uploadArea = document.querySelector('.upload-area');
+            const standardUploadArea = document.getElementById('standardUploadArea');
+            const advancedUploadArea = document.getElementById('advancedUploadArea');
             const standardTab = document.getElementById('standardTab');
             const advancedTab = document.getElementById('advancedTab');
 
@@ -462,7 +465,8 @@
 
                 standardConfig.style.display = 'block';
                 advancedConfig.style.display = 'none';
-                uploadArea.style.display = 'flex';
+                standardUploadArea.style.display = 'flex';
+                advancedUploadArea.style.display = 'none';
                 standardTab.classList.add('active');
                 advancedTab.classList.remove('active');
             } else {
@@ -478,7 +482,8 @@
 
                 standardConfig.style.display = 'none';
                 advancedConfig.style.display = 'block';
-                uploadArea.style.display = 'none';
+                standardUploadArea.style.display = 'none';
+                advancedUploadArea.style.display = 'block';
                 standardTab.classList.remove('active');
                 advancedTab.classList.add('active');
             }
@@ -497,7 +502,8 @@
             <img src="images/myhifi_lockup.svg" alt="MyHiFi" class="header-logo">
         </div>
         
-        <div class="upload-area">
+        <!-- Standard Upload Area -->
+        <div class="upload-area" id="standardUploadArea">
             <h3 style="display: flex; align-items: center; gap: 8px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -515,6 +521,50 @@
                 Select WAV File
             </button>
             <div id="fileInfo" class="file-info" style="display: none;"></div>
+        </div>
+
+        <!-- Advanced Upload Area -->
+        <div class="advanced-upload-container" id="advancedUploadArea" style="display: none;">
+            <div class="advanced-upload-grid">
+                <div class="upload-half" id="uploadHalf0">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        File 0 (Required)
+                    </h3>
+                    <input type="file" id="fileInput0Advanced" style="display:none" accept=".wav" />
+                    <button class="upload-btn" onclick="document.getElementById('fileInput0Advanced').click()" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                            <polyline points="13,2 13,9 20,9"/>
+                        </svg>
+                        Select WAV File
+                    </button>
+                    <div id="fileInfo0Advanced" class="file-info" style="display: none;"></div>
+                </div>
+                <div class="upload-half" id="uploadHalf1">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        File 1 (Optional)
+                    </h3>
+                    <input type="file" id="fileInput1" style="display:none" accept=".wav" />
+                    <button class="upload-btn" onclick="document.getElementById('fileInput1').click()" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                            <polyline points="13,2 13,9 20,9"/>
+                        </svg>
+                        Select WAV File
+                    </button>
+                    <div id="fileInfo1" class="file-info" style="display: none;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Configuration Tabs -->
@@ -608,47 +658,6 @@
                 Advanced Configuration
             </h3>
 
-            <!-- Advanced File Upload Area -->
-            <div class="advanced-upload-grid">
-                <div class="upload-half" id="uploadHalf0">
-                    <h3 style="display: flex; align-items: center; gap: 8px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                            <polyline points="17,8 12,3 7,8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        File 0 (Required)
-                    </h3>
-                    <input type="file" id="fileInput0Advanced" style="display:none" accept=".wav" />
-                    <button class="upload-btn" onclick="document.getElementById('fileInput0Advanced').click()" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
-                            <polyline points="13,2 13,9 20,9"/>
-                        </svg>
-                        Select WAV File
-                    </button>
-                    <div id="fileInfo0Advanced" class="file-info" style="display: none;"></div>
-                </div>
-                <div class="upload-half" id="uploadHalf1">
-                    <h3 style="display: flex; align-items: center; gap: 8px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                            <polyline points="17,8 12,3 7,8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        File 1 (Optional)
-                    </h3>
-                    <input type="file" id="fileInput1" style="display:none" accept=".wav" />
-                    <button class="upload-btn" onclick="document.getElementById('fileInput1').click()" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
-                            <polyline points="13,2 13,9 20,9"/>
-                        </svg>
-                        Select WAV File
-                    </button>
-                    <div id="fileInfo1" class="file-info" style="display: none;"></div>
-                </div>
-            </div>
             <!-- Metadata -->
             <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Metadata</h4>
             <div class="config-grid">
