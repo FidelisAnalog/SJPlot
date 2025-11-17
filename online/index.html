@@ -338,9 +338,34 @@
         }
         /* Hide advanced controls for now */
         .config-item:has(#riaaMode),
-        .config-item:has(#riaaInverse), 
+        .config-item:has(#riaaInverse),
         .config-item:has(#normalize) {
             display: none;
+        }
+        /* Mode switcher styling */
+        .mode-switcher {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .mode-switcher label {
+            margin: 0 10px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+            display: inline-block;
+        }
+        .mode-switcher label:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .mode-switcher input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
         }
         .download-icon {
             display: none;
@@ -396,8 +421,21 @@
             </button>
             <div id="fileInfo" class="file-info" style="display: none;"></div>
         </div>
-        
-        <div class="config-section">
+
+        <!-- UI Mode Switcher -->
+        <div class="mode-switcher">
+            <label>
+                <input type="radio" name="uiMode" value="standard" checked>
+                Standard
+            </label>
+            <label>
+                <input type="radio" name="uiMode" value="advanced">
+                Advanced
+            </label>
+        </div>
+
+        <!-- Standard Configuration Section -->
+        <div class="config-section" id="standardConfig">
             <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"/>
@@ -470,7 +508,96 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- Advanced Configuration Section -->
+        <div class="config-section" id="advancedConfig" style="display: none;">
+            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m6-11h-6m-6 0h6m5.657-5.657l-4.243 4.243m-6.828 0L2.343 7.343m14.314 14.314l-4.243-4.243m-6.828 0l-4.243 4.243"/>
+                </svg>
+                Advanced Configuration
+            </h3>
+            <div class="config-grid">
+                <!-- File Uploads -->
+                <div class="config-item text-input-item">
+                    <label>File 0 (WAV)</label>
+                    <input type="file" id="fileInput0Advanced" accept=".wav" style="padding: 8px; font-size: 0.9em;" />
+                    <span id="file0Status" style="font-size: 0.85em; color: #666; margin-top: 4px;"></span>
+                </div>
+                <div class="config-item text-input-item">
+                    <label>File 1 (WAV - Optional)</label>
+                    <input type="file" id="fileInput1" accept=".wav" style="padding: 8px; font-size: 0.9em;" />
+                    <span id="file1Status" style="font-size: 0.85em; color: #666; margin-top: 4px;"></span>
+                </div>
+
+                <!-- Text Inputs -->
+                <div class="config-item text-input-item">
+                    <label>Plot Info (Title)</label>
+                    <input type="text" id="plotInfoAdvanced" placeholder="Cart / Load / Record" autocomplete="off" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Equipment Info</label>
+                    <input type="text" id="equipInfoAdvanced" placeholder="Arm -> Phonostage -> ADC" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Normalize (Hz)</label>
+                    <input type="number" id="normalizeAdvanced" value="1000" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>End Frequency (Hz)</label>
+                    <input type="number" id="endF" placeholder="e.g., 20000" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Author</label>
+                    <input type="text" id="authorAdvanced" placeholder="Author Name" autocomplete="off"/>
+                </div>
+
+                <!-- Dropdowns -->
+                <div class="config-item dropdown-item">
+                    <label>Plot Style</label>
+                    <select id="plotStyleAdvanced">
+                        <option value="1">Style 1 - Single Plot</option>
+                        <option value="2">Style 2 - Dual Y-Axis</option>
+                        <option value="3">Style 3 - Stacked Plots</option>
+                        <option value="4" selected>Style 4 - Dual + Zoom</option>
+                        <option value="5">Style 5 - Minimal</option>
+                    </select>
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>RIAA Mode</label>
+                    <select id="riaaModeAdvanced">
+                        <option value="0">None</option>
+                        <option value="1">Bass Only</option>
+                        <option value="2">Treble Only</option>
+                        <option value="3" selected>Both</option>
+                    </select>
+                </div>
+
+                <!-- Checkboxes -->
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="riaaInverseAdvanced" checked />
+                    <label>Inverse RIAA</label>
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="extractSweeps" checked />
+                    <label>Extract Sweeps</label>
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="onekfstart" />
+                    <label>1kHz Start</label>
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="str100" />
+                    <label>STR 100</label>
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="xg7001" />
+                    <label>XG-7001</label>
+                </div>
+            </div>
+        </div>
+
         <div class="config-section" style="display:none;">
             <details style="margin: 0;">
                 <summary style="cursor: pointer; font-weight: 600; color: #333; font-size: 1.1em; padding: 5px 0; list-style: none; display: flex; align-items: center;">
@@ -1017,14 +1144,44 @@ window.pyProcessAudio = process_audio_if_ready
             document.getElementById('riaaInverse').checked = settings.inverse;
         }
         
+        // Function to toggle between standard and advanced modes
+        function toggleUIMode() {
+            const mode = document.querySelector('input[name="uiMode"]:checked').value;
+            const standardConfig = document.getElementById('standardConfig');
+            const advancedConfig = document.getElementById('advancedConfig');
+            const uploadArea = document.querySelector('.upload-area');
+
+            if (mode === 'standard') {
+                standardConfig.style.display = 'block';
+                advancedConfig.style.display = 'none';
+                uploadArea.style.display = 'flex';
+            } else {
+                standardConfig.style.display = 'none';
+                advancedConfig.style.display = 'block';
+                uploadArea.style.display = 'none';
+            }
+
+            console.log('UI mode switched to:', mode);
+        }
+
         // Initialize UI event listeners when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Setting up file input and drag-and-drop handlers...');
-            
+
             // Initialize RIAA settings on page load
             updateRIAASettings();
-            
+
+            // Set up mode switcher
+            document.querySelectorAll('input[name="uiMode"]').forEach(radio => {
+                radio.addEventListener('change', toggleUIMode);
+            });
+
+            // Standard mode file input
             document.getElementById('fileInput0').addEventListener('change', e => handleFile(e.target.files[0], 0));
+
+            // Advanced mode file inputs
+            document.getElementById('fileInput0Advanced').addEventListener('change', e => handleFile(e.target.files[0], 0));
+            document.getElementById('fileInput1').addEventListener('change', e => handleFile(e.target.files[0], 1));
             
             // Handle Test Record dropdown to auto-update RIAA settings
             document.getElementById('testRecord').addEventListener('change', updateRIAASettings);
@@ -1064,7 +1221,7 @@ window.pyProcessAudio = process_audio_if_ready
                 alert('No file selected');
                 return;
             }
-            
+
             // Clear previous output and status when new file is selected
             document.getElementById('output').innerHTML = '';
             const statusEl = document.getElementById('status');
@@ -1072,36 +1229,54 @@ window.pyProcessAudio = process_audio_if_ready
             statusEl.innerHTML = '';
             document.getElementById('contributeCta').classList.remove('show');
             document.getElementById('downloadBtn').style.display = 'none';
-            
+
             const fileName = file.name.toLowerCase();
-            
+
             // Only accept WAV files
             if (!fileName.endsWith('.wav')) {
                 alert('Only WAV files are supported.\n\nFor measurement accuracy, this tool requires uncompressed WAV audio files.');
                 return;
             }
-            
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                const fileInfoDiv = document.getElementById('fileInfo');
                 try {
                     // Direct WAV file - use as is
                     const wavBytes = new Uint8Array(e.target.result);
-                    console.log(`Loaded WAV file: ${file.name} (${wavBytes.length} bytes)`);
-                    
+                    console.log(`Loaded WAV file ${index}: ${file.name} (${wavBytes.length} bytes)`);
+
                     if (index === 0) {
                         file0Data = {name: file.name, bytes: wavBytes};
                         // Reset URL flag since this is a manual upload
                         fileLoadedViaUrl = false;
-                        console.log('File loaded manually, reset fileLoadedViaUrl flag');
+                        console.log('File 0 loaded manually, reset fileLoadedViaUrl flag');
+
+                        // Update file info in standard mode
+                        const fileInfoDiv = document.getElementById('fileInfo');
+                        fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
+                        fileInfoDiv.className = 'file-info ready';
+                        fileInfoDiv.style.display = 'block';
+
+                        // Update status in advanced mode
+                        const file0Status = document.getElementById('file0Status');
+                        if (file0Status) {
+                            file0Status.innerHTML = `✅ ${file0Data.name}`;
+                            file0Status.style.color = '#388e3c';
+                        }
+                    } else if (index === 1) {
+                        file1Data = {name: file.name, bytes: wavBytes};
+                        console.log('File 1 loaded');
+
+                        // Update status in advanced mode
+                        const file1Status = document.getElementById('file1Status');
+                        if (file1Status) {
+                            file1Status.innerHTML = `✅ ${file1Data.name}`;
+                            file1Status.style.color = '#388e3c';
+                        }
                     }
-                    
-                    fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
-                    fileInfoDiv.className = 'file-info ready';
-                    fileInfoDiv.style.display = 'block';
+
                     updateAnalyzeButtonState();
                 } catch (error) {
-                    fileInfoDiv.style.display = 'none';
                     console.error('File processing error:', error);
                     alert(error.message || 'Error processing WAV file');
                 }
@@ -1286,24 +1461,48 @@ window.pyProcessAudio = process_audio_if_ready
             
             // Force UI update before starting Python processing
             setTimeout(() => {
-                const config = {
-                    plot_info: document.getElementById('plotInfo').value || "Cart / Load / Record",
-                    equip_info: document.getElementById('equipInfo').value || "Arm -> Phonostage -> ADC",
-                    plot_style: parseInt(document.getElementById('plotStyle').value),
-                    riaa_mode: parseInt(document.getElementById('riaaMode').value),
-                    riaa_inverse: document.getElementById('riaaInverse').checked ? 1 : 0,
-                    normalize: parseInt(document.getElementById('normalize').value),
-                    extract_sweeps: 1, // Always enabled
-                    test_record: document.getElementById('testRecord').value,
-                    author: document.getElementById('author').value
-                };
+                // Determine which mode we're in
+                const mode = document.querySelector('input[name="uiMode"]:checked').value;
+                let config;
+
+                if (mode === 'standard') {
+                    // Standard mode configuration
+                    config = {
+                        plot_info: document.getElementById('plotInfo').value || "Cart / Load / Record",
+                        equip_info: document.getElementById('equipInfo').value || "Arm -> Phonostage -> ADC",
+                        plot_style: parseInt(document.getElementById('plotStyle').value),
+                        riaa_mode: parseInt(document.getElementById('riaaMode').value),
+                        riaa_inverse: document.getElementById('riaaInverse').checked ? 1 : 0,
+                        normalize: parseInt(document.getElementById('normalize').value),
+                        extract_sweeps: 1, // Always enabled in standard mode
+                        test_record: document.getElementById('testRecord').value,
+                        author: document.getElementById('author').value
+                    };
+                } else {
+                    // Advanced mode configuration
+                    config = {
+                        plot_info: document.getElementById('plotInfoAdvanced').value || "Cart / Load / Record",
+                        equip_info: document.getElementById('equipInfoAdvanced').value || "Arm -> Phonostage -> ADC",
+                        plot_style: parseInt(document.getElementById('plotStyleAdvanced').value),
+                        riaa_mode: parseInt(document.getElementById('riaaModeAdvanced').value),
+                        riaa_inverse: document.getElementById('riaaInverseAdvanced').checked ? 1 : 0,
+                        normalize: parseInt(document.getElementById('normalizeAdvanced').value),
+                        extract_sweeps: document.getElementById('extractSweeps').checked ? 1 : 0,
+                        author: document.getElementById('authorAdvanced').value,
+                        // Advanced-only parameters
+                        end_f: document.getElementById('endF').value ? parseInt(document.getElementById('endF').value) : null,
+                        onekfstart: document.getElementById('onekfstart').checked ? 1 : 0,
+                        str100: document.getElementById('str100').checked ? 1 : 0,
+                        xg7001: document.getElementById('xg7001').checked ? 1 : 0
+                    };
+                }
                 
                 try {
                     console.log('Calling Python function directly...');
-                    
+
                     // Set global JS variables that Python can access
                     window.js_file0_data = file0Data.bytes;
-                    window.js_file1_data = null; // Always null since we removed File 1 input
+                    window.js_file1_data = file1Data ? file1Data.bytes : null; // Use file1Data if available (advanced mode)
                     window.js_config = config;
                     
                     // Call the Python function asynchronously to allow UI updates
