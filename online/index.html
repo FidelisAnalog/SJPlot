@@ -1300,14 +1300,19 @@ window.pyProcessAudio = process_audio_if_ready
                     return;
                 }
 
-                // Convert data URL to blob
-                const response = await fetch(img.src);
-                const blob = await response.blob();
-
-                // Copy to clipboard
+                // Safari requires ClipboardItem to be created synchronously,
+                // but the blob can be a Promise that resolves later
                 await navigator.clipboard.write([
                     new ClipboardItem({
-                        [blob.type]: blob
+                        'image/png': new Promise(async (resolve, reject) => {
+                            try {
+                                const response = await fetch(img.src);
+                                const blob = await response.blob();
+                                resolve(blob);
+                            } catch (error) {
+                                reject(error);
+                            }
+                        })
                     })
                 ]);
 
