@@ -986,7 +986,38 @@ window.pyProcessAudio = process_audio_if_ready
             if (savedAuthor) {
                 document.getElementById('author').value = savedAuthor;
             }
-            
+
+            // Load advanced mode settings
+            const savedExtractSweeps = loadPreference('extractSweeps');
+            if (savedExtractSweeps !== null) {
+                document.getElementById('extractSweeps').checked = savedExtractSweeps === 'true';
+            }
+
+            const savedEndF = loadPreference('endF');
+            if (savedEndF) {
+                document.getElementById('endF').value = savedEndF;
+            }
+
+            const savedFile0norm = loadPreference('file0norm');
+            if (savedFile0norm !== null) {
+                document.getElementById('file0norm').checked = savedFile0norm === 'true';
+            }
+
+            const savedOnekfstart = loadPreference('onekfstart');
+            if (savedOnekfstart !== null) {
+                document.getElementById('onekfstart').checked = savedOnekfstart === 'true';
+            }
+
+            const savedRiaaMode = loadPreference('riaaMode');
+            if (savedRiaaMode) {
+                document.getElementById('riaaModeAdvanced').value = savedRiaaMode;
+            }
+
+            const savedRiaaInverse = loadPreference('riaaInverse');
+            if (savedRiaaInverse !== null) {
+                document.getElementById('riaaInverseAdvanced').checked = savedRiaaInverse === 'true';
+            }
+
             console.log('Loaded saved preferences');
             
             // Check for ?file= URL parameter
@@ -1038,6 +1069,31 @@ window.pyProcessAudio = process_audio_if_ready
             // Save author to localStorage on input change
             authorInput.addEventListener('input', function() {
                 localStorage.setItem('author', authorInput.value);
+            });
+
+            // Save advanced mode settings when they change
+            document.getElementById('extractSweeps').addEventListener('change', function() {
+                savePreference('extractSweeps', this.checked);
+            });
+
+            document.getElementById('endF').addEventListener('input', function() {
+                savePreference('endF', this.value);
+            });
+
+            document.getElementById('file0norm').addEventListener('change', function() {
+                savePreference('file0norm', this.checked);
+            });
+
+            document.getElementById('onekfstart').addEventListener('change', function() {
+                savePreference('onekfstart', this.checked);
+            });
+
+            document.getElementById('riaaModeAdvanced').addEventListener('change', function() {
+                savePreference('riaaMode', this.value);
+            });
+
+            document.getElementById('riaaInverseAdvanced').addEventListener('change', function() {
+                savePreference('riaaInverse', this.checked);
             });
         });
         
