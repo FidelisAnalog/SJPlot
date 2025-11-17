@@ -1173,7 +1173,7 @@ window.pyProcessAudio = process_audio_if_ready
         }
         
         // Function to switch between standard and advanced modes
-        function switchConfigMode(mode) {
+        window.switchConfigMode = function(mode) {
             const standardConfig = document.getElementById('standardConfig');
             const advancedConfig = document.getElementById('advancedConfig');
             const uploadArea = document.querySelector('.upload-area');
@@ -1195,7 +1195,7 @@ window.pyProcessAudio = process_audio_if_ready
             }
 
             console.log('UI mode switched to:', mode);
-        }
+        };
 
         // Initialize UI event listeners when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
