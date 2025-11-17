@@ -1448,7 +1448,8 @@ window.pyProcessAudio = process_audio_if_ready
                         const file0Status = document.getElementById('file0Status');
                         if (file0Status) {
                             file0Status.innerHTML = `✅ ${file0Data.name}`;
-                            file0Status.style.color = '#388e3c';
+                            file0Status.className = 'file-info ready';
+                            file0Status.style.display = 'block';
                         }
                     } else if (index === 1) {
                         file1Data = {name: file.name, bytes: wavBytes};
@@ -1458,7 +1459,8 @@ window.pyProcessAudio = process_audio_if_ready
                         const file1Status = document.getElementById('file1Status');
                         if (file1Status) {
                             file1Status.innerHTML = `✅ ${file1Data.name}`;
-                            file1Status.style.color = '#388e3c';
+                            file1Status.className = 'file-info ready';
+                            file1Status.style.display = 'block';
                         }
                     }
 
