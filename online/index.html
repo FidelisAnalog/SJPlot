@@ -526,8 +526,8 @@
 
         // Define clearFile1 globally so it's available for onclick handlers
         window.clearFile1 = function() {
-            // Reset file1Data
-            file1Data = null;
+            // Reset file1Data (accessed via window to ensure we're modifying the global variable)
+            window.file1Data = null;
 
             // Clear the file input
             const fileInput1 = document.getElementById('fileInput1');
@@ -919,8 +919,9 @@ window.pyProcessAudio = process_audio_if_ready
         const sessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         let analysisCounter = 0;
         let currentAnalysisId = null;
-        
-        let file0Data = null, file1Data = null;
+
+        let file0Data = null;
+        window.file1Data = null;  // Expose file1Data globally so clearFile1 can access it
         let fileLoadedViaUrl = false;
         let pyScriptReady = false;
         
@@ -1556,12 +1557,12 @@ window.pyProcessAudio = process_audio_if_ready
                         file0Status.className = 'file-info ready';
                         file0Status.style.display = 'block';
                     } else if (index === 1) {
-                        file1Data = {name: file.name, bytes: wavBytes};
+                        window.file1Data = {name: file.name, bytes: wavBytes};
                         console.log('File 1 loaded');
 
                         // Update status in advanced mode
                         const file1Status = document.getElementById('file1Status');
-                        file1Status.innerHTML = `✅ ${file1Data.name}`;
+                        file1Status.innerHTML = `✅ ${window.file1Data.name}`;
                         file1Status.className = 'file-info ready';
                         file1Status.style.display = 'block';
 
@@ -1805,7 +1806,7 @@ window.pyProcessAudio = process_audio_if_ready
                     // Set global JS variables that Python can access
                     window.js_file0_data = file0Data.bytes;
                     // Only pass file1 in advanced mode
-                    window.js_file1_data = (mode === 'advanced' && file1Data) ? file1Data.bytes : null;
+                    window.js_file1_data = (mode === 'advanced' && window.file1Data) ? window.file1Data.bytes : null;
                     window.js_config = config;
 
                     // Call the Python function asynchronously to allow UI updates
