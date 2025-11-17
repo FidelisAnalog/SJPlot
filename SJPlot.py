@@ -31,7 +31,7 @@ import io
 import base64
 
 
-__version__ = "18.4.1"
+__version__ = "18.4.2"
 
 
 # Try to import js module for web environment
@@ -1101,8 +1101,8 @@ def main():
             axs[0].set_ylim(*OVERRIDE_Y_LIMIT_VALUE)
 
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
-
-		if file1_data:
+        
+        if file1_data:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
             axs[0].legend([("#0000ff", "-", "#ff0000", "-"),],
                        ['Freq Response'],
