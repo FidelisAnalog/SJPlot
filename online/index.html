@@ -523,6 +523,38 @@
 
             console.log('UI mode switched to:', mode);
         };
+
+        // Define clearFile1 globally so it's available for onclick handlers
+        window.clearFile1 = function() {
+            // Reset file1Data
+            file1Data = null;
+
+            // Clear the file input
+            const fileInput1 = document.getElementById('fileInput1');
+            if (fileInput1) {
+                fileInput1.value = '';
+            }
+
+            // Hide the file status
+            const file1Status = document.getElementById('file1Status');
+            if (file1Status) {
+                file1Status.style.display = 'none';
+                file1Status.innerHTML = '';
+            }
+
+            // Hide the clear button
+            const clearBtn = document.getElementById('clearFile1Btn');
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+            }
+
+            // Update analyze button state
+            if (window.updateAnalyzeButtonState) {
+                window.updateAnalyzeButtonState();
+            }
+
+            console.log('File 1 cleared');
+        };
     </script>
 </head>
 <body>
@@ -1341,41 +1373,10 @@ window.pyProcessAudio = process_audio_if_ready
             }
         }
 
-        // Clear file1 upload
-        function clearFile1() {
-            // Reset file1Data
-            file1Data = null;
-
-            // Clear the file input
-            const fileInput1 = document.getElementById('fileInput1');
-            if (fileInput1) {
-                fileInput1.value = '';
-            }
-
-            // Hide the file status
-            const file1Status = document.getElementById('file1Status');
-            if (file1Status) {
-                file1Status.style.display = 'none';
-                file1Status.innerHTML = '';
-            }
-
-            // Hide the clear button
-            const clearBtn = document.getElementById('clearFile1Btn');
-            if (clearBtn) {
-                clearBtn.style.display = 'none';
-            }
-
-            // Update analyze button state
-            updateAnalyzeButtonState();
-
-            console.log('File 1 cleared');
-        }
-
         // Make functions globally available for Python to call
         window.updateAnalyzeButtonState = updateAnalyzeButtonState;
         window.updateUIWithResults = updateUIWithResults;
         window.updateUIWithError = updateUIWithError;
-        window.clearFile1 = clearFile1;
         
         // Function for Python to update progress status (works across worker boundary)
         window.updateProgressStatus = function(statusText) {
