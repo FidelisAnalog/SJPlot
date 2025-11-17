@@ -829,7 +829,7 @@ def main():
         for fo, ao, aox, ao2, ao3 in dataout:
             print(fo, ao, aox, ao2, ao3, sep=', ')
 
-        if file1_data::
+        if file1_data:
             dao1 = [*ao1, *[''] * (len(fo1) - len(ao1))]
             daox1 = [*aox1, *[''] * (len(fo1) - len(aox1))]
             dao2h1 = [*ao2h1, *[''] * (len(fo1) - len(ao2h1))]
