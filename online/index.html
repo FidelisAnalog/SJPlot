@@ -1490,8 +1490,9 @@ window.pyProcessAudio = process_audio_if_ready
             
             // Force UI update before starting Python processing
             setTimeout(() => {
-                // Determine which mode we're in
-                const mode = document.querySelector('input[name="uiMode"]:checked').value;
+                // Determine which mode we're in by checking which config section is visible
+                const standardConfig = document.getElementById('standardConfig');
+                const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
                 let config;
 
                 if (mode === 'standard') {
