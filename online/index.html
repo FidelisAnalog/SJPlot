@@ -400,7 +400,6 @@
         .config-tabs button {
             background: #e8ecff;
             border: 2px solid transparent;
-            border-bottom: none;
             border-radius: 12px 12px 0 0;
             padding: 12px 28px;
             font-size: 1em;
@@ -1275,7 +1274,7 @@ window.pyProcessAudio = process_audio_if_ready
         };
         
         // Test Record RIAA Settings Mapping
-        const testRecordRIAASettings = {
+        window.testRecordRIAASettings = {
             'STR100':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
             'TRS1007':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
             'TRS1005':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
@@ -1290,7 +1289,7 @@ window.pyProcessAudio = process_audio_if_ready
         };
         
         // Function to update RIAA settings based on test record and recording type
-        function updateRIAASettings() {
+        window.updateRIAASettings = function() {
             // Only run this in standard mode
             const standardConfig = document.getElementById('standardConfig');
             if (!standardConfig || standardConfig.style.display === 'none') {
@@ -1299,11 +1298,11 @@ window.pyProcessAudio = process_audio_if_ready
 
             const testRecord = document.getElementById('testRecord').value;
             const recordingType = document.getElementById('recordingType').value;
-            const settings = testRecordRIAASettings[testRecord][recordingType];
+            const settings = window.testRecordRIAASettings[testRecord][recordingType];
 
             document.getElementById('riaaMode').value = settings.mode;
             document.getElementById('riaaInverse').checked = settings.inverse;
-        }
+        };
 
         // Initialize UI event listeners when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
