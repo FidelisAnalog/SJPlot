@@ -518,8 +518,10 @@
                 </svg>
                 Advanced Configuration
             </h3>
+
+            <!-- Files to Process -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Files to Process</h4>
             <div class="config-grid">
-                <!-- File Uploads -->
                 <div class="config-item text-input-item">
                     <label>File 0 (WAV)</label>
                     <input type="file" id="fileInput0Advanced" accept=".wav" style="padding: 8px; font-size: 0.9em;" />
@@ -530,8 +532,11 @@
                     <input type="file" id="fileInput1" accept=".wav" style="padding: 8px; font-size: 0.9em;" />
                     <span id="file1Status" style="font-size: 0.85em; color: #666; margin-top: 4px;"></span>
                 </div>
+            </div>
 
-                <!-- Text Inputs -->
+            <!-- Metadata -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Metadata</h4>
+            <div class="config-grid">
                 <div class="config-item text-input-item">
                     <label>Plot Info (Title)</label>
                     <input type="text" id="plotInfoAdvanced" placeholder="Cart / Load / Record" autocomplete="off" />
@@ -541,19 +546,23 @@
                     <input type="text" id="equipInfoAdvanced" placeholder="Arm -> Phonostage -> ADC" />
                 </div>
                 <div class="config-item text-input-item">
-                    <label>Normalize (Hz)</label>
-                    <input type="number" id="normalizeAdvanced" value="1000" />
-                </div>
-                <div class="config-item text-input-item">
-                    <label>End Frequency (Hz)</label>
-                    <input type="number" id="endF" placeholder="e.g., 20000" />
-                </div>
-                <div class="config-item text-input-item">
                     <label>Author</label>
                     <input type="text" id="authorAdvanced" placeholder="Author Name" autocomplete="off"/>
                 </div>
+            </div>
 
-                <!-- Dropdowns -->
+            <!-- Sweep Extraction -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Sweep Extraction</h4>
+            <div class="config-grid">
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="extractSweeps" checked />
+                    <label>Extract Sweeps</label>
+                </div>
+            </div>
+
+            <!-- Plot Parameters -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Plot Parameters</h4>
+            <div class="config-grid">
                 <div class="config-item dropdown-item">
                     <label>Plot Style</label>
                     <select id="plotStyleAdvanced">
@@ -564,6 +573,27 @@
                         <option value="5">Style 5 - Minimal</option>
                     </select>
                 </div>
+                <div class="config-item text-input-item">
+                    <label>Normalize (Hz)</label>
+                    <input type="number" id="normalizeAdvanced" value="1000" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>End Frequency (Hz)</label>
+                    <input type="number" id="endF" placeholder="e.g., 20000" />
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="file0norm" />
+                    <label>Normalize Both Files to File 0</label>
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="onekfstart" />
+                    <label>1kHz Start</label>
+                </div>
+            </div>
+
+            <!-- Audio Processing -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Audio Processing</h4>
+            <div class="config-grid">
                 <div class="config-item dropdown-item">
                     <label>RIAA Mode</label>
                     <select id="riaaModeAdvanced">
@@ -573,23 +603,9 @@
                         <option value="3" selected>Both</option>
                     </select>
                 </div>
-
-                <!-- Checkboxes -->
                 <div class="config-item checkbox-item">
                     <input type="checkbox" id="riaaInverseAdvanced" checked />
                     <label>Inverse RIAA</label>
-                </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="extractSweeps" checked />
-                    <label>Extract Sweeps</label>
-                </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="file0norm" />
-                    <label>Normalize Both Files to File 0</label>
-                </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="onekfstart" />
-                    <label>1kHz Start</label>
                 </div>
                 <div class="config-item checkbox-item">
                     <input type="checkbox" id="str100" />
