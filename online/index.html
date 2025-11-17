@@ -405,6 +405,32 @@
             height: 16px;
         }
     </style>
+    <script>
+        // Define tab switcher globally so it's available for onclick handlers
+        window.switchConfigMode = function(mode) {
+            const standardConfig = document.getElementById('standardConfig');
+            const advancedConfig = document.getElementById('advancedConfig');
+            const uploadArea = document.querySelector('.upload-area');
+            const standardTab = document.getElementById('standardTab');
+            const advancedTab = document.getElementById('advancedTab');
+
+            if (mode === 'standard') {
+                standardConfig.style.display = 'block';
+                advancedConfig.style.display = 'none';
+                uploadArea.style.display = 'flex';
+                standardTab.classList.add('active');
+                advancedTab.classList.remove('active');
+            } else {
+                standardConfig.style.display = 'none';
+                advancedConfig.style.display = 'block';
+                uploadArea.style.display = 'none';
+                standardTab.classList.remove('active');
+                advancedTab.classList.add('active');
+            }
+
+            console.log('UI mode switched to:', mode);
+        };
+    </script>
 </head>
 <body>
     <div class="container">
@@ -1171,31 +1197,6 @@ window.pyProcessAudio = process_audio_if_ready
             document.getElementById('riaaMode').value = settings.mode;
             document.getElementById('riaaInverse').checked = settings.inverse;
         }
-        
-        // Function to switch between standard and advanced modes
-        window.switchConfigMode = function(mode) {
-            const standardConfig = document.getElementById('standardConfig');
-            const advancedConfig = document.getElementById('advancedConfig');
-            const uploadArea = document.querySelector('.upload-area');
-            const standardTab = document.getElementById('standardTab');
-            const advancedTab = document.getElementById('advancedTab');
-
-            if (mode === 'standard') {
-                standardConfig.style.display = 'block';
-                advancedConfig.style.display = 'none';
-                uploadArea.style.display = 'flex';
-                standardTab.classList.add('active');
-                advancedTab.classList.remove('active');
-            } else {
-                standardConfig.style.display = 'none';
-                advancedConfig.style.display = 'block';
-                uploadArea.style.display = 'none';
-                standardTab.classList.remove('active');
-                advancedTab.classList.add('active');
-            }
-
-            console.log('UI mode switched to:', mode);
-        };
 
         // Initialize UI event listeners when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
