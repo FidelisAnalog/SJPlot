@@ -1518,7 +1518,7 @@ window.pyProcessAudio = process_audio_if_ready
                 let config;
 
                 if (mode === 'standard') {
-                    // Standard mode configuration
+                    // Standard mode configuration with defaults for advanced-only parameters
                     config = {
                         plot_info: document.getElementById('plotInfo').value || "Cart / Load / Record",
                         equip_info: document.getElementById('equipInfo').value || "Arm -> Phonostage -> ADC",
@@ -1528,7 +1528,13 @@ window.pyProcessAudio = process_audio_if_ready
                         normalize: parseInt(document.getElementById('normalize').value),
                         extract_sweeps: 1, // Always enabled in standard mode
                         test_record: document.getElementById('testRecord').value,
-                        author: document.getElementById('author').value
+                        author: document.getElementById('author').value,
+                        // Advanced-only parameters with default values
+                        end_f: null,
+                        file0norm: 0,
+                        onekfstart: 0,
+                        str100: 0,
+                        xg7001: 0
                     };
                 } else {
                     // Advanced mode configuration
