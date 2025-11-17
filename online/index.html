@@ -596,6 +596,13 @@
                         Select WAV File
                     </button>
                     <div id="file1Status" class="file-info" style="display: none;"></div>
+                    <button id="clearFile1Btn" class="clear-file-btn" onclick="clearFile1()" style="margin-top: 10px; padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; align-items: center; gap: 6px; justify-content: center; display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Clear File
+                    </button>
                 </div>
             </div>
         </div>
@@ -1334,6 +1341,36 @@ window.pyProcessAudio = process_audio_if_ready
             }
         }
 
+        // Clear file1 upload
+        function clearFile1() {
+            // Reset file1Data
+            file1Data = null;
+
+            // Clear the file input
+            const fileInput1 = document.getElementById('fileInput1');
+            if (fileInput1) {
+                fileInput1.value = '';
+            }
+
+            // Hide the file status
+            const file1Status = document.getElementById('file1Status');
+            if (file1Status) {
+                file1Status.style.display = 'none';
+                file1Status.innerHTML = '';
+            }
+
+            // Hide the clear button
+            const clearBtn = document.getElementById('clearFile1Btn');
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+            }
+
+            // Update analyze button state
+            updateAnalyzeButtonState();
+
+            console.log('File 1 cleared');
+        }
+
         // Make functions globally available for Python to call
         window.updateAnalyzeButtonState = updateAnalyzeButtonState;
         window.updateUIWithResults = updateUIWithResults;
@@ -1525,6 +1562,12 @@ window.pyProcessAudio = process_audio_if_ready
                         file1Status.innerHTML = `✅ ${file1Data.name}`;
                         file1Status.className = 'file-info ready';
                         file1Status.style.display = 'block';
+
+                        // Show clear button
+                        const clearBtn = document.getElementById('clearFile1Btn');
+                        if (clearBtn) {
+                            clearBtn.style.display = 'flex';
+                        }
                     }
 
                     updateAnalyzeButtonState();
