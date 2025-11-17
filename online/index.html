@@ -142,8 +142,10 @@
         .config-section {
             background: #f8f9ff;
             padding: 25px;
-            border-radius: 15px;
+            border-radius: 0 15px 15px 15px;
             margin-bottom: 30px;
+            border: 2px solid #667eea;
+            border-top: 2px solid #667eea;
         }
         .config-grid {
             display: grid;
@@ -169,10 +171,9 @@
                 flex: 0 0 calc(50% - 10px);
             }
 
-            /* Checkboxes in full-width row, flowing horizontally */
+            /* Checkboxes also at 50% width to align with grid */
             .checkbox-item {
-                flex: 0 0 auto;
-                margin-right: 30px;
+                flex: 0 0 calc(50% - 10px);
             }
         }
         .config-item { display: flex; flex-direction: column; }
@@ -349,30 +350,36 @@
         .config-item:has(#normalize) {
             display: none;
         }
-        /* Mode switcher styling */
-        .mode-switcher {
-            background: #f8f9ff;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            text-align: center;
+        /* Tab navigation styling */
+        .config-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 1;
         }
-        .mode-switcher label {
-            margin: 0 10px;
+        .config-tabs button {
+            background: #e8ecff;
+            border: 2px solid transparent;
+            border-bottom: none;
+            border-radius: 12px 12px 0 0;
+            padding: 12px 28px;
+            font-size: 1em;
             font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .config-tabs button:hover {
+            background: #d8dfff;
             color: #333;
-            cursor: pointer;
-            padding: 8px 20px;
-            border-radius: 8px;
-            transition: background 0.3s ease;
-            display: inline-block;
         }
-        .mode-switcher label:hover {
-            background: rgba(102, 126, 234, 0.1);
-        }
-        .mode-switcher input[type="radio"] {
-            margin-right: 8px;
-            cursor: pointer;
+        .config-tabs button.active {
+            background: #f8f9ff;
+            color: #667eea;
+            border-color: #667eea;
+            border-bottom: 2px solid #f8f9ff;
         }
         .download-icon {
             display: none;
@@ -429,16 +436,10 @@
             <div id="fileInfo" class="file-info" style="display: none;"></div>
         </div>
 
-        <!-- UI Mode Switcher -->
-        <div class="mode-switcher">
-            <label>
-                <input type="radio" name="uiMode" value="standard" checked>
-                Standard
-            </label>
-            <label>
-                <input type="radio" name="uiMode" value="advanced">
-                Advanced
-            </label>
+        <!-- Configuration Tabs -->
+        <div class="config-tabs">
+            <button id="standardTab" class="active" onclick="switchConfigMode('standard')">Standard</button>
+            <button id="advancedTab" onclick="switchConfigMode('advanced')">Advanced</button>
         </div>
 
         <!-- Standard Configuration Section -->
@@ -1171,21 +1172,26 @@ window.pyProcessAudio = process_audio_if_ready
             document.getElementById('riaaInverse').checked = settings.inverse;
         }
         
-        // Function to toggle between standard and advanced modes
-        function toggleUIMode() {
-            const mode = document.querySelector('input[name="uiMode"]:checked').value;
+        // Function to switch between standard and advanced modes
+        function switchConfigMode(mode) {
             const standardConfig = document.getElementById('standardConfig');
             const advancedConfig = document.getElementById('advancedConfig');
             const uploadArea = document.querySelector('.upload-area');
+            const standardTab = document.getElementById('standardTab');
+            const advancedTab = document.getElementById('advancedTab');
 
             if (mode === 'standard') {
                 standardConfig.style.display = 'block';
                 advancedConfig.style.display = 'none';
                 uploadArea.style.display = 'flex';
+                standardTab.classList.add('active');
+                advancedTab.classList.remove('active');
             } else {
                 standardConfig.style.display = 'none';
                 advancedConfig.style.display = 'block';
                 uploadArea.style.display = 'none';
+                standardTab.classList.remove('active');
+                advancedTab.classList.add('active');
             }
 
             console.log('UI mode switched to:', mode);
@@ -1197,11 +1203,6 @@ window.pyProcessAudio = process_audio_if_ready
 
             // Initialize RIAA settings on page load
             updateRIAASettings();
-
-            // Set up mode switcher
-            document.querySelectorAll('input[name="uiMode"]').forEach(radio => {
-                radio.addEventListener('change', toggleUIMode);
-            });
 
             // Standard mode file input
             document.getElementById('fileInput0').addEventListener('change', e => handleFile(e.target.files[0], 0));
