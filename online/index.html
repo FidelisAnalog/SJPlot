@@ -415,12 +415,28 @@
             const advancedTab = document.getElementById('advancedTab');
 
             if (mode === 'standard') {
+                // Copy settings from advanced to standard before switching
+                document.getElementById('plotInfo').value = document.getElementById('plotInfoAdvanced').value;
+                document.getElementById('equipInfo').value = document.getElementById('equipInfoAdvanced').value;
+                document.getElementById('plotStyle').value = document.getElementById('plotStyleAdvanced').value;
+                document.getElementById('normalize').value = document.getElementById('normalizeAdvanced').value;
+                document.getElementById('author').value = document.getElementById('authorAdvanced').value;
+
                 standardConfig.style.display = 'block';
                 advancedConfig.style.display = 'none';
                 uploadArea.style.display = 'flex';
                 standardTab.classList.add('active');
                 advancedTab.classList.remove('active');
             } else {
+                // Copy settings from standard to advanced before switching
+                document.getElementById('plotInfoAdvanced').value = document.getElementById('plotInfo').value;
+                document.getElementById('equipInfoAdvanced').value = document.getElementById('equipInfo').value;
+                document.getElementById('plotStyleAdvanced').value = document.getElementById('plotStyle').value;
+                document.getElementById('normalizeAdvanced').value = document.getElementById('normalize').value;
+                document.getElementById('authorAdvanced').value = document.getElementById('author').value;
+                document.getElementById('riaaModeAdvanced').value = document.getElementById('riaaMode').value;
+                document.getElementById('riaaInverseAdvanced').checked = document.getElementById('riaaInverse').checked;
+
                 standardConfig.style.display = 'none';
                 advancedConfig.style.display = 'block';
                 uploadArea.style.display = 'none';
@@ -1190,10 +1206,16 @@ window.pyProcessAudio = process_audio_if_ready
         
         // Function to update RIAA settings based on test record and recording type
         function updateRIAASettings() {
+            // Only run this in standard mode
+            const standardConfig = document.getElementById('standardConfig');
+            if (!standardConfig || standardConfig.style.display === 'none') {
+                return; // Exit if we're in advanced mode
+            }
+
             const testRecord = document.getElementById('testRecord').value;
             const recordingType = document.getElementById('recordingType').value;
             const settings = testRecordRIAASettings[testRecord][recordingType];
-            
+
             document.getElementById('riaaMode').value = settings.mode;
             document.getElementById('riaaInverse').checked = settings.inverse;
         }
