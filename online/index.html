@@ -469,6 +469,9 @@
                 advancedUploadArea.style.display = 'none';
                 standardTab.classList.add('active');
                 advancedTab.classList.remove('active');
+
+                // Recalculate RIAA settings based on test record and recording type
+                updateRIAASettings();
             } else {
                 // Copy settings from standard to advanced before switching
                 document.getElementById('plotInfoAdvanced').value = document.getElementById('plotInfo').value;
