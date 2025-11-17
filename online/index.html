@@ -122,13 +122,11 @@
             gap: 8px;
             justify-content: center;
         }
-        .advanced-upload-area {
-            margin-bottom: 30px;
-        }
         .advanced-upload-grid {
             display: flex;
             gap: 20px;
             flex-direction: column;
+            margin-bottom: 20px;
         }
         @media (min-width: 768px) {
             .advanced-upload-grid {
@@ -148,6 +146,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+        }
+        .upload-half.drag-over {
+            background-color: #e8ecff;
+            border-color: #764ba2;
+            transform: scale(1.02);
         }
         .upload-half h3 {
             margin: 0 0 20px 0;
@@ -444,8 +447,6 @@
         window.switchConfigMode = function(mode) {
             const standardConfig = document.getElementById('standardConfig');
             const advancedConfig = document.getElementById('advancedConfig');
-            const advancedUploadArea = document.getElementById('advancedUploadArea');
-            const advancedConfigContent = document.getElementById('advancedConfigContent');
             const uploadArea = document.querySelector('.upload-area');
             const standardTab = document.getElementById('standardTab');
             const advancedTab = document.getElementById('advancedTab');
@@ -461,8 +462,6 @@
 
                 standardConfig.style.display = 'block';
                 advancedConfig.style.display = 'none';
-                advancedUploadArea.style.display = 'none';
-                advancedConfigContent.style.display = 'none';
                 uploadArea.style.display = 'flex';
                 standardTab.classList.add('active');
                 advancedTab.classList.remove('active');
@@ -479,8 +478,6 @@
 
                 standardConfig.style.display = 'none';
                 advancedConfig.style.display = 'block';
-                advancedUploadArea.style.display = 'block';
-                advancedConfigContent.style.display = 'block';
                 uploadArea.style.display = 'none';
                 standardTab.classList.remove('active');
                 advancedTab.classList.add('active');
@@ -610,12 +607,10 @@
                 </svg>
                 Advanced Configuration
             </h3>
-        </div>
 
-        <!-- Advanced File Upload Area -->
-        <div class="advanced-upload-area" id="advancedUploadArea" style="display: none;">
+            <!-- Advanced File Upload Area -->
             <div class="advanced-upload-grid">
-                <div class="upload-half">
+                <div class="upload-half" id="uploadHalf0">
                     <h3 style="display: flex; align-items: center; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -634,7 +629,7 @@
                     </button>
                     <div id="fileInfo0Advanced" class="file-info" style="display: none;"></div>
                 </div>
-                <div class="upload-half">
+                <div class="upload-half" id="uploadHalf1">
                     <h3 style="display: flex; align-items: center; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -654,10 +649,6 @@
                     <div id="fileInfo1" class="file-info" style="display: none;"></div>
                 </div>
             </div>
-        </div>
-
-        <!-- Advanced Config Content -->
-        <div class="config-section" id="advancedConfigContent" style="display: none;">
             <!-- Metadata -->
             <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Metadata</h4>
             <div class="config-grid">
@@ -1353,7 +1344,53 @@ window.pyProcessAudio = process_audio_if_ready
                     handleFile(file, 0);
                 }
             });
-            
+
+            // Drag and drop for advanced mode file 0
+            const uploadHalf0 = document.getElementById('uploadHalf0');
+
+            uploadHalf0.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadHalf0.classList.add('drag-over');
+            });
+
+            uploadHalf0.addEventListener('dragleave', (e) => {
+                if (e.target === uploadHalf0) {
+                    uploadHalf0.classList.remove('drag-over');
+                }
+            });
+
+            uploadHalf0.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadHalf0.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFile(file, 0);
+                }
+            });
+
+            // Drag and drop for advanced mode file 1
+            const uploadHalf1 = document.getElementById('uploadHalf1');
+
+            uploadHalf1.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadHalf1.classList.add('drag-over');
+            });
+
+            uploadHalf1.addEventListener('dragleave', (e) => {
+                if (e.target === uploadHalf1) {
+                    uploadHalf1.classList.remove('drag-over');
+                }
+            });
+
+            uploadHalf1.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadHalf1.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFile(file, 1);
+                }
+            });
+
             console.log('File input and drag-and-drop handlers ready!');
         });
         
