@@ -789,7 +789,7 @@ def main():
 
         logger.info(f"Right crosstalk @1kHz: {aox1[find_nearest(fox1, 1000)]:.2f}dB")
 
-        INPUT_FILE_1 = '_'
+        file1_data = '_'
 
 
     else:
@@ -829,7 +829,7 @@ def main():
         for fo, ao, aox, ao2, ao3 in dataout:
             print(fo, ao, aox, ao2, ao3, sep=', ')
 
-        if INPUT_FILE_1:
+        if file1_data::
             dao1 = [*ao1, *[''] * (len(fo1) - len(ao1))]
             daox1 = [*aox1, *[''] * (len(fo1) - len(aox1))]
             dao2h1 = [*ao2h1, *[''] * (len(fo1) - len(ao2h1))]
@@ -857,7 +857,7 @@ def main():
         axs[0].semilogx(fox0,aox0,color = '#0000ff', linestyle = (0, (3, 1, 1, 1)), label = 'Crosstalk')
  
 
-        if INPUT_FILE_1:
+        if file1_data:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axs[0].semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -923,7 +923,7 @@ def main():
         axs[0].semilogx(fox0,aox0,color = '#0000ff', linestyle = (0, (3, 1, 1, 1)), label = 'Crosstalk')
  
  
-        if INPUT_FILE_1:
+        if file1_data:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axtwin.semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -972,7 +972,7 @@ def main():
         axs[1].semilogx(fo3h0,ao3h0,color = '#00dfff', label = '3rd Harmonic')
 
 
-        if INPUT_FILE_1:
+        if file1_data:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axs[1].semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic')
@@ -1031,7 +1031,7 @@ def main():
         axs[1].semilogx(fox0,aox0,color = '#0000ff', linestyle = (0, (3, 1, 1, 1)), label = 'Crosstalk')
  
  
-        if INPUT_FILE_1:
+        if file1_data:
             axs[1].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
 
             axtwin.semilogx(fo2h1,ao2h1,color = '#ff8000', label = '2ⁿᵈ Harmonic', alpha = 1, linewidth = 0.75)
@@ -1056,7 +1056,7 @@ def main():
         axs[1].set_ylim(new_lim1)
         axtwin.set_ylim(new_lim2)
 
-        if INPUT_FILE_1:
+        if file1_data:
             if (min(chain(ao0, ao1)) <-5) or (max(chain(ao0, ao1)) >5):
                 axs[0].autoscale(enable=True, axis='y')
         elif (min(ao0) <-5) or (max(ao0) >5):
@@ -1067,7 +1067,7 @@ def main():
 
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
      
-        if INPUT_FILE_1:
+        if file1_data:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
             axs[0].legend([("#0000ff", "-", "#ff0000", "-"),],
                        ['Freq Response'],
@@ -1091,7 +1091,7 @@ def main():
 
         axs[0].set_ylim(-5,5)
 
-        if INPUT_FILE_1:
+        if file1_data:
             if (min(chain(ao0, ao1)) <-5) or (max(chain(ao0, ao1)) >5):
                 axs[0].autoscale(enable=True, axis='y')
         elif (min(ao0) <-5) or (max(ao0) >5):
@@ -1102,7 +1102,7 @@ def main():
 
         axs[0].semilogx(fo0,ao0,color = '#0000ff', label = 'Freq Response')
 
-        if INPUT_FILE_1:
+		if file1_data:
             axs[0].semilogx(fo1,ao1, color = '#ff0000', label = 'Freq Response')
             axs[0].legend([("#0000ff", "-", "#ff0000", "-"),],
                        ['Freq Response'],
@@ -1144,7 +1144,7 @@ def main():
              xytext=(-10, -20), textcoords='offset points', \
              ha="left", va="center", bbox=bbox_args)
 
-    if INPUT_FILE_1:
+    if file1_data:
         bbox_args = dict(boxstyle="round", color='b', fc='w', ec='r', alpha=1, pad=.15)
         axs[0].annotate('+' + str(deltah1) + ', ' + u"\u2212" + str(deltal1) + ' dB',color = 'r',\
                  xy=(fo0[0],(ao0[0]-1)), xycoords='data', \
@@ -1183,7 +1183,7 @@ def main():
 
     else:
 
-        if INPUT_FILE_1:
+        if file1_data:
             plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
                 now.strftime("%b %d, %Y %H:%M"), fontsize=6)
         else:
