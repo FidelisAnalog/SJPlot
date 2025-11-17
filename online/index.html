@@ -326,15 +326,43 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        #output { 
-            margin-top: 30px; 
+        #output {
+            margin-top: 30px;
             text-align: center;
+        }
+        #output .plot-container {
+            position: relative;
+            display: inline-block;
         }
         #output img {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: block;
+        }
+        .plot-button {
+            position: absolute;
+            top: 10px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            transition: opacity 0.2s;
+        }
+        .plot-button:hover {
+            opacity: 0.8;
+        }
+        #copy-plot-btn {
+            right: 45px;
+        }
+        #download-plot-btn {
+            right: 10px;
         }
         .error-waveform {
             margin-top: 15px;
@@ -399,7 +427,7 @@
         }
         .config-tabs button {
             background: #e8ecff;
-            border: 2px solid transparent;
+            border: none;
             border-bottom: 2px solid #667eea;
             border-radius: 12px 12px 0 0;
             padding: 12px 28px;
@@ -417,7 +445,7 @@
         .config-tabs button.active {
             background: #f8f9ff;
             color: #667eea;
-            border-color: #667eea;
+            border: 2px solid #667eea;
             border-bottom: none;
         }
         .download-icon {
@@ -495,6 +523,38 @@
 
             console.log('UI mode switched to:', mode);
         };
+
+        // Define clearFile1 globally so it's available for onclick handlers
+        window.clearFile1 = function() {
+            // Reset file1Data (accessed via window to ensure we're modifying the global variable)
+            window.file1Data = null;
+
+            // Clear the file input
+            const fileInput1 = document.getElementById('fileInput1');
+            if (fileInput1) {
+                fileInput1.value = '';
+            }
+
+            // Hide the file status
+            const file1Status = document.getElementById('file1Status');
+            if (file1Status) {
+                file1Status.style.display = 'none';
+                file1Status.innerHTML = '';
+            }
+
+            // Hide the clear button
+            const clearBtn = document.getElementById('clearFile1Btn');
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+            }
+
+            // Update analyze button state
+            if (window.updateAnalyzeButtonState) {
+                window.updateAnalyzeButtonState();
+            }
+
+            console.log('File 1 cleared');
+        };
     </script>
 </head>
 <body>
@@ -568,6 +628,13 @@
                         Select WAV File
                     </button>
                     <div id="file1Status" class="file-info" style="display: none;"></div>
+                    <button id="clearFile1Btn" class="clear-file-btn" onclick="clearFile1()" style="margin-top: 10px; padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; align-items: center; gap: 6px; justify-content: center; display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Clear File
+                    </button>
                 </div>
             </div>
         </div>
@@ -794,15 +861,7 @@
             <p><strong>Processing...</strong></p>
         </div>
         <div id="output"></div>
-        
-        <button class="download-icon" id="downloadBtn" onclick="downloadPlot()" title="Download plot">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-        </button>
-        
+
         <div class="footer">
             <p><a href="https://github.com/FidelisAnalog/SJPlot">SJPlot</a> by JP Jones, conceived by Scott Wurcer</p>
             <p>Need help? Try the <a href="https://www.audiosciencereview.com/forum/index.php?threads/phono-cartridge-response-measurement-script.41148/" target="_blank">official thread at AudioScienceReview</a></p>
@@ -860,8 +919,9 @@ window.pyProcessAudio = process_audio_if_ready
         const sessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         let analysisCounter = 0;
         let currentAnalysisId = null;
-        
-        let file0Data = null, file1Data = null;
+
+        let file0Data = null;
+        window.file1Data = null;  // Expose file1Data globally so clearFile1 can access it
         let fileLoadedViaUrl = false;
         let pyScriptReady = false;
         
@@ -926,7 +986,38 @@ window.pyProcessAudio = process_audio_if_ready
             if (savedAuthor) {
                 document.getElementById('author').value = savedAuthor;
             }
-            
+
+            // Load advanced mode settings
+            const savedExtractSweeps = loadPreference('extractSweeps');
+            if (savedExtractSweeps !== null) {
+                document.getElementById('extractSweeps').checked = savedExtractSweeps === 'true';
+            }
+
+            const savedEndF = loadPreference('endF');
+            if (savedEndF) {
+                document.getElementById('endF').value = savedEndF;
+            }
+
+            const savedFile0norm = loadPreference('file0norm');
+            if (savedFile0norm !== null) {
+                document.getElementById('file0norm').checked = savedFile0norm === 'true';
+            }
+
+            const savedOnekfstart = loadPreference('onekfstart');
+            if (savedOnekfstart !== null) {
+                document.getElementById('onekfstart').checked = savedOnekfstart === 'true';
+            }
+
+            const savedRiaaMode = loadPreference('riaaMode');
+            if (savedRiaaMode) {
+                document.getElementById('riaaModeAdvanced').value = savedRiaaMode;
+            }
+
+            const savedRiaaInverse = loadPreference('riaaInverse');
+            if (savedRiaaInverse !== null) {
+                document.getElementById('riaaInverseAdvanced').checked = savedRiaaInverse === 'true';
+            }
+
             console.log('Loaded saved preferences');
             
             // Check for ?file= URL parameter
@@ -978,6 +1069,31 @@ window.pyProcessAudio = process_audio_if_ready
             // Save author to localStorage on input change
             authorInput.addEventListener('input', function() {
                 localStorage.setItem('author', authorInput.value);
+            });
+
+            // Save advanced mode settings when they change
+            document.getElementById('extractSweeps').addEventListener('change', function() {
+                savePreference('extractSweeps', this.checked);
+            });
+
+            document.getElementById('endF').addEventListener('input', function() {
+                savePreference('endF', this.value);
+            });
+
+            document.getElementById('file0norm').addEventListener('change', function() {
+                savePreference('file0norm', this.checked);
+            });
+
+            document.getElementById('onekfstart').addEventListener('change', function() {
+                savePreference('onekfstart', this.checked);
+            });
+
+            document.getElementById('riaaModeAdvanced').addEventListener('change', function() {
+                savePreference('riaaMode', this.value);
+            });
+
+            document.getElementById('riaaInverseAdvanced').addEventListener('change', function() {
+                savePreference('riaaInverse', this.checked);
             });
         });
         
@@ -1262,7 +1378,58 @@ window.pyProcessAudio = process_audio_if_ready
                 });
             }
         }
-        
+
+        // Function to copy the plot image to clipboard
+        async function copyPlotToClipboard() {
+            try {
+                const outputDiv = document.getElementById('output');
+                const img = outputDiv.querySelector('img');
+
+                if (!img) {
+                    alert('No plot available to copy');
+                    return;
+                }
+
+                // Check if clipboard API is available
+                if (!navigator.clipboard || !navigator.clipboard.write) {
+                    alert('Clipboard API not supported in this browser. Try using the download button instead.');
+                    return;
+                }
+
+                // Safari requires ClipboardItem to be created synchronously,
+                // but the blob can be a Promise that resolves later
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'image/png': new Promise(async (resolve, reject) => {
+                            try {
+                                const response = await fetch(img.src);
+                                const blob = await response.blob();
+                                resolve(blob);
+                            } catch (error) {
+                                reject(error);
+                            }
+                        })
+                    })
+                ]);
+
+                console.log('Plot image copied to clipboard');
+
+                // Google Analytics event: plot copy
+                if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                    gtag('event', 'plot_copy', {
+                        'event_category': 'Clipboard',
+                        'event_label': 'plot_copy',
+                        'app_session_id': sessionId,
+                        'app_analysis_id': currentAnalysisId
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error copying plot to clipboard:', error);
+                alert('Failed to copy image to clipboard. Try the download button instead.');
+            }
+        }
+
         // Make functions globally available for Python to call
         window.updateAnalyzeButtonState = updateAnalyzeButtonState;
         window.updateUIWithResults = updateUIWithResults;
@@ -1412,7 +1579,6 @@ window.pyProcessAudio = process_audio_if_ready
             statusEl.className = '';
             statusEl.innerHTML = '';
             document.getElementById('contributeCta').classList.remove('show');
-            document.getElementById('downloadBtn').style.display = 'none';
 
             const fileName = file.name.toLowerCase();
 
@@ -1447,14 +1613,20 @@ window.pyProcessAudio = process_audio_if_ready
                         file0Status.className = 'file-info ready';
                         file0Status.style.display = 'block';
                     } else if (index === 1) {
-                        file1Data = {name: file.name, bytes: wavBytes};
+                        window.file1Data = {name: file.name, bytes: wavBytes};
                         console.log('File 1 loaded');
 
                         // Update status in advanced mode
                         const file1Status = document.getElementById('file1Status');
-                        file1Status.innerHTML = `✅ ${file1Data.name}`;
+                        file1Status.innerHTML = `✅ ${window.file1Data.name}`;
                         file1Status.className = 'file-info ready';
                         file1Status.style.display = 'block';
+
+                        // Show clear button
+                        const clearBtn = document.getElementById('clearFile1Btn');
+                        if (clearBtn) {
+                            clearBtn.style.display = 'flex';
+                        }
                     }
 
                     updateAnalyzeButtonState();
@@ -1634,7 +1806,6 @@ window.pyProcessAudio = process_audio_if_ready
             statusEl.className = '';
             statusEl.textContent = '';
             document.getElementById('contributeCta').classList.remove('show');
-            document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('loading').classList.add('active');
             document.getElementById('analyzeBtn').disabled = true;
             
@@ -1691,7 +1862,7 @@ window.pyProcessAudio = process_audio_if_ready
                     // Set global JS variables that Python can access
                     window.js_file0_data = file0Data.bytes;
                     // Only pass file1 in advanced mode
-                    window.js_file1_data = (mode === 'advanced' && file1Data) ? file1Data.bytes : null;
+                    window.js_file1_data = (mode === 'advanced' && window.file1Data) ? window.file1Data.bytes : null;
                     window.js_config = config;
 
                     // Call the Python function asynchronously to allow UI updates
@@ -1709,20 +1880,51 @@ window.pyProcessAudio = process_audio_if_ready
         
         function updateUIWithPlotImage(imgData) {
 
-            // Update the output div with the plot image
+            // Update the output div with the plot image and buttons
             const outputDiv = document.getElementById('output');
-            outputDiv.innerHTML = `<img src="data:image/png;base64,${imgData}" />`;
+            outputDiv.innerHTML = `
+                <div class="plot-container">
+                    <button id="copy-plot-btn" class="plot-button" title="Copy plot to clipboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                    </button>
+                    <button id="download-plot-btn" class="plot-button" title="Download plot as PNG">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </button>
+                    <img src="data:image/png;base64,${imgData}" />
+                </div>
+            `;
+
+            // Setup button event listeners
+            const downloadBtn = document.getElementById('download-plot-btn');
+            const copyBtn = document.getElementById('copy-plot-btn');
+
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', () => {
+                    downloadBtn.style.opacity = '0.6';
+                    setTimeout(() => downloadBtn.style.opacity = '1', 200);
+                    downloadPlot();
+                });
+            }
+
+            if (copyBtn) {
+                copyBtn.addEventListener('click', async () => {
+                    copyBtn.style.opacity = '0.6';
+                    setTimeout(() => copyBtn.style.opacity = '1', 200);
+                    await copyPlotToClipboard();
+                });
+            }
 
             // Show the contribute CTA
             const ctaElem = document.getElementById('contributeCta');
             if (ctaElem) {
                 ctaElem.classList.add('show');
-            }
-
-            // Show the download button
-            const downloadBtn = document.getElementById('downloadBtn');
-            if (downloadBtn) {
-                downloadBtn.style.display = 'flex';
             }
 
             // Update the status div
