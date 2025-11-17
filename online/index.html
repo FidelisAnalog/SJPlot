@@ -1697,9 +1697,10 @@ window.pyProcessAudio = process_audio_if_ready
 
                     // Set global JS variables that Python can access
                     window.js_file0_data = file0Data.bytes;
-                    window.js_file1_data = file1Data ? file1Data.bytes : null; // Use file1Data if available (advanced mode)
+                    // Only pass file1 in advanced mode
+                    window.js_file1_data = (mode === 'advanced' && file1Data) ? file1Data.bytes : null;
                     window.js_config = config;
-                    
+
                     // Call the Python function asynchronously to allow UI updates
                     window.pyProcessAudio();
                     
