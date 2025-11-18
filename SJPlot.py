@@ -15,7 +15,7 @@ Details in the README here: https://sjplot.com
 from scipy.signal import find_peaks, sosfiltfilt, iirfilter, lfilter, resample
 from scipy.ndimage import uniform_filter1d
 from scipy.io.wavfile import read, write
-from pathlib import Path
+#from pathlib import Path
 from matplotlib.legend_handler import HandlerBase
 from matplotlib.offsetbox import AnchoredText
 from itertools import chain
@@ -28,10 +28,10 @@ import logging
 import argparse
 import configparser
 import io
-import base64
+#import base64
 
 
-__version__ = "18.4.3"
+__version__ = "18.4.4"
 
 
 # Try to import js module for web environment
@@ -275,11 +275,6 @@ def ft_window(n):
          a3*np.cos(6*np.pi*x/(n-1)) + a4*np.cos(8*np.pi*x/(n-1)))
     return w
 
-'''
-def find_nearest(array, value):
-    return (np.abs(np.asarray(array) - value)).argmin()
-'''
-
 
 def find_nearest(array, value):
     """Fast version for sorted arrays using binary search."""
@@ -385,26 +380,24 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
             
     def slice_frequency_range(freq_array, amp_array, start_f=None, end_f=None):
 	    # Handle start
-	    if not start_f:  # Catches None, "", 0, etc.
-		    idx_min = 0
-	    else:
-		    idx_min = find_nearest(freq_array, float(start_f))
+        if not start_f:  # Catches None, "", 0, etc.
+            idx_min = 0
+        else:
+            idx_min = find_nearest(freq_array, float(start_f))
 		
 	    # Handle end
-	    if not end_f:
-		    idx_max = len(freq_array) - 1
-	    else:
-		    idx_max = find_nearest(freq_array, float(end_f))
+        if not end_f:
+            idx_max = len(freq_array) - 1
+        else:
+            idx_max = find_nearest(freq_array, float(end_f))
 		
 	    # Ensure proper order
-	    if idx_min > idx_max:
-		    idx_min, idx_max = idx_max, idx_min
-		
-	    return freq_array[idx_min:idx_max+1], amp_array[idx_min:idx_max+1]     
-            
-                     
-            
-        
+        if idx_min > idx_max:
+            idx_min, idx_max = idx_max, idx_min
+
+        return freq_array[idx_min:idx_max+1], amp_array[idx_min:idx_max+1]
+
+
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
     
     for fmin, fmax, step, offset in [(20,45,5,26.03), (50,90,10,19.995), (100,980,20,13.99), (1000,20000,100,0)]:
@@ -442,7 +435,7 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
 
     iteration[0]+=1
     
-    
+    # Slice frequency range if start_f and end_f are provided
     fout, aout = slice_frequency_range(fout, aout, start_f, end_f)
     foutx, aoutx = slice_frequency_range(foutx, aoutx, start_f, end_f)
     fout2, aout2 = slice_frequency_range(fout2, aout2, start_f, end_f)
@@ -537,8 +530,8 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
 
         if save_sweeps == 1:
 
-            output_file_left = os.path.splitext(input_file)[0] + '_L.wav'
-            output_file_right = os.path.splitext(input_file)[0] + '_R.wav'
+            output_file_left = os.path.splitext(input_data)[0] + '_L.wav'
+            output_file_right = os.path.splitext(input_data)[0] + '_R.wav'
 
             logger.info(f"Writing {output_file_left}")
             write_file(output_file_left, audio, Fs)
@@ -807,20 +800,6 @@ def main():
     else:
         file0_data = INPUT_FILE_0
         file1_data = INPUT_FILE_1
-
-    '''
-    if environment == 'web':
-        from js import window
-        file0_bytes = bytes(window.js_file0_data.to_py())
-        file1_bytes = bytes(window.js_file1_data.to_py()) if window.js_file1_data else None
-
-        audio0, Fs0 = get_audio(file0_bytes, environment)
-        if file1_bytes:
-            audio1, Fs1 = get_audio(file1_bytes, environment)
-    else:
-        audio0, Fs0 = get_audio("path_to_file0.wav", environment)
-        audio1, Fs1 = get_audio("path_to_file1.wav", environment)
-    '''
 
 
     if EXTRACT_SWEEPS == 1:
