@@ -1800,6 +1800,21 @@ window.pyProcessAudio = process_audio_if_ready
                                         });
                                 }
                         }
+
+            // Track config mode before starting analysis (needs to be outside the above block to access 'mode' variable)
+            setTimeout(() => {
+                const standardConfig = document.getElementById('standardConfig');
+                const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+
+                if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                    gtag('event', 'config_mode_used', {
+                        'event_category': 'Config',
+                        'event_label': mode,
+                        'app_session_id': sessionId,
+                        'app_analysis_id': currentAnalysisId
+                    });
+                }
+            }, 0);
             
             // Hide previous status banner and show loading
             const statusEl = document.getElementById('status');
