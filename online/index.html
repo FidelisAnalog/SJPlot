@@ -498,9 +498,9 @@
                 standardTab.classList.add('active');
                 advancedTab.classList.remove('active');
 
-                // Recalculate RIAA settings based on test record and recording type
-                if (window.updateRIAASettings) {
-                    window.updateRIAASettings();
+                // Recalculate test record settings based on test record and recording type
+                if (window.updateTestRecordSettings) {
+                    window.updateTestRecordSettings();
                 }
             } else {
                 // Copy settings from standard to advanced before switching
@@ -1522,22 +1522,22 @@ window.pyProcessAudio = process_audio_if_ready
         };
         
         // Test Record RIAA Settings Mapping
-        window.testRecordRIAASettings = {
-            'STR100':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
-            'TRS1007':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
-            'TRS1005':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
-            'STR120':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
-            'STR130':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false} },
-            'QR2009':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
-            'QR2010':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} },
-            'XG7001':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
-            'XG7002':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 0, inverse: false} },
-            'XG7005':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false} },
-            'DIN45543':  { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false} }
+        window.testRecordSettings = {
+            'STR100':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 20000 },
+            'TRS1007':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
+            'TRS1005':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 50000 },
+            'STR120':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
+            'STR130':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false}, end_f: 20000 },
+            'QR2009':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
+            'QR2010':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 50000 },
+            'XG7001':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 20000 },
+            'XG7002':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
+            'XG7005':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false}, end_f: 20000 },
+            'DIN45543':  { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 }
         };
         
         // Function to update RIAA settings based on test record and recording type
-        window.updateRIAASettings = function() {
+        window.updateTestRecordSettings = function() {
             // Only run this in standard mode
             const standardConfig = document.getElementById('standardConfig');
             if (!standardConfig || standardConfig.style.display === 'none') {
@@ -1546,18 +1546,23 @@ window.pyProcessAudio = process_audio_if_ready
 
             const testRecord = document.getElementById('testRecord').value;
             const recordingType = document.getElementById('recordingType').value;
-            const settings = window.testRecordRIAASettings[testRecord][recordingType];
-
-            document.getElementById('riaaMode').value = settings.mode;
-            document.getElementById('riaaInverse').checked = settings.inverse;
+            const settings = window.testRecordSettings[testRecord];
+            if (!settings) return;
+            const riaa = settings[recordingType];
+            if (riaa) {
+                document.getElementById('riaaMode').value = riaa.mode;
+                document.getElementById('riaaInverse').checked = riaa.inverse;
+            }
+            // Set end_f in the config (if you want to update a hidden field or use directly in config build)
+            // Example: document.getElementById('endF').value = settings.end_f;
         };
 
         // Initialize UI event listeners when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Setting up file input and drag-and-drop handlers...');
 
-            // Initialize RIAA settings on page load
-            updateRIAASettings();
+            // Initialize test record settings on page load
+            updateTestRecordSettings();
 
             // Standard mode file input
             document.getElementById('fileInput0').addEventListener('change', e => handleFile(e.target.files[0], 0));
@@ -1567,10 +1572,9 @@ window.pyProcessAudio = process_audio_if_ready
             document.getElementById('fileInput1').addEventListener('change', e => handleFile(e.target.files[0], 1));
             
             // Handle Test Record dropdown to auto-update RIAA settings
-            document.getElementById('testRecord').addEventListener('change', updateRIAASettings);
-            
-            // Handle Recording Type dropdown to auto-update RIAA settings
-            document.getElementById('recordingType').addEventListener('change', updateRIAASettings);
+            document.getElementById('testRecord').addEventListener('change', updateTestRecordSettings);
+            // Handle Recording Type dropdown to auto-update settings
+            document.getElementById('recordingType').addEventListener('change', updateTestRecordSettings);
             
             // Drag and drop functionality
             const uploadArea = document.querySelector('.upload-area');
@@ -1961,6 +1965,7 @@ window.pyProcessAudio = process_audio_if_ready
                 if (mode === 'standard') {
                     // Standard mode configuration with defaults for advanced-only parameters
                     const testRecord = document.getElementById('testRecord').value;
+                    const testRecordSettings = window.testRecordSettings[testRecord];
                     config = {
                         plot_info: document.getElementById('plotInfo').value || "Cart / Load / Record",
                         equip_info: document.getElementById('equipInfo').value || "Arm -> Phonostage -> ADC",
@@ -1972,10 +1977,12 @@ window.pyProcessAudio = process_audio_if_ready
                         test_record: testRecord,
                         author: document.getElementById('author').value,
                         // Advanced-only parameters
-                        end_f: null,
                         file0norm: 0,
                         onekfstart: 0
                     };
+                    if (testRecordSettings && typeof testRecordSettings.end_f !== 'undefined') {
+                        config.end_f = testRecordSettings.end_f;
+                    }
                 } else {
                     // Advanced mode configuration
                     config = {

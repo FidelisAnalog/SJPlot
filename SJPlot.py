@@ -401,7 +401,7 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
 
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
     
-    for fmin, fmax, step, offset in [(20,45,5,26.03), (50,90,10,19.995), (100,980,20,13.99), (1000,20000,100,0)]:
+    for fmin, fmax, step, offset in [(20,45,5,26.03), (50,90,10,19.995), (100,980,20,13.99), (1000,50000,100,0)]:
         f, a, fx, ax, f2, a2, f3, a3 = process_chunk(signal, Fs, fmin, fmax, step, offset)
         fout.extend(f); aout.extend(a); foutx.extend(fx); aoutx.extend(ax)
         fout2.extend(f2); aout2.extend(a2); fout3.extend(f3); aout3.extend(a3)
