@@ -64,8 +64,8 @@ For clarity, the configuraiton precdence is command-line arguments first, then t
 | test_record      | |If extracting sweeps, specify what test record the audio was captured from. [Supported records can be found here](https://github.com/FidelisAnalog/SJPlot/tree/Splitter?tab=readme-ov-file#supported-test-records-for-sweep-extraction). |
 | plot_style       |`4`|`1`: traditional<br>`2`: dual axis (twinx)<br>`3`: dual plot FR and distortion<br>`4`: dual plot FR zoom and dual axis (twinx)<br>`5`: small plot FR only |
 | file0norm        |`False`|`True`: normalize both files to file_0 level, shown as a magenta "x" on the plot<br>`False`: normalize both files independently, shown as a magenta line on the plot |
-| end_f            |`20000`|Highest frequency to plot in Hz.                                                |
-| onekfstart       |`False`|`True`: start plot from 1 kHz<br>`False`: disable                               |
+| start_f            | |Lowest frequency to plot in Hz.                                                |
+| end_f            | |Highest frequency to plot in Hz.                                                |
 | normalize        |`1000`|Frequency in Hz to set as 0dB in the plot                                      |
 | riaa_mode        |`2`|`0`: none<br>`1`: bass emphasis<br>`2`: treble de-emphasis<br>`3`: both               |
 | riaa_inverse     |`True`|`True`: inverse RIAA EQ per **riaa_mode** setting<br>`False`: disable            |
@@ -100,8 +100,8 @@ test_record =
 [Plot Parameters]
 plot_style = 4
 file0norm = false
-end_f = 20000
-onekfstart = false
+start_f = 
+end_f = 
 normalize = 1000
 
 [Audio Processing]
