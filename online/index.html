@@ -1863,12 +1863,17 @@ window.pyProcessAudio = process_audio_if_ready
                         normalize: parseInt(document.getElementById('normalizeAdvanced').value),
                         extract_sweeps: document.getElementById('extractSweeps').checked ? 1 : 0,
                         test_record: document.getElementById('testRecordAdvanced').value,
-                        author: document.getElementById('authorAdvanced').value,
-                        // Advanced-only parameters
-                        end_f: document.getElementById('endF').value ? parseInt(document.getElementById('endF').value) : null,
-                        file0norm: document.getElementById('file0norm').checked ? 1 : 0,
-                        onekfstart: document.getElementById('onekfstart').checked ? 1 : 0
+                        author: document.getElementById('authorAdvanced').value
                     };
+
+                    // Add advanced-only parameters only if they have values (avoid sending null)
+                    const endFValue = document.getElementById('endF').value;
+                    if (endFValue) {
+                        config.end_f = parseInt(endFValue);
+                    }
+
+                    config.file0norm = document.getElementById('file0norm').checked ? 1 : 0;
+                    config.onekfstart = document.getElementById('onekfstart').checked ? 1 : 0;
                 }
                 
                 try {
