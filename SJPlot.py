@@ -173,7 +173,7 @@ def get_config():
         "normalize": 1000,
         "file0norm": False,
         "start_f": "",
-        "end_f": ,
+        "end_f": "",
         "override_y_limit": False,
         "override_y_limit_value": [-0, 0],
         "log_level": "info",
