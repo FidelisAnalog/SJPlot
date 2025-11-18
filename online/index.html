@@ -1801,42 +1801,59 @@ window.pyProcessAudio = process_audio_if_ready
             console.log('Starting analysis:', currentAnalysisId);
             
             // Google Analytics event: Analyze Audio button clicked
-                        if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
-                                gtag('event', 'analyze_audio_click', {
-                                    'event_category': 'Interaction',
-                                    'event_label': 'Analyze Audio Button',
-                                    'app_session_id': sessionId,
-                                    'app_analysis_id': currentAnalysisId
-                                });
-                                // Also fire events for current config values
-                                gtag('event', 'test_record_used', {
-                                    'event_category': 'Config',
-                                    'event_label': document.getElementById('testRecord').value,
-                                    'app_session_id': sessionId,
-                                    'app_analysis_id': currentAnalysisId
-                                });
-                                gtag('event', 'plot_style_used', {
-                                    'event_category': 'Config',
-                                    'event_label': document.getElementById('plotStyle').value,
-                                    'app_session_id': sessionId,
-                                    'app_analysis_id': currentAnalysisId
-                                });
-                                gtag('event', 'recording_type_used', {
-                                    'event_category': 'Config',
-                                    'event_label': document.getElementById('recordingType').value,
-                                    'app_session_id': sessionId,
-                                    'app_analysis_id': currentAnalysisId
-                                });
-                                // Fire event if file was loaded via URL parameter
-                                if (fileLoadedViaUrl) {
-                                        gtag('event', 'file_loaded_via_url', {
-                                            'event_category': 'File Source',
-                                            'event_label': 'URL Parameter',
-                                            'app_session_id': sessionId,
-                                            'app_analysis_id': currentAnalysisId
-                                        });
-                                }
-                        }
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                gtag('event', 'analyze_audio_click', {
+                    'event_category': 'Interaction',
+                    'event_label': 'Analyze Audio Button',
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                // Also fire events for current config values
+                gtag('event', 'test_record_used', {
+                    'event_category': 'Config',
+                    'event_label': document.getElementById('testRecord').value,
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                gtag('event', 'plot_style_used', {
+                    'event_category': 'Config',
+                    'event_label': document.getElementById('plotStyle').value,
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                gtag('event', 'recording_type_used', {
+                    'event_category': 'Config',
+                    'event_label': document.getElementById('recordingType').value,
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                // Fire event if file was loaded via URL parameter
+                if (fileLoadedViaUrl) {
+                    gtag('event', 'file_loaded_via_url', {
+                        'event_category': 'File Source',
+                        'event_label': 'URL Parameter',
+                        'app_session_id': sessionId,
+                        'app_analysis_id': currentAnalysisId
+                    });
+                }
+                // Fire GA event for startF and endF if present, but only in advanced mode
+                const standardConfig = document.getElementById('standardConfig');
+                const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+                if (mode === 'advanced') {
+                    const startFValue = document.getElementById('startF').value;
+                    const endFValue = document.getElementById('endF').value;
+                    if (startFValue || endFValue) {
+                        gtag('event', 'start_end_frequencies_used', {
+                            'event_category': 'Config',
+                            'event_label': 'Start/End Frequency',
+                            'startF': startFValue || null,
+                            'endF': endFValue || null,
+                            'app_session_id': sessionId,
+                            'app_analysis_id': currentAnalysisId
+                        });
+                    }
+                }
+            }
 
             // Track config mode before starting analysis (needs to be outside the above block to access 'mode' variable)
             setTimeout(() => {
