@@ -31,7 +31,7 @@ import io
 import base64
 
 
-__version__ = "18.4.2"
+__version__ = "18.4.3"
 
 
 # Try to import js module for web environment
@@ -133,7 +133,7 @@ def get_config():
     parser.add_argument("--xg7001", default=None, action="store_true", help="Apply XG7001 correction.")
     parser.add_argument("--normalize", type=int, help="{integer} Frequency in Hz to normalize at.", metavar = "")
     parser.add_argument("--file0norm", default=None, action="store_true", help="Normalize both files to file_0.")
-    parser.add_argument("--onekfstart", default=None, action="store_true", help="Start the plot at 1kHz.")
+    parser.add_argument("--start_f", type=int, help="{integer} Start frequency in Hz.", metavar = "")
     parser.add_argument("--end_f", type=int, help="{integer} End frequency in Hz.", metavar = "")
     parser.add_argument("--override_y_limit_value", nargs=2, type=int, help="Override Y limit values as two integers, ex: {-10 10}", metavar = "{int}")
     parser.add_argument('--version', action='version', version='SJPlot ' + __version__)
@@ -171,7 +171,7 @@ def get_config():
         "xg7001": False,
         "normalize": 1000,
         "file0norm": False,
-        "onekfstart": False,
+        "start_f": "",
         "end_f": 20000,
         "override_y_limit": False,
         "override_y_limit_value": [-0, 0],
@@ -275,12 +275,31 @@ def ft_window(n):
          a3*np.cos(6*np.pi*x/(n-1)) + a4*np.cos(8*np.pi*x/(n-1)))
     return w
 
-
+'''
 def find_nearest(array, value):
     return (np.abs(np.asarray(array) - value)).argmin()
+'''
 
 
-def createplotdata(signal, Fs, iteration=[0], norm=[0], onekfstart=0, end_f=20000, str100=0, file0norm=0, normalize=1000):
+def find_nearest(array, value):
+    """Fast version for sorted arrays using binary search."""
+    idx = np.searchsorted(array, value)
+    
+    # Handle edge cases
+    if idx == 0:
+        return 0
+    if idx == len(array):
+        return len(array) - 1
+    
+    # Check which is actually closer: idx or idx-1
+    if abs(array[idx] - value) < abs(array[idx-1] - value):
+        return idx
+    else:
+        return idx - 1
+
+
+
+def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=20000, str100=0, file0norm=0, normalize=1000):
 
     def interpolate(f, a, minf, maxf, fstep):
         # Ensure inputs are NumPy arrays
@@ -360,6 +379,31 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], onekfstart=0, end_f=2000
             a2 = [amp - offset for amp in a2]
             a3 = [amp - offset for amp in a3]
             return f, a, fx, ax, f2, a2, f3, a3
+            
+            
+            
+            
+    def slice_frequency_range(freq_array, amp_array, start_f=None, end_f=None):
+	    # Handle start
+	    if not start_f:  # Catches None, "", 0, etc.
+		    idx_min = 0
+	    else:
+		    idx_min = find_nearest(freq_array, float(start_f))
+		
+	    # Handle end
+	    if not end_f:
+		    idx_max = len(freq_array) - 1
+	    else:
+		    idx_max = find_nearest(freq_array, float(end_f))
+		
+	    # Ensure proper order
+	    if idx_min > idx_max:
+		    idx_min, idx_max = idx_max, idx_min
+		
+	    return freq_array[idx_min:idx_max+1], amp_array[idx_min:idx_max+1]     
+            
+                     
+            
         
     fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3 = [], [], [], [], [], [], [], []
     
@@ -397,6 +441,13 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], onekfstart=0, end_f=2000
         aoutx = sosfiltfilt(sos, aoutx)
 
     iteration[0]+=1
+    
+    
+    fout, aout = slice_frequency_range(fout, aout, start_f, end_f)
+    foutx, aoutx = slice_frequency_range(foutx, aoutx, start_f, end_f)
+    fout2, aout2 = slice_frequency_range(fout2, aout2, start_f, end_f)
+    fout3, aout3 = slice_frequency_range(fout3, aout3, start_f, end_f)
+    
 
     return fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 
@@ -714,9 +765,8 @@ def main():
     XG7001 = config["xg7001"]
     NORMALIZE = config["normalize"]
     FILE0NORM = config["file0norm"]
-    ONEKFSTART = config["onekfstart"]
+    START_F = config["start_f"]
     END_F = config["end_f"]
-    logger.info(f"Using FILE0NORM={FILE0NORM}, ONEKFSTART={ONEKFSTART}, END_F={END_F}")
     OVERRIDE_Y_LIMIT = config["override_y_limit"]
     OVERRIDE_Y_LIMIT_VALUE = config["override_y_limit_value"]
     LOG_LEVEL = config["log_level"]
@@ -776,7 +826,7 @@ def main():
     if EXTRACT_SWEEPS == 1:
         input_sig_0, input_sig_1, Fs = get_audio(file0_data, environment, EXTRACT_SWEEPS, TEST_RECORD, SAVE_SWEEPS, RIAA_MODE, RIAA_INVERSE, XG7001)
 
-        fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig_0, Fs, onekfstart=ONEKFSTART, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
+        fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig_0, Fs, start_f=START_F, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
 
         deltaadj = ao0[find_nearest(fo0, NORMALIZE)]
         deltah0 = round((max(ao0 - deltaadj)), ROUND_LEVEL)
@@ -784,7 +834,7 @@ def main():
 
         logger.info(f"Left crosstalk @1kHz: {aox0[find_nearest(fox0, 1000)]:.2f}dB")
 
-        fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig_1, Fs, onekfstart=ONEKFSTART, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
+        fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig_1, Fs, start_f=START_F, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
  
         deltaadj = ao1[find_nearest(fo1, NORMALIZE)]
         deltah1 = round((max(ao1 - deltaadj)), ROUND_LEVEL)
@@ -797,7 +847,7 @@ def main():
 
     else:
         input_sig, _, Fs = get_audio(file0_data, environment, riaa_mode=RIAA_MODE, riaa_inverse=RIAA_INVERSE, xg7001=XG7001)
-        fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig, Fs, onekfstart=ONEKFSTART, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
+        fo0, ao0, fox0, aox0, fo2h0, ao2h0, fo3h0, ao3h0 = createplotdata(input_sig, Fs, start_f=START_F, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
 
         deltaadj = ao0[find_nearest(fo0, NORMALIZE)]
         deltah0 = round((max(ao0 - deltaadj)), ROUND_LEVEL)
@@ -809,7 +859,7 @@ def main():
 
         if file1_data:
             input_sig, _, Fs = get_audio(file1_data, environment, riaa_mode=RIAA_MODE, riaa_inverse=RIAA_INVERSE, xg7001=XG7001)
-            fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig, Fs, onekfstart=ONEKFSTART, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
+            fo1, ao1, fox1, aox1, fo2h1, ao2h1, fo3h1, ao3h1 = createplotdata(input_sig, Fs, start_f=START_F, end_f=END_F, str100=STR100, file0norm=FILE0NORM, normalize=NORMALIZE)
      
             deltaadj = ao1[find_nearest(fo1, NORMALIZE)]
             deltah1 = round((max(ao1 - deltaadj)), ROUND_LEVEL)
