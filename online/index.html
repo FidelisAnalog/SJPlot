@@ -1823,17 +1823,46 @@ window.pyProcessAudio = process_audio_if_ready
         
         function startAnalysis() {
             if (!file0Data) { alert('Upload a file first'); return; }
-            
+
             // Check if PyScript is ready
             if (!pyScriptReady) {
                 alert('PyScript is still loading. Please wait a moment and try again.');
                 return;
             }
-            
+
             // Check if Python function is available
             if (!window.pyProcessAudio) {
                 alert('Python environment not ready. Please wait a moment and try again.');
                 return;
+            }
+
+            // Advanced mode: Validate Normalize (Hz) is between startF and endF
+            const standardConfig = document.getElementById('standardConfig');
+            const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+            if (mode === 'advanced') {
+                const normalizeHz = parseFloat(document.getElementById('normalizeAdvanced').value);
+                const startFVal = document.getElementById('startF').value;
+                const endFVal = document.getElementById('endF').value;
+                let warn = false;
+                let msg = '';
+                if (startFVal !== '') {
+                    const startF = parseFloat(startFVal);
+                    if (!isNaN(normalizeHz) && !isNaN(startF) && normalizeHz < startF) {
+                        warn = true;
+                        msg = 'Warning: Normalize (Hz) must be greater than or equal to Start Frequency.';
+                    }
+                }
+                if (!warn && endFVal !== '') {
+                    const endF = parseFloat(endFVal);
+                    if (!isNaN(normalizeHz) && !isNaN(endF) && normalizeHz > endF) {
+                        warn = true;
+                        msg = 'Warning: Normalize (Hz) must be less than or equal to End Frequency.';
+                    }
+                }
+                if (warn) {
+                    alert(msg);
+                    return;
+                }
             }
             
             // Generate analysis ID for this analysis
