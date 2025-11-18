@@ -1878,6 +1878,7 @@ window.pyProcessAudio = process_audio_if_ready
                 
                 try {
                     console.log('Calling Python function directly...');
+                    console.log('Config being sent to Python:', config);
 
                     // Set global JS variables that Python can access
                     window.js_file0_data = file0Data.bytes;
