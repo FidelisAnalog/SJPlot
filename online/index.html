@@ -794,11 +794,11 @@
                 </div>
                 <div class="config-item text-input-item">
                     <label>Start Frequency (Hz)</label>
-                    <input type="number" id="startF" placeholder="Optional - e.g., 20" />
+                    <input type="number" id="startF" placeholder="Optional: e.g., 20" />
                 </div>
                 <div class="config-item text-input-item">
                     <label>End Frequency (Hz)</label>
-                    <input type="number" id="endF" placeholder="Optional - e.g., 20000" />
+                    <input type="number" id="endF" placeholder="Optional: e.g., 20000" />
                 </div>
                 <div class="config-item dropdown-item">
                     <label>Normalization Mode</label>
@@ -963,9 +963,17 @@ window.pyProcessAudio = process_audio_if_ready
             }
             
             // Load saved preferences
+            // Load and sync Plot Info
+            const savedPlotInfo = loadPreference('plotInfo');
+            if (savedPlotInfo) {
+                document.getElementById('plotInfo').value = savedPlotInfo;
+                document.getElementById('plotInfoAdvanced').value = savedPlotInfo;
+            }
+            // Load and sync Equipment Info
             const savedEquipInfo = loadPreference('equipInfo');
             if (savedEquipInfo) {
                 document.getElementById('equipInfo').value = savedEquipInfo;
+                document.getElementById('equipInfoAdvanced').value = savedEquipInfo;
             }
             // Load saved test record and sync both dropdowns
             const savedTestRecord = loadPreference('testRecord');
@@ -988,9 +996,11 @@ window.pyProcessAudio = process_audio_if_ready
                 document.getElementById('normalize').value = savedNormalize;
             }
             // Load saved author from localStorage
-            const savedAuthor = localStorage.getItem('author');
+            // Load and sync Author
+            const savedAuthor = loadPreference('author');
             if (savedAuthor) {
                 document.getElementById('author').value = savedAuthor;
+                document.getElementById('authorAdvanced').value = savedAuthor;
             }
             // Load advanced mode settings
             const savedTestRecordAdvanced = loadPreference('testRecordAdvanced');
@@ -1078,18 +1088,43 @@ window.pyProcessAudio = process_audio_if_ready
                 savePreference('normalize', this.value);
             });
             
-            const authorInput = document.getElementById('author');
+            // Sync Author between both forms
+            function syncAuthor(val) {
+                document.getElementById('author').value = val;
+                document.getElementById('authorAdvanced').value = val;
+                savePreference('author', val);
+            }
+            document.getElementById('author').addEventListener('change', function() {
+                syncAuthor(this.value);
+            });
+            document.getElementById('authorAdvanced').addEventListener('change', function() {
+                syncAuthor(this.value);
+            });
 
-            // Save standard config text fields on change only
+            // Sync Plot Info between both forms
+            function syncPlotInfo(val) {
+                document.getElementById('plotInfo').value = val;
+                document.getElementById('plotInfoAdvanced').value = val;
+                savePreference('plotInfo', val);
+            }
             document.getElementById('plotInfo').addEventListener('change', function() {
-                savePreference('plotInfo', this.value);
+                syncPlotInfo(this.value);
             });
+            document.getElementById('plotInfoAdvanced').addEventListener('change', function() {
+                syncPlotInfo(this.value);
+            });
+
+            // Sync Equipment Info between both forms
+            function syncEquipInfo(val) {
+                document.getElementById('equipInfo').value = val;
+                document.getElementById('equipInfoAdvanced').value = val;
+                savePreference('equipInfo', val);
+            }
             document.getElementById('equipInfo').addEventListener('change', function() {
-                savePreference('equipInfo', this.value);
+                syncEquipInfo(this.value);
             });
-            authorInput.addEventListener('change', function() {
-                localStorage.setItem('author', authorInput.value);
-                console.log(`Saved author: ${authorInput.value}`);
+            document.getElementById('equipInfoAdvanced').addEventListener('change', function() {
+                syncEquipInfo(this.value);
             });
 
             // Save advanced mode settings when they change
@@ -1105,15 +1140,8 @@ window.pyProcessAudio = process_audio_if_ready
                 // removed input event for startF
             });
             // Advanced text fields: save on change only
-            document.getElementById('plotInfoAdvanced').addEventListener('change', function() {
-                savePreference('plotInfoAdvanced', this.value);
-            });
-            document.getElementById('equipInfoAdvanced').addEventListener('change', function() {
-                savePreference('equipInfoAdvanced', this.value);
-            });
             document.getElementById('authorAdvanced').addEventListener('change', function() {
-                savePreference('authorAdvanced', this.value);
-                console.log(`Saved authorAdvanced: ${this.value}`);
+                // (No-op, handled by syncAuthor)
             });
             document.getElementById('startF').addEventListener('change', function() {
                 savePreference('startF', this.value);
