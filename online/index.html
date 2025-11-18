@@ -727,7 +727,7 @@
                     <circle cx="12" cy="12" r="3"/>
                     <path d="M12 1v6m0 6v6m6-11h-6m-6 0h6m5.657-5.657l-4.243 4.243m-6.828 0L2.343 7.343m14.314 14.314l-4.243-4.243m-6.828 0l-4.243 4.243"/>
                 </svg>
-                ** BETA ** Advanced Configuration
+                Advanced Configuration
             </h3>
 
             <!-- Metadata -->
@@ -766,9 +766,12 @@
                         <option value="DIN45543">DIN 45543</option>
                     </select>
                 </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="extractSweeps" checked />
-                    <label>Extract Sweeps</label>
+                <div class="config-item dropdown-item">
+                    <label>Sweep Extraction</label>
+                    <select id="extractSweeps">
+                        <option value="0" selected>No Extraction</option>
+                        <option value="1">Extract Sweeps</option>
+                    </select>
                 </div>
             </div>
 
@@ -790,16 +793,19 @@
                     <input type="number" id="normalizeAdvanced" value="1000" />
                 </div>
                 <div class="config-item text-input-item">
+                    <label>Start Frequency (Hz)</label>
+                    <input type="number" id="startF" placeholder="e.g., 20" />
+                </div>
+                <div class="config-item text-input-item">
                     <label>End Frequency (Hz)</label>
                     <input type="number" id="endF" placeholder="e.g., 20000" />
                 </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="file0norm" />
-                    <label>Normalize Both Files to File 0</label>
-                </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="onekfstart" />
-                    <label>1kHz Start</label>
+                <div class="config-item dropdown-item">
+                    <label>Normalization Mode</label>
+                    <select id="file0norm">
+                        <option value="0" selected>Relative</option>
+                        <option value="1">Absolute</option>
+                    </select>
                 </div>
             </div>
 
@@ -815,9 +821,12 @@
                         <option value="3" selected>Both</option>
                     </select>
                 </div>
-                <div class="config-item checkbox-item">
-                    <input type="checkbox" id="riaaInverseAdvanced" checked />
-                    <label>Inverse RIAA</label>
+                <div class="config-item dropdown-item">
+                    <label>RIAA Inverse</label>
+                    <select id="riaaInverseAdvanced">
+                        <option value="true">Yes</option>
+                        <option value="false" selected>No</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -990,7 +999,7 @@ window.pyProcessAudio = process_audio_if_ready
             // Load advanced mode settings
             const savedExtractSweeps = loadPreference('extractSweeps');
             if (savedExtractSweeps !== null) {
-                document.getElementById('extractSweeps').checked = savedExtractSweeps === 'true';
+                document.getElementById('extractSweeps').value = savedExtractSweeps;
             }
 
             const savedEndF = loadPreference('endF');
@@ -1000,12 +1009,12 @@ window.pyProcessAudio = process_audio_if_ready
 
             const savedFile0norm = loadPreference('file0norm');
             if (savedFile0norm !== null) {
-                document.getElementById('file0norm').checked = savedFile0norm === 'true';
+                document.getElementById('file0norm').value = savedFile0norm;
             }
 
-            const savedOnekfstart = loadPreference('onekfstart');
-            if (savedOnekfstart !== null) {
-                document.getElementById('onekfstart').checked = savedOnekfstart === 'true';
+            const savedStartF = loadPreference('startF');
+            if (savedStartF !== null) {
+                document.getElementById('startF').value = savedStartF;
             }
 
             const savedRiaaMode = loadPreference('riaaMode');
@@ -1015,7 +1024,7 @@ window.pyProcessAudio = process_audio_if_ready
 
             const savedRiaaInverse = loadPreference('riaaInverse');
             if (savedRiaaInverse !== null) {
-                document.getElementById('riaaInverseAdvanced').checked = savedRiaaInverse === 'true';
+                document.getElementById('riaaInverseAdvanced').value = savedRiaaInverse;
             }
 
             console.log('Loaded saved preferences');
@@ -1045,7 +1054,7 @@ window.pyProcessAudio = process_audio_if_ready
         // Save preferences when they change
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('equipInfo').addEventListener('input', function() {
-                savePreference('equipInfo', this.value);
+                // removed input event for equipInfo
             });
             
             document.getElementById('testRecord').addEventListener('change', function() {
@@ -1066,26 +1075,54 @@ window.pyProcessAudio = process_audio_if_ready
             
             const authorInput = document.getElementById('author');
 
-            // Save author to localStorage on input change
-            authorInput.addEventListener('input', function() {
+            // Save standard config text fields on change only
+            document.getElementById('plotInfo').addEventListener('change', function() {
+                savePreference('plotInfo', this.value);
+            });
+            document.getElementById('equipInfo').addEventListener('change', function() {
+                savePreference('equipInfo', this.value);
+            });
+            authorInput.addEventListener('change', function() {
                 localStorage.setItem('author', authorInput.value);
+                console.log(`Saved author: ${authorInput.value}`);
             });
 
             // Save advanced mode settings when they change
             document.getElementById('extractSweeps').addEventListener('change', function() {
-                savePreference('extractSweeps', this.checked);
+                savePreference('extractSweeps', this.value);
             });
 
             document.getElementById('endF').addEventListener('input', function() {
+                // removed input event for endF
+            });
+
+            document.getElementById('startF').addEventListener('input', function() {
+                // removed input event for startF
+            });
+            // Advanced text fields: save on change only
+            document.getElementById('plotInfoAdvanced').addEventListener('change', function() {
+                savePreference('plotInfoAdvanced', this.value);
+            });
+            document.getElementById('equipInfoAdvanced').addEventListener('change', function() {
+                savePreference('equipInfoAdvanced', this.value);
+            });
+            document.getElementById('authorAdvanced').addEventListener('change', function() {
+                savePreference('authorAdvanced', this.value);
+                console.log(`Saved authorAdvanced: ${this.value}`);
+            });
+            document.getElementById('startF').addEventListener('change', function() {
+                savePreference('startF', this.value);
+            });
+            document.getElementById('endF').addEventListener('change', function() {
                 savePreference('endF', this.value);
             });
 
             document.getElementById('file0norm').addEventListener('change', function() {
-                savePreference('file0norm', this.checked);
+                savePreference('file0norm', this.value);
             });
 
-            document.getElementById('onekfstart').addEventListener('change', function() {
-                savePreference('onekfstart', this.checked);
+            document.getElementById('startF').addEventListener('change', function() {
+                // duplicate removed
             });
 
             document.getElementById('riaaModeAdvanced').addEventListener('change', function() {
@@ -1093,7 +1130,7 @@ window.pyProcessAudio = process_audio_if_ready
             });
 
             document.getElementById('riaaInverseAdvanced').addEventListener('change', function() {
-                savePreference('riaaInverse', this.checked);
+                savePreference('riaaInverse', this.value);
             });
         });
         
@@ -1859,11 +1896,12 @@ window.pyProcessAudio = process_audio_if_ready
                         equip_info: document.getElementById('equipInfoAdvanced').value || "Arm -> Phonostage -> ADC",
                         plot_style: parseInt(document.getElementById('plotStyleAdvanced').value),
                         riaa_mode: parseInt(document.getElementById('riaaModeAdvanced').value),
-                        riaa_inverse: document.getElementById('riaaInverseAdvanced').checked ? 1 : 0,
+                        riaa_inverse: document.getElementById('riaaInverseAdvanced').value === 'true' ? 1 : 0,
                         normalize: parseInt(document.getElementById('normalizeAdvanced').value),
-                        extract_sweeps: document.getElementById('extractSweeps').checked ? 1 : 0,
+                        extract_sweeps: parseInt(document.getElementById('extractSweeps').value),
                         test_record: document.getElementById('testRecordAdvanced').value,
-                        author: document.getElementById('authorAdvanced').value
+                        author: document.getElementById('authorAdvanced').value,
+                        file0norm: parseInt(document.getElementById('file0norm').value)
                     };
 
                     // Add advanced-only parameters only if they have values (avoid sending null)
@@ -1871,9 +1909,10 @@ window.pyProcessAudio = process_audio_if_ready
                     if (endFValue) {
                         config.end_f = parseInt(endFValue);
                     }
-
-                    config.file0norm = document.getElementById('file0norm').checked ? 1 : 0;
-                    config.onekfstart = document.getElementById('onekfstart').checked ? 1 : 0;
+                    const startFValue = document.getElementById('startF').value;
+                    if (startFValue) {
+                        config.start_f = parseInt(startFValue);
+                    }                
                 }
                 
                 try {
