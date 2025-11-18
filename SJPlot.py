@@ -202,9 +202,11 @@ def get_config():
         if hasattr(window, 'js_config'):
             web_config = window.js_config.to_py()  # Convert JsProxy to Python dict
             logger.info("Applying web configuration overrides.")
+            logger.info(f"Web config received: {web_config}")
             for key, value in web_config.items():
                 if key in combined_config:
                     combined_config[key] = value
+                    logger.info(f"Applied config: {key} = {value}")
     except ImportError:
         # Not running in a PyScript environment, continue as standalone
         pass
@@ -714,6 +716,7 @@ def main():
     FILE0NORM = config["file0norm"]
     ONEKFSTART = config["onekfstart"]
     END_F = config["end_f"]
+    logger.info(f"Using FILE0NORM={FILE0NORM}, ONEKFSTART={ONEKFSTART}, END_F={END_F}")
     OVERRIDE_Y_LIMIT = config["override_y_limit"]
     OVERRIDE_Y_LIMIT_VALUE = config["override_y_limit_value"]
     LOG_LEVEL = config["log_level"]

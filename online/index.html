@@ -1800,6 +1800,21 @@ window.pyProcessAudio = process_audio_if_ready
                                         });
                                 }
                         }
+
+            // Track config mode before starting analysis (needs to be outside the above block to access 'mode' variable)
+            setTimeout(() => {
+                const standardConfig = document.getElementById('standardConfig');
+                const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+
+                if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                    gtag('event', 'config_mode_used', {
+                        'event_category': 'Config',
+                        'event_label': mode,
+                        'app_session_id': sessionId,
+                        'app_analysis_id': currentAnalysisId
+                    });
+                }
+            }, 0);
             
             // Hide previous status banner and show loading
             const statusEl = document.getElementById('status');
@@ -1848,16 +1863,22 @@ window.pyProcessAudio = process_audio_if_ready
                         normalize: parseInt(document.getElementById('normalizeAdvanced').value),
                         extract_sweeps: document.getElementById('extractSweeps').checked ? 1 : 0,
                         test_record: document.getElementById('testRecordAdvanced').value,
-                        author: document.getElementById('authorAdvanced').value,
-                        // Advanced-only parameters
-                        end_f: document.getElementById('endF').value ? parseInt(document.getElementById('endF').value) : null,
-                        file0norm: document.getElementById('file0norm').checked ? 1 : 0,
-                        onekfstart: document.getElementById('onekfstart').checked ? 1 : 0
+                        author: document.getElementById('authorAdvanced').value
                     };
+
+                    // Add advanced-only parameters only if they have values (avoid sending null)
+                    const endFValue = document.getElementById('endF').value;
+                    if (endFValue) {
+                        config.end_f = parseInt(endFValue);
+                    }
+
+                    config.file0norm = document.getElementById('file0norm').checked ? 1 : 0;
+                    config.onekfstart = document.getElementById('onekfstart').checked ? 1 : 0;
                 }
                 
                 try {
                     console.log('Calling Python function directly...');
+                    console.log('Config being sent to Python:', config);
 
                     // Set global JS variables that Python can access
                     window.js_file0_data = file0Data.bytes;
