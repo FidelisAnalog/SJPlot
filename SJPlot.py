@@ -22,6 +22,7 @@ from itertools import chain
 from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import FuncFormatter
 import numpy as np
 import os
 import logging
@@ -31,7 +32,7 @@ import io
 #import base64
 
 
-__version__ = "18.4.4"
+__version__ = "18.4.5"
 
 
 # Try to import js module for web environment
@@ -730,6 +731,17 @@ def slice_audio(signal, Fs, test_record):
 
     return left_slice, right_slice
 
+def format_freq(x, pos):
+    """Format frequency values with k notation for tick labels"""
+    if x == 0:
+        return '0'
+    elif x >= 1000:
+        # Format with k suffix, remove trailing zeros and decimal point
+        return f'{x/1000:.10g}k'.rstrip('0').rstrip('.')
+    else:
+        return f'{x:.10g}'
+
+
 
 def main():
     """
@@ -1167,7 +1179,7 @@ def main():
         ax.grid(True, which="minor", axis="both", ls="-", color="gainsboro")
 
         ax.set_xticks([0,20,50,100,500,1000,5000,10000,20000,50000,100000])
-        ax.set_xticklabels(['0','20','50','100','500','1k','5k','10k','20k','50k','100k'])
+        #ax.set_xticklabels(['0','20','50','100','500','1k','5k','10k','20k','50k','100k'])
 
 
     bbox_args = dict(boxstyle="round", color='b', fc='w', ec='b', alpha=1, pad=.15)
@@ -1184,6 +1196,24 @@ def main():
                  ha="left", va="center", bbox=bbox_args)
 
     plt.autoscale(enable=True, axis='x')
+
+    for ax in axs.flat:
+        ax.xaxis.set_major_formatter(FuncFormatter(format_freq))
+        
+        # Check the axis range in decades (log scale)
+        xlim = ax.get_xlim()
+        if xlim[0] > 0:  # Avoid log(0)
+            decades = np.log10(xlim[1] / xlim[0])
+            
+            # Get LogFormatter's minor_thresholds setting
+            minor_fmt = ax.xaxis.get_minor_formatter()
+            if hasattr(minor_fmt, 'minor_thresholds'):
+                threshold = minor_fmt.minor_thresholds[0]  # Default is 2
+                
+                # If range is less than threshold decades, LogFormatter labels minors
+                if decades < threshold:
+                    ax.xaxis.set_minor_formatter(FuncFormatter(format_freq))
+
 
     axs[0].set_title(PLOT_INFO + "\n", fontsize=16)
 
