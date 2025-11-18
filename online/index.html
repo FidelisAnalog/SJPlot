@@ -967,65 +967,61 @@ window.pyProcessAudio = process_audio_if_ready
             if (savedEquipInfo) {
                 document.getElementById('equipInfo').value = savedEquipInfo;
             }
-            
+            // Load saved test record and sync both dropdowns
             const savedTestRecord = loadPreference('testRecord');
             if (savedTestRecord) {
                 document.getElementById('testRecord').value = savedTestRecord;
+                document.getElementById('testRecordAdvanced').value = savedTestRecord;
             }
-            
             const savedRecordingType = loadPreference('recordingType');
             if (savedRecordingType) {
                 document.getElementById('recordingType').value = savedRecordingType;
                 // Trigger change event to update RIAA settings
                 document.getElementById('recordingType').dispatchEvent(new Event('change'));
             }
-            
             const savedPlotStyle = loadPreference('plotStyle');
             if (savedPlotStyle) {
                 document.getElementById('plotStyle').value = savedPlotStyle;
             }
-            
             const savedNormalize = loadPreference('normalize');
             if (savedNormalize) {
                 document.getElementById('normalize').value = savedNormalize;
             }
-            
             // Load saved author from localStorage
             const savedAuthor = localStorage.getItem('author');
             if (savedAuthor) {
                 document.getElementById('author').value = savedAuthor;
             }
-
             // Load advanced mode settings
+            const savedTestRecordAdvanced = loadPreference('testRecordAdvanced');
+            if (savedTestRecordAdvanced) {
+                document.getElementById('testRecordAdvanced').value = savedTestRecordAdvanced;
+            }
             const savedExtractSweeps = loadPreference('extractSweeps');
             if (savedExtractSweeps !== null) {
                 document.getElementById('extractSweeps').value = savedExtractSweeps;
             }
-
             const savedEndF = loadPreference('endF');
             if (savedEndF) {
                 document.getElementById('endF').value = savedEndF;
             }
-
             const savedFile0norm = loadPreference('file0norm');
             if (savedFile0norm !== null) {
                 document.getElementById('file0norm').value = savedFile0norm;
             }
-
             const savedStartF = loadPreference('startF');
             if (savedStartF !== null) {
                 document.getElementById('startF').value = savedStartF;
             }
-
             const savedRiaaMode = loadPreference('riaaMode');
             if (savedRiaaMode) {
                 document.getElementById('riaaModeAdvanced').value = savedRiaaMode;
             }
-
             const savedRiaaInverse = loadPreference('riaaInverse');
             if (savedRiaaInverse !== null) {
                 document.getElementById('riaaInverseAdvanced').value = savedRiaaInverse;
             }
+            // ...existing code...
 
             console.log('Loaded saved preferences');
             
@@ -1057,8 +1053,17 @@ window.pyProcessAudio = process_audio_if_ready
                 // removed input event for equipInfo
             });
             
+            // Sync testRecord between both forms
+            function syncTestRecord(val) {
+                document.getElementById('testRecord').value = val;
+                document.getElementById('testRecordAdvanced').value = val;
+                savePreference('testRecord', val);
+            }
             document.getElementById('testRecord').addEventListener('change', function() {
-                savePreference('testRecord', this.value);
+                syncTestRecord(this.value);
+            });
+            document.getElementById('testRecordAdvanced').addEventListener('change', function() {
+                syncTestRecord(this.value);
             });
             
             document.getElementById('recordingType').addEventListener('change', function() {
@@ -1131,6 +1136,14 @@ window.pyProcessAudio = process_audio_if_ready
 
             document.getElementById('riaaInverseAdvanced').addEventListener('change', function() {
                 savePreference('riaaInverse', this.value);
+            });
+
+            document.getElementById('testRecordAdvanced').addEventListener('change', function() {
+                savePreference('testRecordAdvanced', this.value);
+            });
+
+            document.getElementById('normalizeAdvanced').addEventListener('change', function() {
+                // ...existing code...
             });
         });
         
@@ -1640,7 +1653,7 @@ window.pyProcessAudio = process_audio_if_ready
 
                         // Update file info in standard mode
                         const fileInfoDiv = document.getElementById('fileInfo');
-                        fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
+                                               fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
                         fileInfoDiv.className = 'file-info ready';
                         fileInfoDiv.style.display = 'block';
 
