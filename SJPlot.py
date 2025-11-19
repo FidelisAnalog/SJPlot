@@ -32,7 +32,7 @@ import io
 #import base64
 
 
-__version__ = "18.4.5"
+__version__ = "18.4.6"
 
 
 # Try to import js module for web environment
@@ -1218,10 +1218,25 @@ def main():
     axs[0].set_title(PLOT_INFO + "\n", fontsize=16)
 
 
+
     now = datetime.now()
 
-    plt.figtext(.125, 0, EQUIP_INFO, alpha=.75, fontsize=10, ha='left')
-    plt.figtext(.9, 0, AUTHOR, alpha=.75, fontsize=10, ha='right')
+    # Position text below bottom axes using blended transform
+    # This maintains horizontal position while placing vertically relative to axes
+    bottom_ax = axs[-1] if isinstance(axs, np.ndarray) else axs
+    
+    # Calculate vertical position from axes bottom
+    ax_height_inches = bottom_ax.get_position().height * fig.get_figheight()
+    y_in_axes_coords = -0.6 / ax_height_inches
+    
+    # Use blended transform: figure x-coords (for layout) + axes y-coords (for bbox_inches='tight')
+    from matplotlib.transforms import blended_transform_factory
+    trans = blended_transform_factory(fig.transFigure, bottom_ax.transAxes)
+    
+    fig.text(0.125, y_in_axes_coords, EQUIP_INFO, alpha=.75, fontsize=10,
+             ha='left', va='top', transform=trans)
+    fig.text(0.9, y_in_axes_coords, AUTHOR, alpha=.75, fontsize=10,
+             ha='right', va='top', transform=trans)
 
 
     if environment == 'web':
