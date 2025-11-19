@@ -1195,9 +1195,24 @@ def main():
                  xytext=(-10, -34.5), textcoords='offset points', \
                  ha="left", va="center", bbox=bbox_args)
 
-    plt.autoscale(enable=True, axis='x')
+    #plt.autoscale(enable=True, axis='x')
 
     for ax in axs.flat:
+
+        # Get x-range from first line only (main frequency response)
+        lines = ax.get_lines()
+        if lines:
+            x_data = lines[0].get_xdata()
+            if len(x_data) > 0:
+                xmin = np.min(x_data)
+                xmax = np.max(x_data)
+                if xmin > 0:  # Valid for log scale
+                    ax.set_xlim(xmin * 0.80, xmax * 1.20)
+                    actual_xlim = ax.get_xlim()
+                    logger.info(f"Requested xlim: ({xmin * 0.80:.0f}, {xmax * 1.20:.0f}), Actual xlim: ({actual_xlim[0]:.0f}, {actual_xlim[1]:.0f})")
+        
+
+
         ax.xaxis.set_major_formatter(FuncFormatter(format_freq))
         
         # Check the axis range in decades (log scale)
@@ -1216,8 +1231,6 @@ def main():
 
 
     axs[0].set_title(PLOT_INFO + "\n", fontsize=16)
-
-
 
     now = datetime.now()
 
