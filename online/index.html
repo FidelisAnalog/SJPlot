@@ -519,6 +519,8 @@
                 advancedUploadArea.style.display = 'block';
                 standardTab.classList.remove('active');
                 advancedTab.classList.add('active');
+                // Ensure Normalize (Hz) is corrected after switching to advanced
+                setTimeout(autoCorrectNormalizeHz, 0);
             }
 
             console.log('UI mode switched to:', mode);
@@ -955,6 +957,29 @@ window.pyProcessAudio = process_audio_if_ready
         }
         
         // Update file input accept attribute based on browser
+        // Helper: auto-correct Normalize Hz if out of range in advanced mode
+        function autoCorrectNormalizeHz() {
+            const standardConfig = document.getElementById('standardConfig');
+            const mode = standardConfig && standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+            if (mode !== 'advanced') return;
+            const normalizeInput = document.getElementById('normalizeAdvanced');
+            let normalizeHz = parseFloat(normalizeInput.value);
+            const startFVal = document.getElementById('startF').value;
+            const endFVal = document.getElementById('endF').value;
+            let startF = startFVal !== '' ? parseFloat(startFVal) : null;
+            let endF = endFVal !== '' ? parseFloat(endFVal) : null;
+            if (!isNaN(normalizeHz)) {
+                if (startF !== null && !isNaN(startF) && normalizeHz < startF) {
+                    normalizeHz = startF;
+                    normalizeInput.value = startF;
+                }
+                if (endF !== null && !isNaN(endF) && normalizeHz > endF) {
+                    normalizeHz = startF !== null && !isNaN(startF) ? startF : endF;
+                    normalizeInput.value = normalizeHz;
+                }
+            }
+        }
+        window.autoCorrectNormalizeHz = autoCorrectNormalizeHz;
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('fileInput0');
             if (fileInput) {
@@ -1145,10 +1170,17 @@ window.pyProcessAudio = process_audio_if_ready
             });
             document.getElementById('startF').addEventListener('change', function() {
                 savePreference('startF', this.value);
+                autoCorrectNormalizeHz();
             });
             document.getElementById('endF').addEventListener('change', function() {
                 savePreference('endF', this.value);
+                autoCorrectNormalizeHz();
             });
+            document.getElementById('normalizeAdvanced').addEventListener('change', function() {
+                autoCorrectNormalizeHz();
+            });
+            // Run auto-correct on initial load (in case of saved state)
+            autoCorrectNormalizeHz();
 
             document.getElementById('file0norm').addEventListener('change', function() {
                 savePreference('file0norm', this.value);
@@ -1840,32 +1872,25 @@ window.pyProcessAudio = process_audio_if_ready
                 return;
             }
 
-            // Advanced mode: Validate Normalize (Hz) is between startF and endF
+            // Advanced mode: If Normalize (Hz) is out of range, auto-set to startF
             const standardConfig = document.getElementById('standardConfig');
             const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
             if (mode === 'advanced') {
-                const normalizeHz = parseFloat(document.getElementById('normalizeAdvanced').value);
+                const normalizeInput = document.getElementById('normalizeAdvanced');
+                let normalizeHz = parseFloat(normalizeInput.value);
                 const startFVal = document.getElementById('startF').value;
                 const endFVal = document.getElementById('endF').value;
-                let warn = false;
-                let msg = '';
-                if (startFVal !== '') {
-                    const startF = parseFloat(startFVal);
-                    if (!isNaN(normalizeHz) && !isNaN(startF) && normalizeHz < startF) {
-                        warn = true;
-                        msg = 'Warning: Normalize (Hz) must be greater than or equal to Start Frequency.';
+                let startF = startFVal !== '' ? parseFloat(startFVal) : null;
+                let endF = endFVal !== '' ? parseFloat(endFVal) : null;
+                if (!isNaN(normalizeHz)) {
+                    if (startF !== null && !isNaN(startF) && normalizeHz < startF) {
+                        normalizeHz = startF;
+                        normalizeInput.value = startF;
                     }
-                }
-                if (!warn && endFVal !== '') {
-                    const endF = parseFloat(endFVal);
-                    if (!isNaN(normalizeHz) && !isNaN(endF) && normalizeHz > endF) {
-                        warn = true;
-                        msg = 'Warning: Normalize (Hz) must be less than or equal to End Frequency.';
+                    if (endF !== null && !isNaN(endF) && normalizeHz > endF) {
+                        normalizeHz = startF !== null && !isNaN(startF) ? startF : endF;
+                        normalizeInput.value = normalizeHz;
                     }
-                }
-                if (warn) {
-                    alert(msg);
-                    return;
                 }
             }
             
@@ -2139,6 +2164,18 @@ window.pyProcessAudio = process_audio_if_ready
         // Make functions globally available for onclick handlers
         window.startAnalysis = startAnalysis;
         window.downloadPlot = downloadPlot;
+
+        // Patch: Ensure Normalize (Hz) is auto-corrected when switching to advanced mode
+        // Find the code that switches modes and add autoCorrectNormalizeHz() after advanced is shown
+        // This assumes you have a function or event that toggles advanced/standard config
+        // We'll patch the most common pattern: a function like showAdvancedConfig or a button click
+        const advBtn = document.getElementById('advancedModeBtn');
+        if (advBtn) {
+            advBtn.addEventListener('click', function() {
+                setTimeout(autoCorrectNormalizeHz, 0); // Run after UI updates
+            });
+        }
+        // If you have other ways to switch modes, add similar hooks as needed
     </script>
     <script>
             document.addEventListener('DOMContentLoaded', function() {

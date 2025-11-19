@@ -1198,7 +1198,6 @@ def main():
     #plt.autoscale(enable=True, axis='x')
 
     for ax in axs.flat:
-
         # Get x-range from first line only (main frequency response)
         lines = ax.get_lines()
         if lines:
@@ -1207,11 +1206,17 @@ def main():
                 xmin = np.min(x_data)
                 xmax = np.max(x_data)
                 if xmin > 0:  # Valid for log scale
-                    ax.set_xlim(xmin * 0.80, xmax * 1.20)
+                    log_xmin = np.log10(xmin)
+                    log_xmax = np.log10(xmax)
+                    log_range = log_xmax - log_xmin
+                    margin_frac = 0.05  # 5% of range, as before
+                    min_margin_decades = 0.02  # e.g., 0.1 decade (~26% margin for 1000-2000 Hz)
+                    margin = max(margin_frac * log_range, min_margin_decades)
+                    new_log_xmin = log_xmin - margin
+                    new_log_xmax = log_xmax + margin
+                    ax.set_xlim(10**new_log_xmin, 10**new_log_xmax)
                     actual_xlim = ax.get_xlim()
-                    logger.info(f"Requested xlim: ({xmin * 0.80:.0f}, {xmax * 1.20:.0f}), Actual xlim: ({actual_xlim[0]:.0f}, {actual_xlim[1]:.0f})")
-        
-
+                    logger.debug(f"Actual xlim: ({actual_xlim[0]:.0f}, {actual_xlim[1]:.0f})")
 
         ax.xaxis.set_major_formatter(FuncFormatter(format_freq))
         
