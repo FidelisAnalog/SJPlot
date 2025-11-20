@@ -32,7 +32,7 @@ import io
 #import base64
 
 
-__version__ = "18.4.6"
+__version__ = "18.4.7"
 
 
 # Try to import js module for web environment
@@ -844,7 +844,7 @@ def main():
         deltah0 = round((max(ao0 - deltaadj)), ROUND_LEVEL)
         deltal0 = abs(round((min(ao0 - deltaadj)), ROUND_LEVEL))
 
-        if aox0.size > 0:
+        if len(aox0) > 0:
             logger.info(f"Left crosstalk @1kHz: {aox0[find_nearest(fox0, 1000)]:.2f}dB")
 
 
@@ -856,7 +856,7 @@ def main():
             deltah1 = round((max(ao1 - deltaadj)), ROUND_LEVEL)
             deltal1 = abs(round((min(ao1 - deltaadj)), ROUND_LEVEL))
 
-            if aox1.size > 0:
+            if len(aox1) > 0:
                 logger.info(f"Right crosstalk @1kHz: {aox1[find_nearest(fox1, 1000)]:.2f}dB")
 
 
@@ -949,7 +949,7 @@ def main():
             axs[0].set_ylim(-30,2)
 
 
-        if aox0.size > 0:
+        if len(aox0) > 0:
             if INPUT_FILE_1:
                 axs[0].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
             else:
@@ -980,7 +980,7 @@ def main():
                        ['Freq Response', 'Crosstalk', '2ⁿᵈ Harmonic', '3ʳᵈ Harmonic'],
                        handler_map={tuple: AnyObjectHandler()},loc=4)
 
-            if aox0.size > 0  and aox1.size > 0:
+            if len(aox0) > 0  and len(aox1) > 0:
                 axs[0].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
 
         else:
@@ -1057,7 +1057,7 @@ def main():
         if max(ao0) < 0.5:
             axs[1].set_ylim(-30,2)
 
-        if aox0.size > 0:
+        if len(aox0) > 0:
             if INPUT_FILE_1:
                 axs[1].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
             else:
@@ -1088,7 +1088,7 @@ def main():
                        ['Freq Response', 'Crosstalk', '2ⁿᵈ Harmonic', '3ʳᵈ Harmonic'],
                        handler_map={tuple: AnyObjectHandler()},loc=4)
 
-            if aox0.size > 0  and aox1.size > 0:
+            if len(aox0) > 0  and len(aox1) > 0:
                 axs[1].set_ylim((min(chain(aox0, aox1)) -2), (max(chain(ao0, ao1)) +2))
 
         else:
