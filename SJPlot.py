@@ -12,10 +12,9 @@ Details in the README here: https://sjplot.com
 '''
 
 
-from scipy.signal import find_peaks, sosfiltfilt, iirfilter, lfilter, resample
+from scipy.signal import sosfiltfilt, iirfilter, lfilter, resample, hilbert, butter
 from scipy.ndimage import uniform_filter1d
 from scipy.io.wavfile import read, write
-#from pathlib import Path
 from matplotlib.legend_handler import HandlerBase
 from matplotlib.offsetbox import AnchoredText
 from itertools import chain
@@ -29,10 +28,9 @@ import logging
 import argparse
 import configparser
 import io
-#import base64
 
 
-__version__ = "18.4.7"
+__version__ = "18.5.0"
 
 
 # Try to import js module for web environment
@@ -575,78 +573,192 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
 
 
 def slice_audio(signal, Fs, test_record):
-    # Rotation Helper
-    def rotate_left(y_in, nd):
-        return np.concatenate((y_in[nd:], y_in[:nd]))
+
+    def find_burst_bounds(signal, Fs, tone_freq=1000, min_duration=1.0, threshold=0.3, search_duration=30.0):
+        """
+        Find pilot tone burst using Hilbert envelope method.
+        More robust and sample-rate independent than peak-spacing method.
+        
+        Parameters:
+        - signal: input audio signal
+        - Fs: sample rate
+        - tone_freq: expected pilot tone frequency (default 1000 Hz)
+        - min_duration: minimum duration in seconds for valid burst (default 1.0s)
+        - threshold: normalized envelope threshold (default 0.3 = 30% of peak)
+        - search_duration: duration to search in seconds (default 20s)
+        
+        Returns:
+        - start_sample: sample index where burst starts
+        - end_sample: sample index where burst ends
+        """
+        # Only process first search_duration seconds to keep processing fast
+        search_samples = int(search_duration * Fs)
+        if len(signal) > search_samples:
+            logger.debug(f"Limiting search to first {search_duration}s ({search_samples} samples)")
+            signal_search = signal[:search_samples]
+        else:
+            signal_search = signal
+        
+        # Bandpass filter around tone frequency (±50 Hz tolerance)
+        sos = butter(4, [tone_freq - 50, tone_freq + 50], btype='band', fs=Fs, output='sos')
+        filtered = sosfiltfilt(sos, signal_search)
+        
+        # Hilbert transform to get analytic signal and envelope
+        analytic_signal = hilbert(filtered)
+        envelope = np.abs(analytic_signal)
+        
+        # Fast envelope smoothing using uniform_filter1d
+        window_size = int(0.1 * Fs)
+        envelope_smooth = uniform_filter1d(envelope, size=window_size, mode='nearest')
+        
+        # Normalize envelope
+        envelope_norm = envelope_smooth / np.max(envelope_smooth)
+        
+        # Threshold detection
+        above_threshold = envelope_norm > threshold
+        
+        # Find transitions (rising and falling edges)
+        transitions = np.diff(above_threshold.astype(int))
+        starts = np.where(transitions == 1)[0]
+        ends = np.where(transitions == -1)[0]
+        
+        # Find first sustained region above threshold
+        min_samples = int(min_duration * Fs)
+        
+        for start, end in zip(starts, ends):
+            duration = end - start
+            if duration >= min_samples:
+                logger.debug(f"Found burst: start={start}, end={end}, duration={duration/Fs:.2f}s")
+                
+                return start, end
+        
+        raise ValueError(f"No sustained pilot tone found in first {search_duration}s (min duration: {min_duration}s, threshold: {threshold})")
 
 
-    # Filter
-    def apply_filter(signal, low, high, Fs, order=17, btype='band'):
-        if btype == 'band':
-            sos = iirfilter(order, [low, high], rs=140, btype='band', analog=False, ftype='cheby2', fs=Fs, output='sos')
+    def find_sweep_start(signal, Fs, search_duration=20.0, threshold=0.2):
+        """
+        Find the start of a frequency sweep (rising energy), not a sustained tone.
+        Used for test records where sweep starts several seconds after pilot tone ends.
+        
+        Parameters:
+        - signal: raw audio signal
+        - Fs: sample rate  
+        - search_duration: how long to search (seconds)
+        - threshold: energy rise threshold (default 0.2 = 20% of max)
+        
+        Returns:
+        - start_sample: where sweep energy begins to rise
+        """
+        search_samples = int(search_duration * Fs)
+        if len(signal) > search_samples:
+            signal_search = signal[:search_samples]
+        else:
+            signal_search = signal
+        
+        # Bandpass around 1kHz (sweep typically starts at 1kHz)
+        sos = butter(4, [900, 1100], btype='band', fs=Fs, output='sos')
+        filtered = sosfiltfilt(sos, signal_search)
+        
+        # Get envelope
+        envelope = np.abs(hilbert(filtered))
+        
+        # Smooth with larger window to see overall energy trend
+        window_size = int(0.2 * Fs)  # 200ms window
+        envelope_smooth = uniform_filter1d(envelope, size=window_size, mode='nearest')
+        
+        # Normalize
+        envelope_norm = envelope_smooth / np.max(envelope_smooth)
+        
+        # Find where energy rises above threshold
+        above_threshold = envelope_norm > threshold
+        
+        # Find first rising edge
+        transitions = np.diff(above_threshold.astype(int))
+        rises = np.where(transitions == 1)[0]
+        
+        if len(rises) > 0:
+            start_sample = rises[0]
+            logger.debug(f"Found sweep start at sample {start_sample} ({start_sample/Fs:.2f}s)")
             
-        elif btype == 'high':
-            sos = iirfilter(order, high, rs=140, btype='highpass', analog=False, ftype='cheby2', fs=Fs, output='sos')
+            return start_sample
+        else:
+            raise ValueError(f"No sweep start found in first {search_duration}s")
 
-        return sosfiltfilt(sos, signal)
 
 
-    def find_burst_bounds(signal, Fs, lower_border, upper_border, consecutive_in_borders=10, threshold=0.02, shift_size=12, shiftings=3):
-        # Detect peaks with constraints on minimum distance
-        peaks, _ = find_peaks(signal, height=threshold, distance=lower_border)#prominence=.5)
-        logger.debug(f"Peaks Found: {len(peaks)}")
-
-        # Find valid sequences of peak spacing
-        valid_diffs = (lower_border <= np.diff(peaks)) & (np.diff(peaks) <= upper_border)
-        start_index = np.argmax(np.convolve(valid_diffs, np.ones(consecutive_in_borders, dtype=int), mode='valid') == consecutive_in_borders)
-
-        start_sample = peaks[start_index]
-        logger.debug(f"Start Index: {start_sample}")
+    def find_end_of_sweep(sweep_start_sample, sweep_end_min, sweep_end_max, signal, Fs, threshold=0.05):
+        """
+        Find end of frequency sweep using Hilbert envelope - optimized and automatic.
+        Works for sweeps ending anywhere from 10kHz to 75kHz without configuration.
         
-        # Define burst region
-        is_ = int(start_sample + (1 * Fs))  # Start 1s after the first peak
-        ie = int(start_sample + (14 * Fs))  # End 14s after
-
-        # Extract and smooth burst region
-        cut_burst = signal[is_:ie]
-        cut_burst = uniform_filter1d(cut_burst, size=shift_size * shiftings)
-
-        # Normalize and find burst end
-        cut_burst /= np.max(cut_burst)
-        burst_end = np.argmax(cut_burst < threshold)
-
-        end_sample = is_ + burst_end
-
-        logger.debug(f"End Index: {end_sample}")
+        Parameters:
+        - sweep_start_sample: sample where sweep starts
+        - sweep_end_min: minimum expected sweep duration (seconds)
+        - sweep_end_max: maximum expected sweep duration (seconds)
+        - signal: raw audio signal (not pre-filtered)
+        - Fs: sample rate
+        - threshold: relative amplitude threshold for end detection (default 0.05 = 5%)
         
-        return start_sample, end_sample
-
-
-    def find_end_of_sweep(sweep_start_sample, sweep_end_min, sweep_end_max, signal, Fs, threshold=0.05, shiftings=6):
+        Returns:
+        - end_sample: sample index where sweep ends
+        """
+        # Define search window
         sample_offset_start = sweep_start_sample + int(Fs * sweep_end_min)
         sample_offset_end = sweep_start_sample + int(Fs * sweep_end_max)
-        signal = signal[sample_offset_start:sample_offset_end]
-        original_signal = signal
-
-        logger.debug(f"Length of End Window: {len(signal)}")
-
-        # Filter a bit by shifting and adding
-        signal_shifted = rotate_left(signal, 1)
-        for i in range(shiftings):
-            signal = signal + signal_shifted
-            signal_shifted = rotate_left(signal_shifted, 1)
-
-        # Find end    
-        signal = np.array(signal < threshold, dtype=float)
-        signal = np.diff(signal)
-        end_sample = np.argmax(signal) + sample_offset_start
-
+        signal_window = signal[sample_offset_start:sample_offset_end]
+        
+        logger.debug(f"End search window: {len(signal_window)} samples ({len(signal_window)/Fs:.2f}s)")
+        
+        # Use a moderate highpass (5kHz) to catch energy from sweeps ending anywhere 10kHz-75kHz
+        # This is well below even the lowest sweep end, so it will catch the drop
+        highpass_freq = min(5000, Fs * 0.4)  # 5kHz or 40% of Nyquist, whichever is lower
+        sos = butter(4, highpass_freq, btype='high', fs=Fs, output='sos')
+        filtered = sosfiltfilt(sos, signal_window)
+        
+        # Hilbert envelope - much cleaner than rectification
+        envelope = np.abs(hilbert(filtered))
+        
+        # Fast smoothing with smaller window for better time resolution
+        window_size = int(0.01 * Fs)  # 10ms window
+        envelope_smooth = uniform_filter1d(envelope, size=window_size, mode='nearest')
+        
+        # Normalize
+        envelope_norm = envelope_smooth / np.max(envelope_smooth)
+        
+        # Find where envelope drops below threshold
+        below_threshold = envelope_norm < threshold
+        
+        # Find first sustained drop (to avoid false triggers on transients)
+        min_samples = int(0.05 * Fs)  # Must stay below for 50ms
+        
+        # Fast vectorized method using diff to find transitions
+        if len(below_threshold) >= min_samples:
+            # Find transitions in/out of low region
+            padded = np.concatenate(([False], below_threshold, [False]))
+            diff = np.diff(padded.astype(int))
+            starts = np.where(diff == 1)[0]  # Start of low regions
+            ends = np.where(diff == -1)[0]   # End of low regions
+            
+            # Find first region that's >= min_samples long
+            if len(starts) > 0 and len(ends) > 0:
+                durations = ends - starts
+                long_enough = np.where(durations >= min_samples)[0]
+                
+                if len(long_enough) > 0:
+                    end_sample = sample_offset_start + starts[long_enough[0]]
+                else:
+                    # No sustained region, use first drop
+                    end_sample = sample_offset_start + starts[0]
+            else:
+                # No low regions at all
+                end_sample = sample_offset_end
+        else:
+            # Window too small, use midpoint
+            end_sample = (sample_offset_start + sample_offset_end) // 2
+        
         logger.debug(f"End Sample (Global Index): {end_sample}")
-        logger.debug(f"Sample Offset Start: {sample_offset_start}, End: {sample_offset_end}")
-        logger.debug(f"End Sample (Relative Index): {end_sample - sample_offset_start}")
         
         return end_sample
-
 
     # Test record parameters
     record_params = {
@@ -659,7 +771,7 @@ def slice_audio(signal, Fs, test_record):
         'QR2009': {'sweep_offset': 80, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
         'QR2010': {'sweep_offset': 24, 'sweep_end_min': 15, 'sweep_end_max': 18, 'sweep_start_detect': 0},
         'XG7001': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
-        'XG7002': {'sweep_offset': 74, 'sweep_end_min': 26, 'sweep_end_max': 30, 'sweep_start_detect': 1},
+        'XG7002': {'sweep_offset': 65, 'sweep_end_min': 26, 'sweep_end_max': 30, 'sweep_start_detect': 1},
         'XG7005': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
 	    'DIN45543': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
 	    'ИЗМ33С0327': {'sweep_offset': 58, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
@@ -675,50 +787,48 @@ def slice_audio(signal, Fs, test_record):
 
     logger.info(f"Test Record: {test_record}")
 
-    lower_border = int(Fs/2040) # 1020Hz - have to scale with Fs
-    upper_border = int(Fs/1960) # 980Hz
-
-    # Filter and maximize for end of left pilot detection
-    left_filtered = apply_filter(left, 500, 2000, Fs, btype='band')
-    left_normalized = np.abs(left_filtered) / np.max(np.abs(left_filtered))
-
-    # Find end of left pilot tone / start of sweep
-    _, start_left_sweep = find_burst_bounds(left_normalized, Fs, lower_border, upper_border)
+    # Find end of left pilot tone / start of sweep using Hilbert method
+    # Note: find_burst_bounds_hilbert does its own filtering
+    _, start_left_sweep = find_burst_bounds(left, Fs, tone_freq=1000, threshold=0.3)
 
     if params['sweep_start_detect'] == 1:
-        sample_offset = start_left_sweep + Fs
-        start_left_sweep, _ = sample_offset + find_burst_bounds(left_normalized[sample_offset:], Fs, lower_border, upper_border)
+        # For test records where sweep starts several seconds after pilot ends
+        # Look for energy rise at 1kHz (sweep start), not another sustained tone
+        sample_offset = start_left_sweep + Fs  # Start searching 1s after pilot ends
+        start_left_sweep = sample_offset + find_sweep_start(left[sample_offset:], Fs, search_duration=10.0, threshold=0.2)
 
     logger.info(f"Start of Left Sweep: {start_left_sweep}")
 
-    # Filter and maximize for end of right pilot detection
-    right_filtered = apply_filter(right, 500, 2000, Fs, btype='band')
-    right_normalized = np.abs(right_filtered) / np.max(np.abs(right_filtered))
-
-    # Find end of left pilot tone / start of sweep
+    # Find end of right pilot tone / start of sweep
     sample_offset = start_left_sweep + int(Fs * params['sweep_offset'])
-    _, start_right_sweep = sample_offset + find_burst_bounds(right_normalized[sample_offset:], Fs, lower_border, upper_border)
+    _, start_right_sweep = sample_offset + find_burst_bounds(right[sample_offset:], Fs, tone_freq=1000, threshold=0.3)
 
     if params['sweep_start_detect'] == 1:
+        # Same for right channel
         sample_offset = start_right_sweep + Fs
-        start_right_sweep, _ = sample_offset + find_burst_bounds(right_normalized[sample_offset:], Fs, lower_border, upper_border)
+        start_right_sweep = sample_offset + find_sweep_start(right[sample_offset:], Fs, search_duration=10.0, threshold=0.2)
 
     logger.info(f"Start of Right Sweep: {start_right_sweep}")
 
-    # Filter and maximize for end of left sweep detection
-    left_filtered = apply_filter(left, None, 10000, Fs, btype='high')
-    left_normalized = np.abs(left_filtered) / np.max(np.abs(left_filtered))
-
-    # Find end of left sweep
-    end_left_sweep = find_end_of_sweep(start_left_sweep, params['sweep_end_min'], params['sweep_end_max'], left_normalized, Fs)
+    # Find end of left sweep using Hilbert method
+    # Automatically detects end for sweeps ending 10kHz-75kHz
+    end_left_sweep = find_end_of_sweep(
+        start_left_sweep, 
+        params['sweep_end_min'], 
+        params['sweep_end_max'], 
+        left,
+        Fs
+    )
     logger.info(f"End of Left Sweep: {end_left_sweep}")
 
-    # Filter and maximize for end of right sweep detection
-    right_filtered = apply_filter(right, None, 10000, Fs, btype='high')
-    right_normalized = np.abs(right_filtered) / np.max(np.abs(right_filtered))
-
     # Find end of right sweep
-    end_right_sweep = find_end_of_sweep(start_right_sweep, params['sweep_end_min'], params['sweep_end_max'], right_normalized, Fs)
+    end_right_sweep = find_end_of_sweep(
+        start_right_sweep, 
+        params['sweep_end_min'], 
+        params['sweep_end_max'], 
+        right,
+        Fs
+    )
     logger.info(f"End of Right Sweep: {end_right_sweep}")
 
     logger.info(f"Left Sweep Duration: {(end_left_sweep-start_left_sweep)/Fs:.4f}")
