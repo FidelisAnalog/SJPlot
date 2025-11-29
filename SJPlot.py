@@ -574,7 +574,7 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
 
 def slice_audio(signal, Fs, test_record):
 
-    def find_burst_bounds(signal, Fs, tone_freq=1000, min_duration=1.0, threshold=0.3, search_duration=20.0):
+    def find_burst_bounds(signal, Fs, tone_freq=1000, min_duration=1.0, threshold=0.3, search_duration=30.0):
         """
         Find pilot tone burst using Hilbert envelope method.
         More robust and sample-rate independent than peak-spacing method.
@@ -585,7 +585,7 @@ def slice_audio(signal, Fs, test_record):
         - tone_freq: expected pilot tone frequency (default 1000 Hz)
         - min_duration: minimum duration in seconds for valid burst (default 1.0s)
         - threshold: normalized envelope threshold (default 0.3 = 30% of peak)
-        - search_duration: duration to search in seconds (default 20s)
+        - search_duration: duration to search in seconds (default 30s)
         
         Returns:
         - start_sample: sample index where burst starts
