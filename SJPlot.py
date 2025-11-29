@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.5.0"
+__version__ = "18.5.1"
 
 
 # Try to import js module for web environment
@@ -556,10 +556,10 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
         audio = normxg7001(audio, Fs)
         try:
             audio_2 = normxg7001(audio_2, Fs)
-            print('norm 0')
+            #print('norm 0')
         except NameError:
             audio_2 = None
-            print('norm 1')
+            #print('norm 1')
     elif extract_sweeps != 1:
         audio_2 = None
 
@@ -762,17 +762,17 @@ def slice_audio(signal, Fs, test_record):
 
     # Test record parameters
     record_params = {
-        'TRS1007': {'sweep_offset': 74, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+        'TRS1007': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
         'TRS1005': {'sweep_offset': 32, 'sweep_end_min': 26, 'sweep_end_max': 34, 'sweep_start_detect': 1},
         'STR100': {'sweep_offset': 74, 'sweep_end_min': 64, 'sweep_end_max': 66, 'sweep_start_detect': 0},
-        'STR120': {'sweep_offset': 58, 'sweep_end_min': 45, 'sweep_end_max': 50, 'sweep_start_detect': 0},
-        'STR130': {'sweep_offset': 82, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
-        'STR170': {'sweep_offset': 75, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
-        'QR2009': {'sweep_offset': 80, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
-        'QR2010': {'sweep_offset': 24, 'sweep_end_min': 15, 'sweep_end_max': 18, 'sweep_start_detect': 0},
+        'STR120': {'sweep_offset': 56, 'sweep_end_min': 45, 'sweep_end_max': 50, 'sweep_start_detect': 0},
+        'STR130': {'sweep_offset': 80, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
+        'STR170': {'sweep_offset': 72, 'sweep_end_min': 63, 'sweep_end_max': 67, 'sweep_start_detect': 0},
+        'QR2009': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+        'QR2010': {'sweep_offset': 22, 'sweep_end_min': 15, 'sweep_end_max': 18, 'sweep_start_detect': 0},
         'XG7001': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
-        'XG7002': {'sweep_offset': 65, 'sweep_end_min': 26, 'sweep_end_max': 30, 'sweep_start_detect': 1},
-        'XG7005': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+        'XG7002': {'sweep_offset': 63, 'sweep_end_min': 26, 'sweep_end_max': 30, 'sweep_start_detect': 1},
+        'XG7005': {'sweep_offset': 76, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
 	    'DIN45543': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
 	    'ИЗМ33С0327': {'sweep_offset': 58, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
     }

@@ -673,6 +673,7 @@
                         <option value="TRS1005">TRS-1005</option>
                         <option value="STR120">STR 120</option>
                         <option value="STR130">STR 130</option>
+                        <option value="STR170">STR 170</option>
                         <option value="QR2009">QR 2009</option>
                         <option value="QR2010">QR 2010</option>
                         <option value="XG7001">XG-7001</option>
@@ -760,6 +761,7 @@
                         <option value="TRS1005">TRS-1005</option>
                         <option value="STR120">STR 120</option>
                         <option value="STR130">STR 130</option>
+                        <option value="STR170">STR 170</option>
                         <option value="QR2009">QR 2009</option>
                         <option value="QR2010">QR 2010</option>
                         <option value="XG7001">XG-7001</option>
@@ -1557,9 +1559,10 @@ window.pyProcessAudio = process_audio_if_ready
         window.testRecordSettings = {
             'STR100':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 20000 },
             'TRS1007':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
-            'TRS1005':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 50000 },
+            'TRS1005':   { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
             'STR120':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
             'STR130':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false}, end_f: 20000 },
+            'STR170':    { withRIAA: {mode: 2, inverse: false}, withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
             'QR2009':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
             'QR2010':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 50000 },
             'XG7001':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 20000 },
