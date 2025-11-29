@@ -574,7 +574,7 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
 
 def slice_audio(signal, Fs, test_record):
 
-    def find_burst_bounds(signal, Fs, tone_freq=1000, min_duration=1.0, threshold=0.3, search_duration=30.0):
+    def find_burst_bounds(signal, Fs, tone_freq=1000, min_duration=1.0, threshold=0.3, search_duration=20.0):
         """
         Find pilot tone burst using Hilbert envelope method.
         More robust and sample-rate independent than peak-spacing method.
@@ -635,7 +635,7 @@ def slice_audio(signal, Fs, test_record):
         raise ValueError(f"No sustained pilot tone found in first {search_duration}s (min duration: {min_duration}s, threshold: {threshold})")
 
 
-    def find_sweep_start(signal, Fs, search_duration=20.0, threshold=0.2):
+    def find_sweep_start(signal, Fs, search_duration=10.0, threshold=0.2):
         """
         Find the start of a frequency sweep (rising energy), not a sustained tone.
         Used for test records where sweep starts several seconds after pilot tone ends.
@@ -1371,7 +1371,7 @@ def main():
         import io
         import base64
 
-        plt.figtext(.17, .118, "sjplot.com/online" + "\n" + "SJPlot v" + __version__  + "\n" + \
+        plt.figtext(.17, .118, "sjplot.com/online" + "\n" + "SJPlot " + __version__  + "\n" + \
             now.strftime("%b %d, %Y %H:%M"), fontsize=6)
 
         buf = io.BytesIO()
@@ -1389,10 +1389,10 @@ def main():
     else:
 
         if file1_data:
-            plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
+            plt.figtext(.17, .118, "SJPlot " + __version__ + "\n" + INPUT_FILE_0 + "\n" + INPUT_FILE_1 + "\n" + \
                 now.strftime("%b %d, %Y %H:%M"), fontsize=6)
         else:
-            plt.figtext(.17, .118, "SJPlot v" + __version__ + "\n" + INPUT_FILE_0 + "\n" + \
+            plt.figtext(.17, .118, "SJPlot " + __version__ + "\n" + INPUT_FILE_0 + "\n" + \
                 now.strftime("%b %d, %Y %H:%M"), fontsize=6)
 
         plt.savefig(PLOT_INFO.replace(' / ', '_') + '.png', bbox_inches='tight', pad_inches=.5, dpi=192)
