@@ -364,6 +364,31 @@
         #download-plot-btn {
             right: 10px;
         }
+        .csv-download-link {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .csv-download-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        .csv-download-link a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .csv-download-link svg {
+            flex-shrink: 0;
+        }
         .error-waveform {
             margin-top: 15px;
             padding: 15px;
@@ -2003,6 +2028,7 @@ window.pyProcessAudio = process_audio_if_ready
                         extract_sweeps: 1, // Always enabled in standard mode
                         test_record: testRecord,
                         author: document.getElementById('author').value,
+                        plot_data_out: 1, // Always enabled for web mode
                         // Advanced-only parameters
                         file0norm: 0,
                         onekfstart: 0
@@ -2022,7 +2048,8 @@ window.pyProcessAudio = process_audio_if_ready
                         extract_sweeps: parseInt(document.getElementById('extractSweeps').value),
                         test_record: document.getElementById('testRecordAdvanced').value,
                         author: document.getElementById('authorAdvanced').value,
-                        file0norm: parseInt(document.getElementById('file0norm').value)
+                        file0norm: parseInt(document.getElementById('file0norm').value),
+                        plot_data_out: 1 // Always enabled for web mode
                     };
 
                     // Add advanced-only parameters only if they have values (avoid sending null)
@@ -2079,6 +2106,16 @@ window.pyProcessAudio = process_audio_if_ready
                         </svg>
                     </button>
                     <img src="data:image/png;base64,${imgData}" />
+                </div>
+                <div class="csv-download-link">
+                    <a href="#" id="download-csv-btn" onclick="window.downloadCSV(); return false;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Download Plot Data (CSV)
+                    </a>
                 </div>
             `;
 
@@ -2159,13 +2196,60 @@ window.pyProcessAudio = process_audio_if_ready
             }
         }
 
+        // Store CSV data globally for download
+        window.csvData = { file0: null, file1: null };
+
+        function updateUIWithPlotData(csvData0, csvData1) {
+            // Store CSV data for download
+            window.csvData.file0 = csvData0;
+            window.csvData.file1 = csvData1;
+            console.log('CSV data received:', csvData1 ? 'dual files' : 'single file');
+        }
+
+        function downloadCSV() {
+            const standardConfig = document.getElementById('standardConfig');
+            const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+            const plotInfo = document.getElementById(mode === 'advanced' ? 'plotInfoAdvanced' : 'plotInfo').value || 'SJPlot';
+            const baseFilename = plotInfo.replace(/ \/ /g, '_').replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
+
+            if (window.csvData.file1) {
+                // Dual files - create two downloads
+                const link0 = document.createElement('a');
+                link0.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(window.csvData.file0);
+                link0.download = `${baseFilename}_L.csv`;
+                document.body.appendChild(link0);
+                link0.click();
+                document.body.removeChild(link0);
+
+                // Small delay between downloads
+                setTimeout(() => {
+                    const link1 = document.createElement('a');
+                    link1.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(window.csvData.file1);
+                    link1.download = `${baseFilename}_R.csv`;
+                    document.body.appendChild(link1);
+                    link1.click();
+                    document.body.removeChild(link1);
+                }, 100);
+            } else {
+                // Single file
+                const link = document.createElement('a');
+                link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(window.csvData.file0);
+                link.download = `${baseFilename}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
         // Make the function globally available for Python to call
         window.updateUIWithPlotImage = updateUIWithPlotImage;
+        window.updateUIWithPlotData = updateUIWithPlotData;
         window.showErrorWaveform = showErrorWaveform;
-        
+
         // Make functions globally available for onclick handlers
         window.startAnalysis = startAnalysis;
         window.downloadPlot = downloadPlot;
+        window.downloadCSV = downloadCSV;
 
         // Patch: Ensure Normalize (Hz) is auto-corrected when switching to advanced mode
         // Find the code that switches modes and add autoCorrectNormalizeHz() after advanced is shown

@@ -412,25 +412,25 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
         if aoutx:
             aoutx = normstr100(foutx, aoutx)
 
-    if file0norm == 0 and iteration[0] == 0:
-        i = find_nearest(fout, normalize)
-        norm[0] = aout[i]
-    elif file0norm == 1:
-        i = find_nearest(fout, normalize)
-        norm[0] = aout[i]
- 
-    aout = [a - norm[0] for a in aout]
-    aoutx = [a - norm[0] for a in aoutx] if aoutx else []
-    aout2 = [a - norm[0] for a in aout2]
-    aout3 = [a - norm[0] for a in aout3]
-
-    # Apply low-pass filter
+    # Apply low-pass filter before normalization
     sos = iirfilter(3, 0.5, btype='lowpass', output='sos')  # Low-pass filter
     aout = sosfiltfilt(sos, aout)
     aout2 = sosfiltfilt(sos, aout2)
     aout3 = sosfiltfilt(sos, aout3)
     if len(aoutx) > 0:
         aoutx = sosfiltfilt(sos, aoutx)
+
+    if file0norm == 0 and iteration[0] == 0:
+        i = find_nearest(fout, normalize)
+        norm[0] = aout[i]
+    elif file0norm == 1:
+        i = find_nearest(fout, normalize)
+        norm[0] = aout[i]
+
+    aout = [a - norm[0] for a in aout]
+    aoutx = [a - norm[0] for a in aoutx] if len(aoutx) > 0 else []
+    aout2 = [a - norm[0] for a in aout2]
+    aout3 = [a - norm[0] for a in aout3]
 
     iteration[0]+=1
     
@@ -852,6 +852,104 @@ def format_freq(x, pos):
         return f'{x:.10g}'
 
 
+def _generate_csv_string(fo, ao, aox, ao2h, ao3h):
+    """
+    Helper function to generate CSV string from plot data arrays.
+
+    Args:
+        fo: Frequency data
+        ao: Amplitude data
+        aox: Crosstalk data
+        ao2h: 2nd harmonic data
+        ao3h: 3rd harmonic data
+
+    Returns:
+        CSV formatted string
+    """
+    import csv
+    from io import StringIO
+
+    # Pad arrays to match frequency array length
+    dao = [*ao, *[''] * (len(fo) - len(ao))]
+    daox = [*aox, *[''] * (len(fo) - len(aox))]
+    dao2h = [*ao2h, *[''] * (len(fo) - len(ao2h))]
+    dao3h = [*ao3h, *[''] * (len(fo) - len(ao3h))]
+
+    csv_buffer = StringIO()
+    writer = csv.writer(csv_buffer)
+    writer.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
+
+    for f, a, ax, a2, a3 in zip(fo, dao, daox, dao2h, dao3h):
+        # Format values: frequency as integer, amplitudes to 2 decimal places
+        f_out = f'{int(f)}' if f != '' else ''
+        a_out = f'{a:.2f}' if a != '' else ''
+        ax_out = f'{ax:.2f}' if ax != '' else ''
+        a2_out = f'{a2:.2f}' if a2 != '' else ''
+        a3_out = f'{a3:.2f}' if a3 != '' else ''
+        writer.writerow([f_out, a_out, ax_out, a2_out, a3_out])
+
+    csv_data = csv_buffer.getvalue()
+    csv_buffer.close()
+
+    return csv_data
+
+
+def output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0, fo1=None, ao1=None, aox1=None, ao2h1=None, ao3h1=None,
+                     environment='standalone', filename_base='plot_data'):
+    """
+    Output plot data to CSV file or prepare for web frontend.
+
+    Args:
+        fo0: Frequency data for file 0
+        ao0: Amplitude data for file 0
+        aox0: Crosstalk data for file 0
+        ao2h0: 2nd harmonic data for file 0
+        ao3h0: 3rd harmonic data for file 0
+        fo1: Frequency data for file 1 (optional)
+        ao1: Amplitude data for file 1 (optional)
+        aox1: Crosstalk data for file 1 (optional)
+        ao2h1: 2nd harmonic data for file 1 (optional)
+        ao3h1: 3rd harmonic data for file 1 (optional)
+        environment: 'standalone' or 'web'
+        filename_base: Base name for output CSV file
+    """
+    # Generate CSV data for file 0
+    csv_data0 = _generate_csv_string(fo0, ao0, aox0, ao2h0, ao3h0)
+
+    # Generate CSV data for file 1 if present
+    csv_data1 = None
+    if fo1 is not None and ao1 is not None:
+        csv_data1 = _generate_csv_string(fo1, ao1, aox1, ao2h1, ao3h1)
+
+    if environment == 'standalone':
+        if csv_data1:
+            # Dual file output - use L/R suffixes
+            csv_file_L = f"{filename_base}_L.csv"
+            with open(csv_file_L, 'w') as f:
+                f.write(csv_data0)
+            logger.info(f"Left channel plot data written to {csv_file_L}")
+
+            csv_file_R = f"{filename_base}_R.csv"
+            with open(csv_file_R, 'w') as f:
+                f.write(csv_data1)
+            logger.info(f"Right channel plot data written to {csv_file_R}")
+        else:
+            # Single file output - no suffix needed
+            csv_file = f"{filename_base}.csv"
+            with open(csv_file, 'w') as f:
+                f.write(csv_data0)
+            logger.info(f"Plot data written to {csv_file}")
+
+    elif environment == 'web':
+        # Send CSV data to JS frontend
+        from js import window
+
+        if hasattr(window, 'updateUIWithPlotData'):
+            window.updateUIWithPlotData(csv_data0, csv_data1)
+            logger.info("Plot data sent to web frontend")
+        else:
+            logger.warning("updateUIWithPlotData function not found in JS window object")
+
 
 def main():
     """
@@ -971,29 +1069,15 @@ def main():
 
 
     if PLOT_DATA_OUT == 1:
-
-        dao0 = [*ao0, *[''] * (len(fo0) - len(ao0))]
-        daox0 = [*aox0, *[''] * (len(fo0) - len(aox0))]
-        dao2h0 = [*ao2h0, *[''] * (len(fo0) - len(ao2h0))]
-        dao3h0 = [*ao3h0, *[''] * (len(fo0) - len(ao3h0))]
-
-        print('\n\nFile 0 Plot Data: (freq, ampl, x-talk, 2h, 3h)\n\n')
-
-        dataout = list(zip(fo0, dao0, daox0, dao2h0, dao3h0))
-        for fo, ao, aox, ao2, ao3 in dataout:
-            print(fo, ao, aox, ao2, ao3, sep=', ')
-
+        # Output plot data based on environment
+        plot_filename_base = PLOT_INFO.replace(' / ', '_')
         if file1_data:
-            dao1 = [*ao1, *[''] * (len(fo1) - len(ao1))]
-            daox1 = [*aox1, *[''] * (len(fo1) - len(aox1))]
-            dao2h1 = [*ao2h1, *[''] * (len(fo1) - len(ao2h1))]
-            dao3h1 = [*ao3h1, *[''] * (len(fo1) - len(ao3h1))]
-
-            print('\n\nFile 1 Plot Data: (freq, ampl, x-talk, 2h, 3h)\n\n')
-
-            dataout = list(zip(fo1, dao1, daox1, dao2h1, dao3h1))
-            for fo, ao, aox, ao2, ao3 in dataout:
-                print(fo, ao, aox, ao2, ao3, sep=', ')
+            output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0,
+                           fo1=fo1, ao1=ao1, aox1=aox1, ao2h1=ao2h1, ao3h1=ao3h1,
+                           environment=environment, filename_base=plot_filename_base)
+        else:
+            output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0,
+                           environment=environment, filename_base=plot_filename_base)
 
 
     plt.rcParams["xtick.minor.visible"] =  True
