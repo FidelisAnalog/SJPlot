@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.2"
+__version__ = "18.6.3"
 
 
 # Try to import js module for web environment
@@ -1353,13 +1353,23 @@ def main():
 
 
     for i, ax in enumerate(axs.flat):
- 
-        if FILE0NORM == 0:
-            if  not (PLOT_STYLE == 3 and i != 0):
-                ax.axline((NORMALIZE, 0), (NORMALIZE, 1), color = 'm', lw = 1)
-        elif FILE0NORM == 1:
-            if not (PLOT_STYLE == 3 and i != 0):
-                ax.plot(NORMALIZE, 0, marker = 'x', color = 'm')
+
+        # Check if NORMALIZE is within the plot range
+        in_range = True
+        if START_F and START_F != "":
+            if NORMALIZE < int(START_F):
+                in_range = False
+        if END_F and END_F != "":
+            if NORMALIZE > int(END_F):
+                in_range = False
+
+        if in_range:
+            if FILE0NORM == 0:
+                if  not (PLOT_STYLE == 3 and i != 0):
+                    ax.axline((NORMALIZE, 0), (NORMALIZE, 1), color = 'm', lw = 1)
+            elif FILE0NORM == 1:
+                if not (PLOT_STYLE == 3 and i != 0):
+                    ax.plot(NORMALIZE, 0, marker = 'x', color = 'm')
         
         anchored_text = AnchoredText('SJ', 
                             frameon=False, borderpad=0, pad=0.03, 
