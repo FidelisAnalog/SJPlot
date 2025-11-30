@@ -428,7 +428,7 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
         norm[0] = aout[i]
 
     aout = [a - norm[0] for a in aout]
-    aoutx = [a - norm[0] for a in aoutx] if aoutx else []
+    aoutx = [a - norm[0] for a in aoutx] if len(aoutx) > 0 else []
     aout2 = [a - norm[0] for a in aout2]
     aout3 = [a - norm[0] for a in aout3]
 
