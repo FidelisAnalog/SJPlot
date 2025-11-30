@@ -916,18 +916,18 @@ def output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0, fo1=None, ao1=None, aox1=None
         csv_data1 = _generate_csv_string(fo1, ao1, aox1, ao2h1, ao3h1)
 
     if environment == 'standalone':
-        # Write file 0 CSV to disk
-        csv_file0 = f"{filename_base}_file0.csv"
-        with open(csv_file0, 'w') as f:
+        # Write left channel CSV to disk
+        csv_file_L = f"{filename_base}_L.csv"
+        with open(csv_file_L, 'w') as f:
             f.write(csv_data0)
-        logger.info(f"File 0 plot data written to {csv_file0}")
+        logger.info(f"Left channel plot data written to {csv_file_L}")
 
-        # Write file 1 CSV to disk if present
+        # Write right channel CSV to disk if present
         if csv_data1:
-            csv_file1 = f"{filename_base}_file1.csv"
-            with open(csv_file1, 'w') as f:
+            csv_file_R = f"{filename_base}_R.csv"
+            with open(csv_file_R, 'w') as f:
                 f.write(csv_data1)
-            logger.info(f"File 1 plot data written to {csv_file1}")
+            logger.info(f"Right channel plot data written to {csv_file_R}")
 
     elif environment == 'web':
         # Send CSV data to JS frontend
@@ -1059,13 +1059,14 @@ def main():
 
     if PLOT_DATA_OUT == 1:
         # Output plot data based on environment
+        plot_filename_base = PLOT_INFO.replace(' / ', '_')
         if file1_data:
             output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0,
                            fo1=fo1, ao1=ao1, aox1=aox1, ao2h1=ao2h1, ao3h1=ao3h1,
-                           environment=environment)
+                           environment=environment, filename_base=plot_filename_base)
         else:
             output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0,
-                           environment=environment)
+                           environment=environment, filename_base=plot_filename_base)
 
 
     plt.rcParams["xtick.minor.visible"] =  True
