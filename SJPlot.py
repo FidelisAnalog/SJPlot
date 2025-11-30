@@ -852,6 +852,42 @@ def format_freq(x, pos):
         return f'{x:.10g}'
 
 
+def _generate_csv_string(fo, ao, aox, ao2h, ao3h):
+    """
+    Helper function to generate CSV string from plot data arrays.
+
+    Args:
+        fo: Frequency data
+        ao: Amplitude data
+        aox: Crosstalk data
+        ao2h: 2nd harmonic data
+        ao3h: 3rd harmonic data
+
+    Returns:
+        CSV formatted string
+    """
+    import csv
+    from io import StringIO
+
+    # Pad arrays to match frequency array length
+    dao = [*ao, *[''] * (len(fo) - len(ao))]
+    daox = [*aox, *[''] * (len(fo) - len(aox))]
+    dao2h = [*ao2h, *[''] * (len(fo) - len(ao2h))]
+    dao3h = [*ao3h, *[''] * (len(fo) - len(ao3h))]
+
+    csv_buffer = StringIO()
+    writer = csv.writer(csv_buffer)
+    writer.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
+
+    for f, a, ax, a2, a3 in zip(fo, dao, daox, dao2h, dao3h):
+        writer.writerow([f, a, ax, a2, a3])
+
+    csv_data = csv_buffer.getvalue()
+    csv_buffer.close()
+
+    return csv_data
+
+
 def output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0, fo1=None, ao1=None, aox1=None, ao2h1=None, ao3h1=None,
                      environment='standalone', filename_base='plot_data'):
     """
@@ -871,89 +907,34 @@ def output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0, fo1=None, ao1=None, aox1=None
         environment: 'standalone' or 'web'
         filename_base: Base name for output CSV file
     """
-    import csv
-    from io import StringIO
+    # Generate CSV data for file 0
+    csv_data0 = _generate_csv_string(fo0, ao0, aox0, ao2h0, ao3h0)
+
+    # Generate CSV data for file 1 if present
+    csv_data1 = None
+    if fo1 is not None and ao1 is not None:
+        csv_data1 = _generate_csv_string(fo1, ao1, aox1, ao2h1, ao3h1)
 
     if environment == 'standalone':
-        # Output File 0 data to CSV
+        # Write file 0 CSV to disk
         csv_file0 = f"{filename_base}_file0.csv"
-
-        # Pad arrays to match frequency array length
-        dao0 = [*ao0, *[''] * (len(fo0) - len(ao0))]
-        daox0 = [*aox0, *[''] * (len(fo0) - len(aox0))]
-        dao2h0 = [*ao2h0, *[''] * (len(fo0) - len(ao2h0))]
-        dao3h0 = [*ao3h0, *[''] * (len(fo0) - len(ao3h0))]
-
-        with open(csv_file0, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
-            for fo, ao, aox, ao2, ao3 in zip(fo0, dao0, daox0, dao2h0, dao3h0):
-                writer.writerow([fo, ao, aox, ao2, ao3])
-
+        with open(csv_file0, 'w') as f:
+            f.write(csv_data0)
         logger.info(f"File 0 plot data written to {csv_file0}")
 
-        # Output File 1 data to CSV if present
-        if fo1 is not None and ao1 is not None:
+        # Write file 1 CSV to disk if present
+        if csv_data1:
             csv_file1 = f"{filename_base}_file1.csv"
-
-            dao1 = [*ao1, *[''] * (len(fo1) - len(ao1))]
-            daox1 = [*aox1, *[''] * (len(fo1) - len(aox1))]
-            dao2h1 = [*ao2h1, *[''] * (len(fo1) - len(ao2h1))]
-            dao3h1 = [*ao3h1, *[''] * (len(fo1) - len(ao3h1))]
-
-            with open(csv_file1, 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
-                for fo, ao, aox, ao2, ao3 in zip(fo1, dao1, daox1, dao2h1, dao3h1):
-                    writer.writerow([fo, ao, aox, ao2, ao3])
-
+            with open(csv_file1, 'w') as f:
+                f.write(csv_data1)
             logger.info(f"File 1 plot data written to {csv_file1}")
 
     elif environment == 'web':
-        # Format CSV data to send back to JS front-end
+        # Send CSV data to JS frontend
         from js import window
 
-        # Prepare File 0 CSV data as string
-        csv_buffer0 = StringIO()
-        writer0 = csv.writer(csv_buffer0)
-        writer0.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
-
-        # Pad arrays to match frequency array length
-        dao0 = [*ao0, *[''] * (len(fo0) - len(ao0))]
-        daox0 = [*aox0, *[''] * (len(fo0) - len(aox0))]
-        dao2h0 = [*ao2h0, *[''] * (len(fo0) - len(ao2h0))]
-        dao3h0 = [*ao3h0, *[''] * (len(fo0) - len(ao3h0))]
-
-        for fo, ao, aox, ao2, ao3 in zip(fo0, dao0, daox0, dao2h0, dao3h0):
-            writer0.writerow([fo, ao, aox, ao2, ao3])
-
-        csv_data0 = csv_buffer0.getvalue()
-        csv_buffer0.close()
-
-        # Prepare File 1 CSV data if present
-        csv_data1 = None
-        if fo1 is not None and ao1 is not None:
-            csv_buffer1 = StringIO()
-            writer1 = csv.writer(csv_buffer1)
-            writer1.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
-
-            dao1 = [*ao1, *[''] * (len(fo1) - len(ao1))]
-            daox1 = [*aox1, *[''] * (len(fo1) - len(aox1))]
-            dao2h1 = [*ao2h1, *[''] * (len(fo1) - len(ao2h1))]
-            dao3h1 = [*ao3h1, *[''] * (len(fo1) - len(ao3h1))]
-
-            for fo, ao, aox, ao2, ao3 in zip(fo1, dao1, daox1, dao2h1, dao3h1):
-                writer1.writerow([fo, ao, aox, ao2, ao3])
-
-            csv_data1 = csv_buffer1.getvalue()
-            csv_buffer1.close()
-
-        # Send CSV data to JS frontend
         if hasattr(window, 'updateUIWithPlotData'):
-            if csv_data1:
-                window.updateUIWithPlotData(csv_data0, csv_data1)
-            else:
-                window.updateUIWithPlotData(csv_data0, None)
+            window.updateUIWithPlotData(csv_data0, csv_data1)
             logger.info("Plot data sent to web frontend")
         else:
             logger.warning("updateUIWithPlotData function not found in JS window object")
