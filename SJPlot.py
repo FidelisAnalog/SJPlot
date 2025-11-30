@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.5.1"
+__version__ = "18.6.0"
 
 
 # Try to import js module for web environment
@@ -205,7 +205,7 @@ def get_config():
             for key, value in web_config.items():
                 if key in combined_config:
                     combined_config[key] = value
-                    logger.info(f"Applied config: {key} = {value}")
+                    #logger.info(f"Applied config: {key} = {value}")
     except ImportError:
         # Not running in a PyScript environment, continue as standalone
         pass
