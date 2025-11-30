@@ -872,6 +872,7 @@ def output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0, fo1=None, ao1=None, aox1=None
         filename_base: Base name for output CSV file
     """
     import csv
+    from io import StringIO
 
     if environment == 'standalone':
         # Output File 0 data to CSV
@@ -909,10 +910,53 @@ def output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0, fo1=None, ao1=None, aox1=None
             logger.info(f"File 1 plot data written to {csv_file1}")
 
     elif environment == 'web':
-        # TODO: Format CSV data to send back to JS front-end
-        # For now, just log that we're in web mode
-        logger.info("Web mode plot data output - to be implemented")
-        pass
+        # Format CSV data to send back to JS front-end
+        from js import window
+
+        # Prepare File 0 CSV data as string
+        csv_buffer0 = StringIO()
+        writer0 = csv.writer(csv_buffer0)
+        writer0.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
+
+        # Pad arrays to match frequency array length
+        dao0 = [*ao0, *[''] * (len(fo0) - len(ao0))]
+        daox0 = [*aox0, *[''] * (len(fo0) - len(aox0))]
+        dao2h0 = [*ao2h0, *[''] * (len(fo0) - len(ao2h0))]
+        dao3h0 = [*ao3h0, *[''] * (len(fo0) - len(ao3h0))]
+
+        for fo, ao, aox, ao2, ao3 in zip(fo0, dao0, daox0, dao2h0, dao3h0):
+            writer0.writerow([fo, ao, aox, ao2, ao3])
+
+        csv_data0 = csv_buffer0.getvalue()
+        csv_buffer0.close()
+
+        # Prepare File 1 CSV data if present
+        csv_data1 = None
+        if fo1 is not None and ao1 is not None:
+            csv_buffer1 = StringIO()
+            writer1 = csv.writer(csv_buffer1)
+            writer1.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
+
+            dao1 = [*ao1, *[''] * (len(fo1) - len(ao1))]
+            daox1 = [*aox1, *[''] * (len(fo1) - len(aox1))]
+            dao2h1 = [*ao2h1, *[''] * (len(fo1) - len(ao2h1))]
+            dao3h1 = [*ao3h1, *[''] * (len(fo1) - len(ao3h1))]
+
+            for fo, ao, aox, ao2, ao3 in zip(fo1, dao1, daox1, dao2h1, dao3h1):
+                writer1.writerow([fo, ao, aox, ao2, ao3])
+
+            csv_data1 = csv_buffer1.getvalue()
+            csv_buffer1.close()
+
+        # Send CSV data to JS frontend
+        if hasattr(window, 'updateUIWithPlotData'):
+            if csv_data1:
+                window.updateUIWithPlotData(csv_data0, csv_data1)
+            else:
+                window.updateUIWithPlotData(csv_data0, None)
+            logger.info("Plot data sent to web frontend")
+        else:
+            logger.warning("updateUIWithPlotData function not found in JS window object")
 
 
 def main():
