@@ -880,8 +880,8 @@ def _generate_csv_string(fo, ao, aox, ao2h, ao3h):
     writer.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
 
     for f, a, ax, a2, a3 in zip(fo, dao, daox, dao2h, dao3h):
-        # Format numeric values to 2 decimal places, preserve empty strings
-        f_out = f'{f:.2f}' if f != '' else ''
+        # Format values: frequency as integer, amplitudes to 2 decimal places
+        f_out = f'{int(f)}' if f != '' else ''
         a_out = f'{a:.2f}' if a != '' else ''
         ax_out = f'{ax:.2f}' if ax != '' else ''
         a2_out = f'{a2:.2f}' if a2 != '' else ''
