@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.2"
+__version__ = "18.6.3"
 
 
 # Try to import js module for web environment
