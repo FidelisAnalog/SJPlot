@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.0"
+__version__ = "18.6.1"
 
 
 # Try to import js module for web environment
@@ -200,12 +200,12 @@ def get_config():
         from js import window
         if hasattr(window, 'js_config'):
             web_config = window.js_config.to_py()  # Convert JsProxy to Python dict
-            logger.info("Applying web configuration overrides.")
-            logger.info(f"Web config received: {web_config}")
+            logger.info("Applying web configuration overrides")
+            logger.debug(f"Web config received: {web_config}")
             for key, value in web_config.items():
                 if key in combined_config:
                     combined_config[key] = value
-                    #logger.info(f"Applied config: {key} = {value}")
+                    logger.debug(f"Applied config: {key} = {value}")
     except ImportError:
         # Not running in a PyScript environment, continue as standalone
         pass
@@ -959,6 +959,8 @@ def main():
 
     createplotdata.__defaults__ = ([0], [0], 0, 20000, 0, 0, 1000)
 
+    logger.info(f"SJPlot {__version__}")
+
     config = get_config()
 
     INPUT_FILE_0 = config["file_0"]
@@ -996,9 +998,6 @@ def main():
         for key, value in config.items():
             logger.debug(f"  {key}: {value}")
 
-
-
-    logger.info(f"SJPlot {__version__}")
 
     environment = get_environment()
 
