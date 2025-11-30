@@ -916,18 +916,23 @@ def output_plot_data(fo0, ao0, aox0, ao2h0, ao3h0, fo1=None, ao1=None, aox1=None
         csv_data1 = _generate_csv_string(fo1, ao1, aox1, ao2h1, ao3h1)
 
     if environment == 'standalone':
-        # Write left channel CSV to disk
-        csv_file_L = f"{filename_base}_L.csv"
-        with open(csv_file_L, 'w') as f:
-            f.write(csv_data0)
-        logger.info(f"Left channel plot data written to {csv_file_L}")
-
-        # Write right channel CSV to disk if present
         if csv_data1:
+            # Dual file output - use L/R suffixes
+            csv_file_L = f"{filename_base}_L.csv"
+            with open(csv_file_L, 'w') as f:
+                f.write(csv_data0)
+            logger.info(f"Left channel plot data written to {csv_file_L}")
+
             csv_file_R = f"{filename_base}_R.csv"
             with open(csv_file_R, 'w') as f:
                 f.write(csv_data1)
             logger.info(f"Right channel plot data written to {csv_file_R}")
+        else:
+            # Single file output - no suffix needed
+            csv_file = f"{filename_base}.csv"
+            with open(csv_file, 'w') as f:
+                f.write(csv_data0)
+            logger.info(f"Plot data written to {csv_file}")
 
     elif environment == 'web':
         # Send CSV data to JS frontend
