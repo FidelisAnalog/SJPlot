@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.1"
+__version__ = "18.6.2"
 
 
 # Try to import js module for web environment
@@ -149,7 +149,7 @@ def get_config():
     if os.path.exists(config_file):
         config.read(config_file)
     else:
-        logger.info(f"No configuration file. Using default values.")
+        logger.info(f"No configuration file found; applying defaults")
     
     # Set default values for missing parameters
     defaults = {
