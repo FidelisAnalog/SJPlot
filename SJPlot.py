@@ -1356,10 +1356,12 @@ def main():
 
         # Check if NORMALIZE is within the plot range
         in_range = True
-        if START_F and START_F != "" and NORMALIZE < START_F:
-            in_range = False
-        if END_F and END_F != "" and NORMALIZE > END_F:
-            in_range = False
+        if START_F and START_F != "":
+            if NORMALIZE < int(START_F):
+                in_range = False
+        if END_F and END_F != "":
+            if NORMALIZE > int(END_F):
+                in_range = False
 
         if in_range:
             if FILE0NORM == 0:
