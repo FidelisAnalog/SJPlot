@@ -880,7 +880,13 @@ def _generate_csv_string(fo, ao, aox, ao2h, ao3h):
     writer.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
 
     for f, a, ax, a2, a3 in zip(fo, dao, daox, dao2h, dao3h):
-        writer.writerow([f, a, ax, a2, a3])
+        # Round numeric values to 2 decimals, preserve empty strings
+        f_out = round(f, 2) if f != '' else ''
+        a_out = round(a, 2) if a != '' else ''
+        ax_out = round(ax, 2) if ax != '' else ''
+        a2_out = round(a2, 2) if a2 != '' else ''
+        a3_out = round(a3, 2) if a3 != '' else ''
+        writer.writerow([f_out, a_out, ax_out, a2_out, a3_out])
 
     csv_data = csv_buffer.getvalue()
     csv_buffer.close()
