@@ -2207,7 +2207,9 @@ window.pyProcessAudio = process_audio_if_ready
         }
 
         function downloadCSV() {
-            const plotInfo = document.getElementById(document.getElementById('mode-toggle').checked ? 'plotInfoAdvanced' : 'plotInfo').value || 'SJPlot';
+            const standardConfig = document.getElementById('standardConfig');
+            const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+            const plotInfo = document.getElementById(mode === 'advanced' ? 'plotInfoAdvanced' : 'plotInfo').value || 'SJPlot';
             const baseFilename = plotInfo.replace(/ \/ /g, '_').replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
 
             if (window.csvData.file1) {
