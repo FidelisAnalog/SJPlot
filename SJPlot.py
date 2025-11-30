@@ -412,25 +412,25 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
         if aoutx:
             aoutx = normstr100(foutx, aoutx)
 
-    if file0norm == 0 and iteration[0] == 0:
-        i = find_nearest(fout, normalize)
-        norm[0] = aout[i]
-    elif file0norm == 1:
-        i = find_nearest(fout, normalize)
-        norm[0] = aout[i]
- 
-    aout = [a - norm[0] for a in aout]
-    aoutx = [a - norm[0] for a in aoutx] if aoutx else []
-    aout2 = [a - norm[0] for a in aout2]
-    aout3 = [a - norm[0] for a in aout3]
-
-    # Apply low-pass filter
+    # Apply low-pass filter before normalization
     sos = iirfilter(3, 0.5, btype='lowpass', output='sos')  # Low-pass filter
     aout = sosfiltfilt(sos, aout)
     aout2 = sosfiltfilt(sos, aout2)
     aout3 = sosfiltfilt(sos, aout3)
     if len(aoutx) > 0:
         aoutx = sosfiltfilt(sos, aoutx)
+
+    if file0norm == 0 and iteration[0] == 0:
+        i = find_nearest(fout, normalize)
+        norm[0] = aout[i]
+    elif file0norm == 1:
+        i = find_nearest(fout, normalize)
+        norm[0] = aout[i]
+
+    aout = [a - norm[0] for a in aout]
+    aoutx = [a - norm[0] for a in aoutx] if aoutx else []
+    aout2 = [a - norm[0] for a in aout2]
+    aout3 = [a - norm[0] for a in aout3]
 
     iteration[0]+=1
     
@@ -880,12 +880,12 @@ def _generate_csv_string(fo, ao, aox, ao2h, ao3h):
     writer.writerow(['Frequency', 'Amplitude', 'Crosstalk', '2nd Harmonic', '3rd Harmonic'])
 
     for f, a, ax, a2, a3 in zip(fo, dao, daox, dao2h, dao3h):
-        # Round numeric values to 2 decimals, preserve empty strings
-        f_out = round(f, 2) if f != '' else ''
-        a_out = round(a, 2) if a != '' else ''
-        ax_out = round(ax, 2) if ax != '' else ''
-        a2_out = round(a2, 2) if a2 != '' else ''
-        a3_out = round(a3, 2) if a3 != '' else ''
+        # Format numeric values to 2 decimal places, preserve empty strings
+        f_out = f'{f:.2f}' if f != '' else ''
+        a_out = f'{a:.2f}' if a != '' else ''
+        ax_out = f'{ax:.2f}' if ax != '' else ''
+        a2_out = f'{a2:.2f}' if a2 != '' else ''
+        a3_out = f'{a3:.2f}' if a3 != '' else ''
         writer.writerow([f_out, a_out, ax_out, a2_out, a3_out])
 
     csv_data = csv_buffer.getvalue()
