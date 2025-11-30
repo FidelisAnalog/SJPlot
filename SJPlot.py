@@ -149,7 +149,7 @@ def get_config():
     if os.path.exists(config_file):
         config.read(config_file)
     else:
-        logger.info(f"No configuration file found; applying defaults")
+        logger.info(f"No configuration file found; using defaults")
     
     # Set default values for missing parameters
     defaults = {
