@@ -1353,13 +1353,21 @@ def main():
 
 
     for i, ax in enumerate(axs.flat):
- 
-        if FILE0NORM == 0:
-            if  not (PLOT_STYLE == 3 and i != 0):
-                ax.axline((NORMALIZE, 0), (NORMALIZE, 1), color = 'm', lw = 1)
-        elif FILE0NORM == 1:
-            if not (PLOT_STYLE == 3 and i != 0):
-                ax.plot(NORMALIZE, 0, marker = 'x', color = 'm')
+
+        # Check if NORMALIZE is within the plot range
+        in_range = True
+        if START_F is not None and NORMALIZE < START_F:
+            in_range = False
+        if END_F is not None and NORMALIZE > END_F:
+            in_range = False
+
+        if in_range:
+            if FILE0NORM == 0:
+                if  not (PLOT_STYLE == 3 and i != 0):
+                    ax.axline((NORMALIZE, 0), (NORMALIZE, 1), color = 'm', lw = 1)
+            elif FILE0NORM == 1:
+                if not (PLOT_STYLE == 3 and i != 0):
+                    ax.plot(NORMALIZE, 0, marker = 'x', color = 'm')
         
         anchored_text = AnchoredText('SJ', 
                             frameon=False, borderpad=0, pad=0.03, 
