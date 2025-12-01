@@ -41,8 +41,9 @@ The signal processing pipeline consists of five major stages:
 │ STAGE 1: Audio Input & Sweep Extraction                        │
 │ ─────────────────────────────────────────────────────────────── │
 │ • get_audio(): Read WAV file or receive web upload             │
-│ • slice_audio(): Extract left/right sweeps (TRS1007)           │
-│ • Pilot tone detection using Hilbert envelope                  │
+│ • slice_audio(): Extract left/right sweeps (test record        │
+│   dependent - e.g., TRS1007 uses pilot tone detection)         │
+│ • Hilbert envelope analysis for pilot tone detection           │
 │ • Sweep validation and duration verification                   │
 └─────────────────────────────────────────────────────────────────┘
                                ↓
@@ -97,9 +98,9 @@ Input WAV File (stereo, 96/192 kHz)
          │         │
          │         ├─→ If extract_sweeps == True:
          │         │      └──→ [slice_audio] Pilot tone detection
-         │         │              ├─→ Hilbert envelope analysis
+         │         │              ├─→ Hilbert envelope analysis (test record dependent)
          │         │              ├─→ Find sweep start/end markers
-         │         │              └─→ Extract L/R sweeps (50s each)
+         │         │              └─→ Extract L/R sweeps (duration varies by test record)
          │         │
          │         └─→ [ordersignal] Detect sweep direction
          │                ├─→ FFT of start chunk
@@ -163,6 +164,29 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0,
               riaa_inverse=False, xg7001=False):
 ```
 
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `input_data` | str/bytes | Required | File path (standalone) or base64 audio data (web) |
+| `environment` | str | 'standalone' | Execution context: 'standalone' or 'web' |
+| `extract_sweeps` | int | 0 | Enable sweep extraction (0=off, 1=on) |
+| `test_record` | str/None | None | Test record identifier (e.g., 'TRS1007', 'CBS STR100') |
+| `save_sweeps` | int | 0 | Save extracted sweeps to disk (0=off, 1=on) |
+| `riaa_mode` | int | 0 | RIAA filter mode (0=off, 1=bass, 2=treble, 3=both) |
+| `riaa_inverse` | bool | False | Apply inverse RIAA (de-emphasis) |
+| `xg7001` | bool | False | Apply XG7001 test record correction |
+
+#### Return Values
+
+Returns tuple: `(signal_left, signal_right, Fs)`
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `signal_left` | ndarray | Left channel audio data (samples,) |
+| `signal_right` | ndarray | Right channel audio data (samples,) |
+| `Fs` | int | Sample rate in Hz |
+
 #### Processing Flow
 
 1. **Environment Detection**
@@ -182,9 +206,9 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0,
    - Transposes to (channels, samples) format
 
 3. **Sweep Extraction** (if `extract_sweeps=True`)
-   - Calls `slice_audio()` for TRS1007 test records
+   - Calls `slice_audio()` for test records with pilot tones (e.g., TRS1007)
    - Extracts separate left and right channel sweeps
-   - Validates sweep duration (~50 seconds expected)
+   - Validates sweep duration (typically ~50 seconds per channel)
 
 4. **Pre-Processing Filters**
    - Optional RIAA filtering via `riaaiir()`
@@ -202,15 +226,41 @@ Returns tuple: `(signal_left, signal_right, Fs)`
 ### `slice_audio()` Function
 
 **Location**: Lines 575-842  
-**Purpose**: Extract left and right channel sweeps from TRS1007 test record using pilot tone detection.
+**Purpose**: Extract left and right channel sweeps from test records using pilot tone detection.
 
 #### Algorithm Overview
 
-The TRS1007 test record contains:
+Some test records (such as TRS1007) contain:
 - Left channel sweep: ~50 seconds
 - Right channel sweep: ~50 seconds  
-- 3150 Hz pilot tones marking sweep boundaries
+- Pilot tones (e.g., 3150 Hz for TRS1007) marking sweep boundaries
 - Expected total duration: ~100-200 seconds
+
+The function automatically detects these pilot tones to extract individual channel sweeps.
+
+#### Function Signature
+
+```python
+def slice_audio(signal, Fs, test_record):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `signal` | ndarray | Stereo audio signal (channels, samples) |
+| `Fs` | int | Sample rate in Hz |
+| `test_record` | str | Test record identifier for pilot tone frequency selection |
+
+#### Return Values
+
+Returns tuple: `(left_sweep, right_sweep, Fs)`
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `left_sweep` | ndarray | Extracted left channel sweep (samples,) |
+| `right_sweep` | ndarray | Extracted right channel sweep (samples,) |
+| `Fs` | int | Sample rate in Hz |
 
 #### Pilot Tone Detection Using Hilbert Transform
 
@@ -218,6 +268,7 @@ The TRS1007 test record contains:
 
 ```python
 # 1. Bandpass filter around pilot tone frequency
+# (frequency depends on test record - e.g., 3150 Hz for TRS1007)
 sos = butter(4, [3000/Fs_new, 3300/Fs_new], btype='band', output='sos')
 filtered = sosfiltfilt(sos, audio_mono)
 
@@ -235,7 +286,7 @@ pilot_active = envelope_smooth > threshold
 ```
 
 **Why Hilbert Transform?**:
-- **Robust**: Insensitive to exact pilot frequency (works across 3000-3300 Hz band)
+- **Robust**: Insensitive to exact pilot frequency (works across bandpass range)
 - **Fast**: Single-pass envelope extraction
 - **Reliable**: Not affected by noise or brief dropouts
 - **Simple**: No complex peak-finding algorithms needed
@@ -268,11 +319,13 @@ sweep2_end = pilot_starts[2]
 #### Validation
 
 ```python
-# Verify sweep durations (~50 seconds expected)
+# Verify sweep durations (expected duration varies by test record)
 duration1 = (sweep1_end - sweep1_start) / Fs
 duration2 = (sweep2_end - sweep2_start) / Fs
 
-if not (48 < duration1 < 52 and 48 < duration2 < 52):
+# Validate against expected duration (e.g., 48-52 seconds for TRS1007)
+if not (expected_min < duration1 < expected_max and 
+        expected_min < duration2 < expected_max):
     raise ValueError("Invalid sweep durations")
 ```
 
@@ -287,6 +340,29 @@ Returns: `(left_sweep, right_sweep, Fs)`
 
 **Location**: Lines 447-463  
 **Purpose**: Detect if sweep runs low-to-high or high-to-low frequency and automatically correct orientation.
+
+#### Function Signature
+
+```python
+def ordersignal(signal, Fs):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `signal` | ndarray | Input audio signal (channels, samples) or (samples,) |
+| `Fs` | int | Sample rate in Hz |
+
+#### Return Values
+
+Returns tuple: `(oriented_signal, start_freq, end_freq)`
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `oriented_signal` | ndarray | Signal with correct time orientation (2D format) |
+| `start_freq` | int | FFT bin index of dominant frequency at start |
+| `end_freq` | int | FFT bin index of dominant frequency at end |
 
 #### Algorithm
 
@@ -323,9 +399,6 @@ Test records can be played backward accidentally or by design. Some test procedu
 - Low→High: Normal forward sweep (no action)
 - High→Low: Backward sweep (reverse signal)
 
-#### Output
-Returns: `(oriented_signal, start_freq, end_freq)`
-
 ---
 
 ## Stage 3: Pre-Processing Filters
@@ -334,6 +407,27 @@ Returns: `(oriented_signal, start_freq, end_freq)`
 
 **Location**: Lines 466-482  
 **Purpose**: Apply RIAA equalization curves (standard phono pre-emphasis/de-emphasis).
+
+#### Function Signature
+
+```python
+def riaaiir(sig, Fs, mode, inv):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sig` | ndarray | Input audio signal |
+| `Fs` | int | Sample rate in Hz (currently only 96000 supported) |
+| `mode` | int | Filter mode: 0=none, 1=bass only, 2=treble only, 3=both |
+| `inv` | int | Apply inverse filter (0=forward/pre-emphasis, 1=inverse/de-emphasis) |
+
+#### Return Values
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `sig` | ndarray | Filtered audio signal |
 
 #### RIAA Standard
 
@@ -393,6 +487,25 @@ Most common: `inv=True, mode=3` to remove RIAA curve from cartridge output, show
 
 **Location**: Lines 485-490  
 **Purpose**: Apply XG7001 test record specific correction.
+
+#### Function Signature
+
+```python
+def normxg7001(signal, Fs):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `signal` | ndarray | Input audio signal |
+| `Fs` | int | Sample rate in Hz (currently only 96000 supported) |
+
+#### Return Values
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `signal` | ndarray | Corrected audio signal |
 
 #### Implementation
 
@@ -466,6 +579,31 @@ fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 
 **Note**: Previously named `interpolate()` which was misleading. This function does **not** interpolate (estimate between points). It **bins and averages** (groups nearby points and computes their mean).
 
+#### Function Signature
+
+```python
+def bin_and_average(f, a, minf, maxf, fstep):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `f` | list/array | Irregular frequency values (Hz) |
+| `a` | list/array | Corresponding amplitudes (linear scale) |
+| `minf` | float | Minimum frequency for output range (Hz) |
+| `maxf` | float | Maximum frequency for output range (Hz) |
+| `fstep` | float | Frequency step size for bins (Hz) |
+
+#### Return Values
+
+Returns tuple: `(f_out, a_out)`
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `f_out` | list | Regularized frequency array (Hz) at fstep intervals |
+| `a_out` | list | Binned and averaged amplitudes (dB) |
+
 ##### Algorithm
 
 ```python
@@ -530,6 +668,37 @@ Output (regular):
 **Location**: Lines 315-351 (nested within `createplotdata`)  
 **Purpose**: Core FFT analysis engine using **windowed, sliding analysis** of sweep signal.
 
+#### Function Signature
+
+```python
+def rfft(signal, Fs, minf, maxf, fstep):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `signal` | ndarray | Input audio signal (channels, samples) or (samples,) |
+| `Fs` | int | Sample rate in Hz |
+| `minf` | float | Minimum frequency for this band (Hz) |
+| `maxf` | float | Maximum frequency for this band (Hz) |
+| `fstep` | float | Frequency resolution step (Hz) |
+
+#### Return Values
+
+Returns tuple: `(freq, amp, freqx, ampx, freq2h, amp2h, freq3h, amp3h)`
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `freq` | list | Fundamental frequencies for primary channel (Hz) |
+| `amp` | list | Fundamental amplitudes for primary channel (linear) |
+| `freqx` | list | Fundamental frequencies for secondary channel (Hz) |
+| `ampx` | list | Fundamental amplitudes for secondary channel (linear) |
+| `freq2h` | list | Fundamental frequencies where 2nd harmonic detected (Hz) |
+| `amp2h` | list | 2nd harmonic amplitudes (linear) |
+| `freq3h` | list | Fundamental frequencies where 3rd harmonic detected (Hz) |
+| `amp3h` | list | 3rd harmonic amplitudes (linear) |
+
 ##### Critical Concept: Slicing vs. Full-Signal FFT
 
 **The Key Innovation**: This function analyzes the sweep signal in **overlapping time slices** rather than performing a single FFT on the entire signal.
@@ -538,9 +707,9 @@ Output (regular):
 
 A log sweep contains **all frequencies over time**, not simultaneously:
 - At t=0s: 20 Hz
-- At t=10s: 200 Hz
-- At t=20s: 2 kHz
-- At t=30s: 20 kHz
+- At t=16.7s: 200 Hz (1 decade)
+- At t=33.3s: 2 kHz (2 decades)
+- At t=50s: 20 kHz (3 decades)
 
 **If you ran a full-signal FFT** (traditional approach):
 - All frequencies would appear in the spectrum
@@ -597,7 +766,7 @@ for x in range(0, signal.shape[1] - F, F):
 ```
 
 **Critical**: Non-overlapping windows, stride = F
-- Each window is **independent**
+- Each window is **independent** and contiguous
 - No overlap = faster processing
 - Sufficient for slow-changing sweep signals
 
@@ -689,6 +858,25 @@ All values in **linear scale** (not dB), **irregular spacing** (bin_and_average 
 **Location**: Lines 354-360 (nested within `createplotdata`)  
 **Purpose**: Compensate for STR-100 test record's non-standard bass curve.
 
+#### Function Signature
+
+```python
+def normstr100(f, a):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `f` | list | Frequency array (Hz) |
+| `a` | list | Amplitude array (dB) |
+
+#### Return Values
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `a` | list | Corrected amplitude array with bass boost applied (dB) |
+
 ##### Background
 
 The STR-100 test record has a **-6.02 dB/octave rolloff** from 500 Hz down to 40 Hz. This was a design choice by the manufacturer (possibly for stylus safety or cutting head limitations).
@@ -731,6 +919,38 @@ This exactly cancels the test record's rolloff, revealing true cartridge respons
 
 **Location**: Lines 363-375 (nested within `createplotdata`)  
 **Purpose**: Orchestrate the complete processing pipeline for one frequency band.
+
+#### Function Signature
+
+```python
+def process_chunk(signal, Fs, fmin, fmax, step, offset):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `signal` | ndarray | Input audio signal (channels, samples) |
+| `Fs` | int | Sample rate in Hz |
+| `fmin` | float | Minimum frequency for this band (Hz) |
+| `fmax` | float | Maximum frequency for this band (Hz) |
+| `step` | float | Frequency resolution step (Hz) |
+| `offset` | float | FFT window size compensation offset (dB) |
+
+#### Return Values
+
+Returns tuple: `(f, a, fx, ax, f2, a2, f3, a3)`
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `f` | list | Regularized frequency array for primary channel (Hz) |
+| `a` | list | Compensated amplitude array for primary channel (dB) |
+| `fx` | list | Regularized frequency array for secondary channel (Hz) |
+| `ax` | list | Compensated amplitude array for secondary channel (dB) |
+| `f2` | list | Frequency array for 2nd harmonic (Hz) |
+| `a2` | list | Compensated 2nd harmonic amplitude array (dB) |
+| `f3` | list | Frequency array for 3rd harmonic (Hz) |
+| `a3` | list | Compensated 3rd harmonic amplitude array (dB) |
 
 ##### Implementation
 
@@ -790,6 +1010,30 @@ Where N = window size in samples.
 
 **Location**: Lines 380-397 (nested within `createplotdata`)  
 **Purpose**: Filter output to user-specified frequency range.
+
+#### Function Signature
+
+```python
+def slice_frequency_range(freq_array, amp_array, start_f=None, end_f=None):
+```
+
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `freq_array` | list | Required | Frequency array (Hz) |
+| `amp_array` | list | Required | Amplitude array (dB) |
+| `start_f` | float/None | None | Start frequency for output (Hz), None = no limit |
+| `end_f` | float/None | None | End frequency for output (Hz), None = no limit |
+
+#### Return Values
+
+Returns tuple: `(freq_array, amp_array)`
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `freq_array` | list | Sliced frequency array within specified range |
+| `amp_array` | list | Sliced amplitude array within specified range |
 
 ##### Implementation
 
@@ -943,9 +1187,10 @@ aout3 = [a - norm[0] for a in aout3]
 - Shows absolute level differences
 
 **Why 1000 Hz?**:
-- RIAA curve is 0 dB at 1 kHz
+- Industry standard/convention for RIAA reference point (not because curve is flat there)
 - Midpoint of audio range
-- Typically flat region for cartridges
+- RIAA curve is actively shaped by the treble time constant (75 µs / 2122 Hz) and effects extend to ~5 kHz
+- Typically stable region for cartridges (not at frequency extremes)
 - Avoids bass (RIAA rolloff) and treble (HF issues)
 
 ---
@@ -956,6 +1201,26 @@ aout3 = [a - norm[0] for a in aout3]
 
 **Location**: Lines 270-275  
 **Purpose**: Generate flat-top window for FFT analysis.
+
+#### Function Signature
+
+```python
+def ft_window(n):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `n` | int | Window length in samples |
+
+#### Return Values
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `w` | ndarray | Flat-top window coefficients, length n |
+
+#### Implementation
 
 ```python
 def ft_window(n):
@@ -989,6 +1254,27 @@ For phono cartridge frequency response, **amplitude accuracy is critical**. We'r
 
 **Location**: Lines 278-292  
 **Purpose**: Efficiently find closest value index in sorted array.
+
+#### Function Signature
+
+```python
+def find_nearest(array, value):
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `array` | array-like | Sorted array to search |
+| `value` | float | Target value to find |
+
+#### Return Values
+
+| Return | Type | Description |
+|--------|------|-------------|
+| `idx` | int | Index of closest value in array |
+
+#### Implementation
 
 ```python
 def find_nearest(array, value):
@@ -1210,7 +1496,7 @@ sos = iirfilter(3, 0.5, btype='lowpass', output='sos')
 
 ### Current Performance Profile
 
-**Test case**: TRS1007 50-second sweep, 96 kHz, stereo  
+**Test case**: 50-second stereo sweep, 96 kHz (typical test record recording)  
 **Total runtime**: 1.96 seconds
 
 #### Time Breakdown
