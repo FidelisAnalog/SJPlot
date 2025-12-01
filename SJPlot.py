@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.4"
+__version__ = "18.6.5"
 
 
 # Try to import js module for web environment
@@ -295,7 +295,7 @@ def find_nearest(array, value):
 
 def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=20000, str100=0, file0norm=0, normalize=1000):
 
-    def interpolate(f, a, minf, maxf, fstep):
+    def bin_and_average(f, a, minf, maxf, fstep):
         # Ensure inputs are NumPy arrays
         f, a = np.array(f), np.array(a)
 
@@ -363,10 +363,10 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
     def process_chunk(signal, Fs, fmin, fmax, step, offset):
             f, a, fx, ax, f2, a2, f3, a3 = rfft(signal, Fs, fmin, fmax, step)
             
-            f, a = interpolate(f, a, fmin, fmax, step)
-            fx, ax = interpolate(fx, ax, fmin, fmax, step)
-            f2, a2 = interpolate(f2, a2, fmin, fmax, step)
-            f3, a3 = interpolate(f3, a3, fmin, fmax, step)
+            f, a = bin_and_average(f, a, fmin, fmax, step)
+            fx, ax = bin_and_average(fx, ax, fmin, fmax, step)
+            f2, a2 = bin_and_average(f2, a2, fmin, fmax, step)
+            f3, a3 = bin_and_average(f3, a3, fmin, fmax, step)
             
             a = [amp - offset for amp in a]
             ax = [amp - offset for amp in ax] if ax else []
