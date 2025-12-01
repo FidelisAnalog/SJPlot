@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.3"
+__version__ = "18.6.4"
 
 
 # Try to import js module for web environment
@@ -1477,6 +1477,9 @@ def main():
         from js import window
         window.updateUIWithPlotImage(img_data)
 
+        # Close the figure to free memory
+        plt.close(fig)
+
         return img_data
 
     else:
@@ -1490,6 +1493,9 @@ def main():
 
         plt.savefig(PLOT_INFO.replace(' / ', '_') + '.png', bbox_inches='tight', pad_inches=.5, dpi=192)
         plt.show()
+
+        # Close the figure to free memory
+        plt.close(fig)
 
     logger.info(f"Done!")
 
