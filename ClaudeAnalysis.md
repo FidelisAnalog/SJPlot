@@ -38,52 +38,52 @@ The signal processing pipeline consists of five major stages:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ STAGE 1: Audio Input & Sweep Extraction                        │
+│ STAGE 1: Audio Input & Sweep Extraction                         │
 │ ─────────────────────────────────────────────────────────────── │
-│ • get_audio(): Read WAV file or receive web upload             │
-│ • slice_audio(): Extract left/right sweeps (test record        │
-│   dependent - e.g., TRS1007 uses pilot tone detection)         │
-│ • Hilbert envelope analysis for pilot tone detection           │
-│ • Sweep validation and duration verification                   │
+│ • get_audio(): Read WAV file or receive web upload              │
+│ • slice_audio(): Extract left/right sweeps (optonal,            |
+|   supported test records only)                                  |
+│ • Sweep validation and duration verification                    │
 └─────────────────────────────────────────────────────────────────┘
                                ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ STAGE 2: Sweep Detection & Orientation                         │
+│ STAGE 2: Sweep Detection & Orientation                          │
 │ ─────────────────────────────────────────────────────────────── │
-│ • ordersignal(): Detect sweep direction                        │
-│ • FFT analysis of start/end to find frequency trend            │
-│ • Automatic reversal if sweep is backwards                     │
+│ • ordersignal(): Detect sweep direction                         │
+│ • FFT analysis of start/end to find frequency trend             │
+│ • Automatic reversal if sweep is backwards                      │
 └─────────────────────────────────────────────────────────────────┘
                                ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ STAGE 3: Pre-Processing Filters (Optional)                     │
+│ STAGE 3: Pre-Processing Filters (Optional)                      │
 │ ─────────────────────────────────────────────────────────────── │
-│ • riaaiir(): RIAA equalization (bass, treble, or both)         │
-│ • normxg7001(): XG7001 test record correction                  │
-│ • IIR filtering in time domain before FFT analysis             │
+│ • riaaiir(): RIAA equalization (bass, treble, or both,          |
+|   and inverse)                                                  │
+│ • normxg7001(): XG7001 test record correction                   │
+│ • IIR filtering in time domain before FFT analysis              │
 └─────────────────────────────────────────────────────────────────┘
                                ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ STAGE 4: FFT Analysis & Frequency Response Extraction          │
+│ STAGE 4: FFT Analysis & Frequency Response Extraction           │
 │ ─────────────────────────────────────────────────────────────── │
-│ • createplotdata(): Core analysis engine                       │
-│   ├─ Multi-resolution windowed FFT (4 frequency bands)         │
-│   ├─ Peak detection for fundamental frequency                  │
-│   ├─ Harmonic extraction (2nd and 3rd)                         │
-│   ├─ Binning and averaging for regularization                  │
-│   ├─ FFT window size compensation                              │
-│   ├─ Low-pass smoothing filter                                 │
-│   ├─ Normalization to reference frequency                      │
-│   └─ Frequency range filtering                                 │
+│ • createplotdata(): Core analysis engine                        │
+│   ├─ Multi-resolution windowed FFT (4 frequency bands)          │
+│   ├─ Peak detection for fundamental frequency                   │
+│   ├─ Harmonic extraction (2nd and 3rd)                          │
+│   ├─ Binning and averaging for regularization                   │
+│   ├─ FFT window size compensation                               │
+│   ├─ Low-pass smoothing filter                                  │
+│   ├─ Normalization to reference frequency                       │
+│   └─ Frequency range filtering                                  │
 └─────────────────────────────────────────────────────────────────┘
                                ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ STAGE 5: Post-Processing & Output                              │
+│ STAGE 5: Post-Processing & Output                               │
 │ ─────────────────────────────────────────────────────────────── │
-│ • output_plot_data(): Generate CSV export (optional)           │
-│ • Crosstalk calculation at 1 kHz                               │
-│ • Statistical analysis (min/max deviation)                     │
-│ • Plot generation (not covered in this document)               │
+│ • output_plot_data(): Generate CSV export (optional)            │
+│ • Crosstalk calculation at 1 kHz                                │
+│ • Statistical analysis (min/max deviation)                      │
+│ • Plot generation (not covered in this document)                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -108,9 +108,10 @@ Input WAV File (stereo, 96/192 kHz)
          │                └─→ Reverse if backward
          │
          ├──→ [Optional: riaaiir] RIAA filtering
-         │         └─→ Bass, treble, or both
+         │         └─→ Bass, treble, or both, and inverse IIR
          │
          ├──→ [Optional: normxg7001] XG7001 correction
+         |         └─→ via IIR
          │
          └──→ [createplotdata] FFT Analysis
                    │
@@ -138,7 +139,7 @@ Input WAV File (stereo, 96/192 kHz)
                                  │
                                  ├──→ STR-100 correction (optional)
                                  ├──→ Low-pass smoothing (cutoff=0.5)
-                                 ├──→ Normalize to 1 kHz = 0 dB
+                                 ├──→ Normalize to 0 dB (default 1kHz)
                                  └──→ Slice to frequency range
                                           │
                                           ↓
