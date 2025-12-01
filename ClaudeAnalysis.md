@@ -43,7 +43,6 @@ The signal processing pipeline consists of five major stages:
 │ • get_audio(): Read WAV file or receive web upload              │
 │ • slice_audio(): Extract left/right sweeps (optonal,            │
 │   supported test records only)                                  │
-│ • Sweep validation and duration verification                    │
 └─────────────────────────────────────────────────────────────────┘
                                ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -144,7 +143,7 @@ Input WAV File (stereo, up to 96 kHz)
                           └─→ No offset (reference band)
                                  │
                                  ↓
-                   [Combine all bands]
+                       [Combine all bands]
                                  │
                                  ├──→ STR-100 correction (optional)
                                  ├──→ Low-pass smoothing (cutoff=0.5)
@@ -298,13 +297,6 @@ pilot_active = envelope_smooth > threshold
 - **Reliable**: Not affected by noise or brief dropouts
 - **Simple**: No complex peak-finding algorithms needed
 
-**Previous approach (peak spacing)**:
-- Required exact frequency knowledge
-- Sensitive to noise
-- Failed on slight frequency variations
-- Complex state machine logic
-
-**Performance**: Hilbert approach is **40× faster** and more reliable.
 
 #### Sweep Boundary Detection
 
@@ -511,7 +503,6 @@ def normxg7001(signal, Fs):
 ```
 
 This is a simple IIR filter that corrects for XG7001 test record characteristics.
----
 
 ## Stage 4: FFT Analysis & Frequency Response Extraction
 
@@ -568,7 +559,6 @@ fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 **Location**: Lines 298-312 (nested within `createplotdata`)  
 **Purpose**: Regularize irregular FFT frequency points into uniform frequency bins and average.
 
-**Note**: Previously named `interpolate()` which was misleading. This function does **not** interpolate (estimate between points). It **bins and averages** (groups nearby points and computes their mean).
 
 #### Function Signature
 
@@ -692,7 +682,7 @@ Returns tuple: `(freq, amp, freqx, ampx, freq2h, amp2h, freq3h, amp3h)`
 
 ##### Critical Concept: Slicing vs. Full-Signal FFT
 
-**The Key Innovation**: This function analyzes the sweep signal in **overlapping time slices** rather than performing a single FFT on the entire signal.
+**The Key Innovation**: This function analyzes the sweep signal in **time slices** rather than performing a single FFT on the entire signal.
 
 **Why This Matters**:
 
@@ -717,7 +707,6 @@ A log sweep contains **all frequencies over time**, not simultaneously:
 This is what makes SJPlot's analysis **agnostic to sweep characteristics**:
 - Works with any sweep speed
 - Works with linear or logarithmic sweeps
-- Works with swept tones or warble tones
 - Amplitude accuracy is independent of time-per-frequency
 
 ##### Function Signature
@@ -870,9 +859,8 @@ def normstr100(f, a):
 
 ##### Background
 
-The STR-100 test record has a **-6.02 dB/octave rolloff** from 500 Hz down to 40 Hz. This was a design choice by the manufacturer (possibly for stylus safety or cutting head limitations).
-
-To measure cartridge response accurately, this rolloff must be compensated.
+The STR-100 test record has a **-6.02 dB/octave rolloff** from 500 Hz down to 40 Hz. To measure
+cartridge response accurately, this rolloff must be compensated.
 
 ##### Implementation
 
@@ -1090,7 +1078,6 @@ for fmin, fmax, step, offset in [(20,45,5,26.03), (50,90,10,19.995),
 2. **Low resolution everywhere** (100 Hz):
    - Only ~200 frequency points
    - Insufficient bass detail (critical range)
-   - Misses narrow bass resonances
    - Poor frequency resolution
 
 **Multi-resolution benefits**:
@@ -1177,12 +1164,6 @@ aout3 = [a - norm[0] for a in aout3]
 - Allows direct amplitude comparison between measurements
 - Shows absolute level differences
 
-**Why 1000 Hz?**:
-- Industry standard/convention for RIAA reference point (not because curve is flat there)
-- Midpoint of audio range
-- RIAA curve is actively shaped by the treble time constant (75 µs / 2122 Hz) and effects extend to ~5 kHz
-- Typically stable region for cartridges (not at frequency extremes)
-- Avoids bass (RIAA rolloff) and treble (HF issues)
 
 ---
 
@@ -1487,7 +1468,7 @@ sos = iirfilter(3, 0.5, btype='lowpass', output='sos')
 
 ### Current Performance Profile
 
-**Test case**: 50-second stereo sweep, 96 kHz (typical test record recording)  
+**Test case**: 50-second stereo sweep, 96 kHz (typical test record recording), apply RIAA base emphasis  
 **Total runtime**: 1.96 seconds
 
 #### Time Breakdown
@@ -1580,7 +1561,6 @@ The SJPlot signal processing pipeline transforms phono cartridge test recordings
 - **Flat-top windowing**: ±0.01 dB amplitude accuracy for precision measurements
 - **Hilbert envelope detection**: Robust pilot tone detection for sweep extraction
 
-**Performance**: 1.96s total processing time (3.5× faster than original), with 72% reduction achieved through algorithmic improvements rather than micro-optimizations.
 
 **Output Quality**: Suitable for professional phono cartridge analysis with harmonic distortion measurement, stereo channel comparison, and crosstalk analysis.
 
