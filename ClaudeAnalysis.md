@@ -41,8 +41,8 @@ The signal processing pipeline consists of five major stages:
 │ STAGE 1: Audio Input & Sweep Extraction                         │
 │ ─────────────────────────────────────────────────────────────── │
 │ • get_audio(): Read WAV file or receive web upload              │
-│ • slice_audio(): Extract left/right sweeps (optonal,            |
-|   supported test records only)                                  |
+│ • slice_audio(): Extract left/right sweeps (optonal,            │
+│   supported test records only)                                  │
 │ • Sweep validation and duration verification                    │
 └─────────────────────────────────────────────────────────────────┘
                                ↓
@@ -57,8 +57,8 @@ The signal processing pipeline consists of five major stages:
 ┌─────────────────────────────────────────────────────────────────┐
 │ STAGE 3: Pre-Processing Filters (Optional)                      │
 │ ─────────────────────────────────────────────────────────────── │
-│ • riaaiir(): RIAA equalization (bass, treble, or both,          |
-|   and inverse)                                                  │
+│ • riaaiir(): RIAA equalization (bass, treble, or both,          │
+│   and inverse)                                                  │
 │ • normxg7001(): XG7001 test record correction                   │
 │ • IIR filtering in time domain before FFT analysis              │
 └─────────────────────────────────────────────────────────────────┘
