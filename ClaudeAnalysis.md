@@ -92,13 +92,13 @@ The signal processing pipeline consists of five major stages:
 ## Data Flow Diagram
 
 ```
-Input WAV File (stereo, 96/192 kHz)
+Input WAV File (stereo, up to 96 kHz)
          │
          ├──→ [get_audio] Read audio data
          │         │
          │         ├─→ If extract_sweeps == True:
          │         │      └──→ [slice_audio] Pilot tone detection
-         │         │              ├─→ Hilbert envelope analysis (test record dependent)
+         │         │              ├─→ Hilbert envelope analysis
          │         │              ├─→ Find sweep start/end markers
          │         │              └─→ Extract L/R sweeps (duration varies by test record)
          │         │
@@ -124,14 +124,23 @@ Input WAV File (stereo, 96/192 kHz)
                    │
                    ├──→ Band 2: 50-90 Hz @ 10 Hz resolution
                    │      ├─→ rfft: 9600-sample windows
+                   │      ├─→ Peak detection per window
+                   │      ├─→ Harmonic extraction
+                   │      ├─→ bin_and_average: Regularization
                    │      └─→ Apply 19.995 dB offset
                    │
                    ├──→ Band 3: 100-980 Hz @ 20 Hz resolution
                    │      ├─→ rfft: 4800-sample windows
+                   │      ├─→ Peak detection per window
+                   │      ├─→ Harmonic extraction
+                   │      ├─→ bin_and_average: Regularization
                    │      └─→ Apply 13.99 dB offset
                    │
                    └──→ Band 4: 1000-50k Hz @ 100 Hz resolution
                           ├─→ rfft: 960-sample windows
+                          ├─→ Peak detection per window
+                          ├─→ Harmonic extraction
+                          ├─→ bin_and_average: Regularization                             
                           └─→ No offset (reference band)
                                  │
                                  ↓
@@ -172,10 +181,10 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0,
 | `input_data` | str/bytes | Required | File path (standalone) or base64 audio data (web) |
 | `environment` | str | 'standalone' | Execution context: 'standalone' or 'web' |
 | `extract_sweeps` | int | 0 | Enable sweep extraction (0=off, 1=on) |
-| `test_record` | str/None | None | Test record identifier (e.g., 'TRS1007', 'CBS STR100') |
+| `test_record` | str/None | None | Test record identifier (e.g., 'TRS1007', 'STR100') |
 | `save_sweeps` | int | 0 | Save extracted sweeps to disk (0=off, 1=on) |
 | `riaa_mode` | int | 0 | RIAA filter mode (0=off, 1=bass, 2=treble, 3=both) |
-| `riaa_inverse` | bool | False | Apply inverse RIAA (de-emphasis) |
+| `riaa_inverse` | bool | False | Apply inverse RIAA |
 | `xg7001` | bool | False | Apply XG7001 test record correction |
 
 #### Return Values
@@ -184,8 +193,8 @@ Returns tuple: `(signal_left, signal_right, Fs)`
 
 | Return | Type | Description |
 |--------|------|-------------|
-| `signal_left` | ndarray | Left channel audio data (samples,) |
-| `signal_right` | ndarray | Right channel audio data (samples,) |
+| `signal_left` | ndarray | Left channel audio data (samples) |
+| `signal_right` | ndarray | Right channel audio data (samples) |
 | `Fs` | int | Sample rate in Hz |
 
 #### Processing Flow
@@ -202,14 +211,12 @@ Returns tuple: `(signal_left, signal_right, Fs)`
    ```
 
 2. **Audio Format Handling**
-   - Converts mono to stereo format
    - Normalizes data types (int16, int24, int32, float32)
    - Transposes to (channels, samples) format
 
 3. **Sweep Extraction** (if `extract_sweeps=True`)
-   - Calls `slice_audio()` for test records with pilot tones (e.g., TRS1007)
+   - Calls `slice_audio()` (for supported test records)
    - Extracts separate left and right channel sweeps
-   - Validates sweep duration (typically ~50 seconds per channel)
 
 4. **Pre-Processing Filters**
    - Optional RIAA filtering via `riaaiir()`
@@ -231,11 +238,11 @@ Returns tuple: `(signal_left, signal_right, Fs)`
 
 #### Algorithm Overview
 
-Some test records (such as TRS1007) contain:
-- Left channel sweep: ~50 seconds
-- Right channel sweep: ~50 seconds  
-- Pilot tones (e.g., 3150 Hz for TRS1007) marking sweep boundaries
-- Expected total duration: ~100-200 seconds
+Supported test records that contain:
+- 1 kHz pilot tone 
+- Left channel sweep
+- 1 kHz pilot tone 
+- Right channel sweep
 
 The function automatically detects these pilot tones to extract individual channel sweeps.
 
@@ -269,7 +276,6 @@ Returns tuple: `(left_sweep, right_sweep, Fs)`
 
 ```python
 # 1. Bandpass filter around pilot tone frequency
-# (frequency depends on test record - e.g., 3150 Hz for TRS1007)
 sos = butter(4, [3000/Fs_new, 3300/Fs_new], btype='band', output='sos')
 filtered = sosfiltfilt(sos, audio_mono)
 
@@ -317,18 +323,6 @@ sweep2_start = pilot_ends[1]
 sweep2_end = pilot_starts[2]
 ```
 
-#### Validation
-
-```python
-# Verify sweep durations (expected duration varies by test record)
-duration1 = (sweep1_end - sweep1_start) / Fs
-duration2 = (sweep2_end - sweep2_start) / Fs
-
-# Validate against expected duration (e.g., 48-52 seconds for TRS1007)
-if not (expected_min < duration1 < expected_max and 
-        expected_min < duration2 < expected_max):
-    raise ValueError("Invalid sweep durations")
-```
 
 #### Output
 Returns: `(left_sweep, right_sweep, Fs)`
@@ -392,10 +386,6 @@ def ordersignal(signal, Fs):
     return signal, minf, maxf
 ```
 
-#### Why This Matters
-
-Test records can be played backward accidentally or by design. Some test procedures call for reverse playback. This function ensures consistent analysis regardless of playback direction by detecting the frequency trend and correcting it.
-
 **Detection method**: Compare dominant frequencies at start vs. end
 - Low→High: Normal forward sweep (no action)
 - High→Low: Backward sweep (reverse signal)
@@ -432,11 +422,13 @@ def riaaiir(sig, Fs, mode, inv):
 
 #### RIAA Standard
 
-The RIAA curve has two time constants:
+The RIAA curve has three time constants:
 - **Treble**: 75 µs (2122 Hz)
-- **Bass**: 318 µs (501 Hz)
+- **Bass**: 318 µs (500.5 Hz), 3180 µs (50.05 Hz)
 
-Combined, this creates the standard phono equalization curve.
+Combined, this creates the standard phono equalization curve. These are implemented as Bass and Treble
+with the abililty to inverse the equaliation to accomdate the various test record and recording chain
+characteristics. 
 
 #### Implementation
 
@@ -480,7 +472,6 @@ def riaaiir(sig, Fs, mode, inv):
 - `inv=False`: Apply RIAA pre-emphasis (recording curve)
 - `inv=True`: Apply RIAA de-emphasis (playback curve)
 
-Most common: `inv=True, mode=3` to remove RIAA curve from cartridge output, showing flat response.
 
 ---
 
@@ -519,8 +510,7 @@ def normxg7001(signal, Fs):
     return signal
 ```
 
-This is a simple IIR filter that corrects for XG7001 test record characteristics. The exact response curve is proprietary to the test record manufacturer.
-
+This is a simple IIR filter that corrects for XG7001 test record characteristics.
 ---
 
 ## Stage 4: FFT Analysis & Frequency Response Extraction
