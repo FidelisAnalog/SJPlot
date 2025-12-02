@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.5"
+__version__ = "18.6.6"
 
 
 # Try to import js module for web environment
@@ -621,6 +621,15 @@ def slice_audio(signal, Fs, test_record):
         transitions = np.diff(above_threshold.astype(int))
         starts = np.where(transitions == 1)[0]
         ends = np.where(transitions == -1)[0]
+        
+        # Handle edge cases: signal starts or ends above threshold
+        if above_threshold[0]:
+            # Signal starts above threshold - prepend 0 to starts
+            starts = np.concatenate(([0], starts))
+        
+        if above_threshold[-1]:
+            # Signal ends above threshold - append length to ends
+            ends = np.concatenate((ends, [len(above_threshold)]))
         
         # Find first sustained region above threshold
         min_samples = int(min_duration * Fs)
