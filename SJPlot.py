@@ -627,9 +627,9 @@ def slice_audio(signal, Fs, test_record):
             # Signal starts above threshold - prepend 0 to starts
             starts = np.concatenate(([0], starts))
         
-        if above_threshold[-1]:
-            # Signal ends above threshold - append length to ends
-            ends = np.concatenate((ends, [len(above_threshold)]))
+        #if above_threshold[-1]:
+        #    # Signal ends above threshold - append length to ends
+        #    ends = np.concatenate((ends, [len(above_threshold)]))
         
         # Find first sustained region above threshold
         min_samples = int(min_duration * Fs)
