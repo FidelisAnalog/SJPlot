@@ -7,6 +7,8 @@
 ## Overview
 This python script was originally conceived by Scott Wurcer as a tool to accurately plot the frequency response of phono cartridges using the logarithmic sweep tracks found on common (and some not so common) test records.
 
+## [AI generated SJPlot Siganl Pipeline Analysis](https://github.com/FidelisAnalog/SJPlot/blob/main/ClaudeAnalysis.md)
+
 ## Features
 - **Multiple Data Sets**: Frequency response, 2nd and 3rd harmonic distortion, and crosstalk. 
 - **Mono or Stereo Files**: For stereo files, the Left channel is assumed to be the tone fundamental, and the Right channel the crosstalk.
