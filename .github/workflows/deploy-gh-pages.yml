@@ -7,6 +7,7 @@ on:
     paths:
       - 'index.html'
       - 'SJPlot.py'
+      - 'CNAME'
       - 'online/**'
       - '.github/workflows/deploy-gh-pages.yml'
 
@@ -30,6 +31,7 @@ jobs:
           mkdir -p deploy
           cp index.html deploy/
           cp SJPlot.py deploy/
+          cp CNAME deploy/
           cp -r online deploy/
 
       - name: Deploy to gh-pages
