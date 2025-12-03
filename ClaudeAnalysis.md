@@ -215,7 +215,7 @@ Returns tuple: `(signal_left, signal_right, Fs)`
 
 3. **Sweep Extraction** (if `extract_sweeps=True`)
    - Calls `slice_audio()` (for supported test records)
-   - Extracts separate left and right channel sweeps
+   - Extracts separate left and right sweeps
 
 4. **Pre-Processing Filters**
    - Optional RIAA filtering via `riaaiir()`
@@ -275,7 +275,7 @@ Returns tuple: `(left_sweep, right_sweep, Fs)`
 
 ```python
 # 1. Bandpass filter around pilot tone frequency
-sos = butter(4, [3000/Fs_new, 3300/Fs_new], btype='band', output='sos')
+sos = butter(4, [950/Fs_new, 1050/Fs_new], btype='band', output='sos')
 filtered = sosfiltfilt(sos, audio_mono)
 
 # 2. Hilbert transform to extract envelope
@@ -287,7 +287,7 @@ window_size = int(0.1 * Fs_new)  # 100ms window
 envelope_smooth = uniform_filter1d(envelope, size=window_size)
 
 # 4. Threshold detection
-threshold = 0.5 * np.max(envelope_smooth)
+threshold = 0.3 * np.max(envelope_smooth)
 pilot_active = envelope_smooth > threshold
 ```
 
@@ -307,12 +307,6 @@ pilot_starts = np.where(pilot_diff == 1)[0]
 
 # Find falling edges (pilot tone ends)
 pilot_ends = np.where(pilot_diff == -1)[0]
-
-# Extract sweeps between pilot tones
-sweep1_start = pilot_ends[0]
-sweep1_end = pilot_starts[1]
-sweep2_start = pilot_ends[1]  
-sweep2_end = pilot_starts[2]
 ```
 
 
@@ -461,8 +455,8 @@ def riaaiir(sig, Fs, mode, inv):
 
 #### Inverse Flag
 
-- `inv=True`: Apply RIAA pre-emphasis (recording curve)
-- `inv=False`: Apply RIAA de-emphasis (playback curve)
+- `inv=False`: Apply RIAA pre-emphasis (recording curve)
+- `inv=True`: Apply RIAA de-emphasis (playback curve)
 
 
 ---
