@@ -118,28 +118,28 @@ Input WAV File (stereo, up to 96 kHz)
                    │      ├─→ rfft: 19200-sample windows
                    │      ├─→ Peak detection per window
                    │      ├─→ Harmonic extraction
-                   │      ├─→ bin_and_average: Regularization
+                   │      ├─→ bin_and_average: Averaging duplicates
                    │      └─→ Apply 26.03 dB offset
                    │
                    ├──→ Band 2: 50-90 Hz @ 10 Hz resolution
                    │      ├─→ rfft: 9600-sample windows
                    │      ├─→ Peak detection per window
                    │      ├─→ Harmonic extraction
-                   │      ├─→ bin_and_average: Regularization
+                   │      ├─→ bin_and_average: Averaging duplicates
                    │      └─→ Apply 19.995 dB offset
                    │
                    ├──→ Band 3: 100-980 Hz @ 20 Hz resolution
                    │      ├─→ rfft: 4800-sample windows
                    │      ├─→ Peak detection per window
                    │      ├─→ Harmonic extraction
-                   │      ├─→ bin_and_average: Regularization
+                   │      ├─→ bin_and_average: Averaging duplicates
                    │      └─→ Apply 13.99 dB offset
                    │
                    └──→ Band 4: 1000-50k Hz @ 100 Hz resolution
                           ├─→ rfft: 960-sample windows
                           ├─→ Peak detection per window
                           ├─→ Harmonic extraction
-                          ├─→ bin_and_average: Regularization                             
+                          ├─→ bin_and_average: Averaging duplicates                             
                           └─→ No offset (reference band)
                                  │
                                  ↓
@@ -455,8 +455,8 @@ def riaaiir(sig, Fs, mode, inv):
 
 #### Inverse Flag
 
-- `inv=False`: Apply RIAA pre-emphasis (recording curve)
-- `inv=True`: Apply RIAA de-emphasis (playback curve)
+- `inv=True`: Apply RIAA pre-emphasis (recording curve)
+- `inv=False`: Apply RIAA de-emphasis (playback curve)
 
 
 ---
@@ -551,8 +551,7 @@ fout, aout, foutx, aoutx, fout2, aout2, fout3, aout3
 #### 1. `bin_and_average()` Function
 
 **Location**: Lines 298-312 (nested within `createplotdata`)  
-**Purpose**: Regularize irregular FFT frequency points into uniform frequency bins and average.
-
+**Purpose**: Average duplicate frequency measurements to reduce noise. Uses vectorized operations for performance.
 
 #### Function Signature
 
@@ -564,11 +563,11 @@ def bin_and_average(f, a, minf, maxf, fstep):
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `f` | list/array | Irregular frequency values (Hz) |
+| `f` | list/array | Frequency values from peak detection (Hz) - quantized to fstep multiples |
 | `a` | list/array | Corresponding amplitudes (linear scale) |
 | `minf` | float | Minimum frequency for output range (Hz) |
 | `maxf` | float | Maximum frequency for output range (Hz) |
-| `fstep` | float | Frequency step size for bins (Hz) |
+| `fstep` | float | Frequency step size (Hz) - defines FFT bin spacing |
 
 #### Return Values
 
@@ -576,8 +575,8 @@ Returns tuple: `(f_out, a_out)`
 
 | Return | Type | Description |
 |--------|------|-------------|
-| `f_out` | list | Regularized frequency array (Hz) at fstep intervals |
-| `a_out` | list | Binned and averaged amplitudes (dB) |
+| `f_out` | list | Unique frequency bins with measurements (Hz) |
+| `a_out` | list | Averaged amplitudes (dB) for each bin |
 
 ##### Algorithm
 
@@ -589,7 +588,7 @@ def bin_and_average(f, a, minf, maxf, fstep):
     # Define bin edges
     bins = np.arange(minf, maxf + fstep, fstep)
     
-    # Assign each frequency point to a bin
+    # Assign each frequency point to a bin (vectorized)
     indices = np.digitize(f, bins) - 1
     
     f_out, a_out = [], []
@@ -605,36 +604,44 @@ def bin_and_average(f, a, minf, maxf, fstep):
     return f_out, a_out
 ```
 
-##### Why Binning is Needed
+##### Why Averaging is Needed
 
-Log sweep FFT analysis produces **irregular frequency spacing**:
-- Window positions don't align perfectly with frequencies
-- Peak detection finds nearest bin to actual frequency
-- Multiple measurements may occur near the same frequency
+**Primary purpose: Noise reduction through averaging**
 
-Binning provides:
-- **Regularized spacing** for consistent plotting
-- **Noise reduction** through averaging
-- **Data reduction** from thousands of points to hundreds
+During log sweep FFT analysis, multiple consecutive windows peak at the same FFT bin:
+- **Low frequencies** (~20-100 Hz): Around 12 measurements per bin
+- **High frequencies** (~20 kHz): Typically 4-6 measurements per bin
+- Averaging reduces noise by √N where N is the number of measurements
 
-##### Example
+**Implementation: Vectorized binning**
 
+Uses `np.digitize()` for performance - this vectorized approach groups all measurements by bin in one operation rather than looping through duplicates.
+
+**Additional capability: Handles out-of-order data**
+
+Occasionally at high frequencies, sweep speed variations cause measurements to arrive out of sequence (e.g., 20000, 20100, 20000, 20100, 20200 Hz). The binning approach groups by frequency regardless of arrival order, so this is handled correctly by design.
+
+**Processing example**:
 ```
-Input (irregular):
-  f = [21.3, 23.7, 24.9, 26.1, 28.4, ...]
-  a = [0.95, 0.96, 0.94, 0.97, 0.95, ...] (linear)
+Input (may contain duplicates and occasional out-of-order):
+  f = [20000, 20000, 20100, 20000, 20100, 20100, 20200, ...]
+  a = [0.95, 0.96, 0.94, 0.97, 0.93, 0.95, 0.96, ...] (linear)
 
-Bins: [20, 25, 30, 35, ...]
+Grouping by bin (vectorized via np.digitize):
+  Bin 20000: [0.95, 0.96, 0.97] → mean = 0.96 → -0.35 dB
+  Bin 20100: [0.94, 0.93, 0.95] → mean = 0.94 → -0.52 dB
+  Bin 20200: [0.96] → mean = 0.96 → -0.35 dB
 
-Processing:
-  Bin 20 Hz: Contains points at 21.3, 23.7, 24.9 Hz
-  Mean amplitude = (0.95 + 0.96 + 0.94) / 3 = 0.95
-  dB = 20*log10(0.95) = -0.44 dB
-
-Output (regular):
-  f_out = [20, 25, 30, ...]
-  a_out = [-0.44, -0.38, -0.41, ...] (dB)
+Output:
+  f_out = [20000, 20100, 20200, ...]
+  a_out = [-0.35, -0.52, -0.35, ...] (dB)
 ```
+
+**Benefits**:
+- **Noise reduction**: Averaging 4-12 measurements significantly improves SNR
+- **Proper dB conversion**: Averaging in linear domain before logarithmic conversion
+- **Performance**: Vectorized operations using NumPy
+- **Robustness**: Handles occasional out-of-order measurements by design
 
 ---
 
@@ -823,7 +830,7 @@ if signal.shape[0] > 1:  # Process second channel if stereo
 return freq, amp, freqx, ampx, freq2h, amp2h, freq3h, amp3h
 ```
 
-All values in **linear scale** (not dB), **irregular spacing** (bin_and_average will regularize).
+All values in **linear scale** (not dB), with **duplicate measurements** per bin (bin_and_average will consolidate).
 
 ---
 
@@ -853,8 +860,7 @@ def normstr100(f, a):
 
 ##### Background
 
-The STR-100 test record has a **-6.02 dB/octave rolloff** from 500 Hz down to 40 Hz. To measure
-cartridge response accurately, this rolloff must be compensated.
+The STR-100 test record was manufactured with a **-6.02 dB/octave rolloff** from 500 Hz down to 40 Hz (the cutting characteristic used during record production). To measure cartridge response accurately, this intentional rolloff must be compensated.
 
 ##### Implementation
 
