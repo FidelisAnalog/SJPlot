@@ -91,7 +91,7 @@ The signal processing pipeline consists of five major stages:
 ## Data Flow Diagram
 
 ```
-Input WAV File (stereo, up to 96 kHz)
+Input WAV File (stereo or mono, up to 96 kHz)
          │
          ├──→ [get_audio] Read audio data
          │         │
