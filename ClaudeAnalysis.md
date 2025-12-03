@@ -461,8 +461,8 @@ def riaaiir(sig, Fs, mode, inv):
 
 #### Inverse Flag
 
-- `inv=False`: Apply RIAA pre-emphasis (recording curve)
-- `inv=True`: Apply RIAA de-emphasis (playback curve)
+- `inv=True`: Apply RIAA pre-emphasis (recording curve)
+- `inv=False`: Apply RIAA de-emphasis (playback curve)
 
 
 ---
