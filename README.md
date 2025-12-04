@@ -89,11 +89,11 @@ Each file object:
 **Styles:**
 | Style | Layout | Description |
 |-------|--------|-------------|
-| 1 | single panel | Fundamental only |
-| 2 | single panel + twin axis | Fundamental + harmonics (harmonics on right axis) |
-| 3 | dual panel (50/50) | L channel top, R channel bottom |
-| 4 | dual panel (1:2 ratio) + twin | Overview top, full detail bottom with harmonics on twin axis |
-| 5 | compact single panel | Tight y-limits for comparison plots |
+| 1 | single panel | Fundamental, crosstalk, h2, h3 all on same axis |
+| 2 | single panel + twin axis | Fundamental + crosstalk on left axis, harmonics on right axis |
+| 3 | dual panel (50/50) | Fundamental on top, harmonics on bottom (no crosstalk) |
+| 4 | dual panel (1:2 ratio) + twin | Fundamental overview on top, full detail on bottom with harmonics on twin axis |
+| 5 | compact single panel | Fundamental only, tight y-limits, short height |
 
 **Dimensions** (for comparison mode):
 - `"fundamental"` - Frequency response
@@ -131,7 +131,7 @@ When `extract_sweeps` is false, input files should be pre-extracted sweep WAVs.
 |--------|------|---------|-------------|
 | `start_f` | int/null | null | Start frequency (Hz). null = use data minimum. |
 | `end_f` | int/null | null | End frequency (Hz). null = use data maximum. |
-| `smoothing` | float | 0.5 | Lowpass filter cutoff. Lower = more smoothing. Use 0.02 for busy comparison plots. |
+| `smoothing` | float | 0.5 | Data smoothig filter low pass cutoff. |
 | `override_ylim` | array/null | null | Force y-axis limits as [min, max]. null = auto. |
 
 ### Corrections
