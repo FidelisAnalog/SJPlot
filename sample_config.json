@@ -1,0 +1,33 @@
+{
+  "plot_info": "Cart / Load / Record",
+  "equip_info": "Arm -> Phonostage -> ADC",
+  "author": "",
+  
+  "files": [
+    {"path": "recording.wav", "label": ""}
+  ],
+  
+  "mode": "standard",
+  "style": 4,
+  "dimensions": ["fundamental", "crosstalk", "h2", "h3"],
+  
+  "extract_sweeps": true,
+  "extract_channel": "both",
+  "test_record": "STR100",
+  
+  "normalize": 1000,
+  "normalize_mode": "relative",
+  
+  "start_f": null,
+  "end_f": null,
+  "smoothing": 0.5,
+  "override_ylim": null,
+  
+  "riaa_mode": 0,
+  "riaa_inverse": false,
+  "str100": true,
+  "xg7001": false,
+  
+  "plot_data_out": false,
+  "log_level": "info"
+}
