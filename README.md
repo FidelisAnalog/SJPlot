@@ -2,6 +2,10 @@
 
 Phono cartridge frequency response measurement tool. Analyzes test record sweep recordings and generates frequency response plots with crosstalk and harmonic distortion.
 
+## Download 
+
+[Download v19 Alpha-1 Release](https://github.com/FidelisAnalog/SJPlot/releases/tag/v19.0.0-alpha.1)
+
 ## Usage
 
 ```bash
