@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.7"
+__version__ = "18.7.0"
 
 
 # Try to import js module for web environment
@@ -320,11 +320,11 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
         win = ft_window(F)
 
         if len(signal.shape) == 1: # mono signal
-            signal = np.expand_dims(signal, axis=0)
+            signal = np.expand_dims(signal, axis=1)
             
-        for x in range(0, signal.shape[1] - F,F):
+        for x in range(0, signal.shape[0] - F,F):
 
-            y0 = abs(np.fft.rfft(signal[0, x:x + F] * win))
+            y0 = abs(np.fft.rfft(signal[x:x + F, 0] * win))
             f0 = np.argmax(y0) #use largest bin
             if f0 >=minf/fstep and f0 <=maxf/fstep:
                 freq.append(f0*fstep)
@@ -338,12 +338,12 @@ def createplotdata(signal, Fs, iteration=[0], norm=[0], start_f=None, end_f=2000
                 freq3h.append(f0*fstep)
                 amp3h.append(y0[3*f0-2+f3])
 
-            if signal.shape[0] > 1: # Process second channel if stereo
-                y1 = abs(np.fft.rfft(signal[1, x:x + F] * win))
+            if signal.shape[1] > 1: # Process second channel if stereo
+                y1 = abs(np.fft.rfft(signal[x:x + F, 1] * win))
                 f1 = np.argmax(y1) #use largest bin
                 if f0 >=minf/fstep and f0 <=maxf/fstep: # use primary sweep f range
-                    freqx.append(f1*fstep)
-                    ampx.append(y1[f1])
+                    freqx.append(f0*fstep)
+                    ampx.append(y1[f0])
             else:
                 ampx = 0  # No secondary channel for mono
                 freqx = 0
@@ -449,16 +449,16 @@ def ordersignal(signal, Fs):
     win = ft_window(F)
 
     if len(signal.shape) == 1: # if mono signal
-        signal = np.expand_dims(signal, axis=0)
+        signal = np.expand_dims(signal, axis=1)
 
-    y = abs(np.fft.rfft(signal[0,0:F]*win))
+    y = abs(np.fft.rfft(signal[0:F,0]*win))
     minf = np.argmax(y)
-    y = abs(np.fft.rfft(signal[0][len(signal[0])-F:len(signal[0])]*win))
+    y = abs(np.fft.rfft(signal[-F:,0]*win))
     maxf = np.argmax(y)
                       
     if maxf < minf:
         maxf,minf = minf,maxf
-        signal = np.fliplr(signal)
+        signal = np.flipud(signal)
  
     return signal, minf, maxf
 
@@ -473,12 +473,12 @@ def riaaiir(sig, Fs, mode, inv):
         at,bt = bt,at
         ars,brs = brs,ars
     if mode == 1:
-        sig = lfilter(brs,ars,sig)
+        sig = lfilter(brs,ars,sig,axis=0)
     if mode == 2:
-        sig = lfilter(bt,at,sig)
+        sig = lfilter(bt,at,sig,axis=0)
     if mode == 3:
-        sig = lfilter(bt,at,sig)
-        sig = lfilter(brs,ars,sig)
+        sig = lfilter(bt,at,sig,axis=0)
+        sig = lfilter(brs,ars,sig,axis=0)
     return sig
 
 
@@ -486,7 +486,7 @@ def normxg7001(signal, Fs):
     if Fs == 96000:
         b = [1.0080900, -0.9917285, 0]
         a = [1, -0.9998364, 0]
-        signal = lfilter(b,a,signal)
+        signal = lfilter(b,a,signal,axis=0)
     return signal
 
 
@@ -523,12 +523,19 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
         audio = resample(audio, int(len(audio) * 96000 / Fs))
         Fs = 96000
 
+   # Apply DSP corrections first (before slicing)
+    if riaa_mode != 0:
+        audio = riaaiir(audio, Fs, riaa_mode, riaa_inverse)
+
+    if xg7001 == 1:
+        audio = normxg7001(audio, Fs)
+
+    # Extract sweeps (on corrected audio)
     if extract_sweeps == 1:
         logger.info(f"Extracting sweeps from audio file...")
         audio, audio_2 = slice_audio(audio, Fs, test_record)
 
         if save_sweeps == 1:
-
             output_file_left = os.path.splitext(input_data)[0] + '_L.wav'
             output_file_right = os.path.splitext(input_data)[0] + '_R.wav'
 
@@ -537,32 +544,8 @@ def get_audio(input_data, environment='standalone', extract_sweeps=0, test_recor
 
             logger.info(f"Writing {output_file_right}")
             write_file(output_file_right, audio_2, Fs)  
-        
-        audio = audio.T
-        audio_2 = audio_2.T
     else:
-        audio = audio.T
-
-    if riaa_mode != 0:
-        audio = riaaiir(audio, Fs, riaa_mode, riaa_inverse)
-        try:
-            audio_2 = riaaiir(audio_2, Fs, riaa_mode, riaa_inverse)
-        except NameError:
-            audio_2 = None
-    elif extract_sweeps != 1:
         audio_2 = None
-
-    if xg7001 == 1:
-        audio = normxg7001(audio, Fs)
-        try:
-            audio_2 = normxg7001(audio_2, Fs)
-            #print('norm 0')
-        except NameError:
-            audio_2 = None
-            #print('norm 1')
-    elif extract_sweeps != 1:
-        audio_2 = None
-
 
     audio, minf, maxf = ordersignal(audio, Fs)
     
@@ -729,7 +712,7 @@ def slice_audio(signal, Fs, test_record):
         
         # Fast smoothing with smaller window for better time resolution
         window_size = int(0.01 * Fs)  # 10ms window
-        envelope_smooth = uniform_filter1d(envelope, size=window_size, mode='nearest')
+        envelope_smooth = uniform_filter1d(envelope, size=window_size, mode='nearest', origin=-window_size//2)
         
         # Normalize
         envelope_norm = envelope_smooth / np.max(envelope_smooth)
@@ -805,6 +788,9 @@ def slice_audio(signal, Fs, test_record):
         # Look for energy rise at 1kHz (sweep start), not another sustained tone
         sample_offset = start_left_sweep + Fs  # Start searching 1s after pilot ends
         start_left_sweep = sample_offset + find_sweep_start(left[sample_offset:], Fs, search_duration=10.0, threshold=0.2)
+    else:
+        # Short gap records - skip 35ms of silence
+        start_left_sweep = start_left_sweep + int(0.035 * Fs)
 
     logger.info(f"Start of Left Sweep: {start_left_sweep}")
 
@@ -816,6 +802,9 @@ def slice_audio(signal, Fs, test_record):
         # Same for right channel
         sample_offset = start_right_sweep + Fs
         start_right_sweep = sample_offset + find_sweep_start(right[sample_offset:], Fs, search_duration=10.0, threshold=0.2)
+    else:
+        # Short gap records - skip 35ms of silence
+        start_right_sweep = start_right_sweep + int(0.035 * Fs)
 
     logger.info(f"Start of Right Sweep: {start_right_sweep}")
 
