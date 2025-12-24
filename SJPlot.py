@@ -30,7 +30,7 @@ import configparser
 import io
 
 
-__version__ = "18.6.6"
+__version__ = "18.6.7"
 
 
 # Try to import js module for web environment
@@ -458,7 +458,7 @@ def ordersignal(signal, Fs):
                       
     if maxf < minf:
         maxf,minf = minf,maxf
-        signal = np.flipud(signal)
+        signal = np.fliplr(signal)
  
     return signal, minf, maxf
 
