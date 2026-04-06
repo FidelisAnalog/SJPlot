@@ -703,6 +703,7 @@
                         <option value="XG7002">XG-7002</option>
                         <option value="XG7005">XG-7005</option>
                         <option value="DIN45543">DIN 45543</option>
+                        <option value="SFC-TR100">SFC-TR100</option>
                     </select>
                 </div>
                 <div class="config-item dropdown-item">
@@ -791,6 +792,7 @@
                         <option value="XG7002">XG-7002</option>
                         <option value="XG7005">XG-7005</option>
                         <option value="DIN45543">DIN 45543</option>
+                        <option value="SFC-TR100">SFC-TR100</option>
                     </select>
                 </div>
                 <div class="config-item dropdown-item">
@@ -1561,7 +1563,8 @@ window.pyProcessAudio = process_audio_if_ready
             'XG7001':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 20000 },
             'XG7002':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
             'XG7005':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false}, end_f: 20000 },
-            'DIN45543':  { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 }
+            'DIN45543':  { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
+            'SFC-TR100': { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 }
         };
         
         // Function to update RIAA settings based on test record and recording type

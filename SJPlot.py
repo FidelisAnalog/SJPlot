@@ -767,6 +767,7 @@ def slice_audio(signal, Fs, test_record):
         'XG7005': {'sweep_offset': 76, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
 	    'DIN45543': {'sweep_offset': 78, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
 	    'ИЗМ33С0327': {'sweep_offset': 58, 'sweep_end_min': 48, 'sweep_end_max': 52, 'sweep_start_detect': 0},
+        'SFC-TR100': {'sweep_offset': 80, 'sweep_end_min': 43, 'sweep_end_max': 47, 'sweep_start_detect': 0},
     }
 
     if test_record.upper() not in record_params:
