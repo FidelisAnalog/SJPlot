@@ -1,0 +1,2234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <!-- Google tag (gtag.js) -->
+        <script>
+            // Only load GA if on sjplot.com or subdomain
+            (function() {
+                var hostOK = location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com");
+                if (hostOK) {
+                    var gaScript = document.createElement('script');
+                    gaScript.async = true;
+                    gaScript.src = "https://www.googletagmanager.com/gtag/js?id=G-D241HHDEYS";
+                    document.head.appendChild(gaScript);
+                    window.dataLayer = window.dataLayer || [];
+                    window.gtag = function(){dataLayer.push(arguments);};
+                    gtag('js', new Date());
+                    gtag('config', 'G-D241HHDEYS');
+                } else {
+                    // Define a no-op gtag to avoid errors
+                    window.gtag = function(){};
+                }
+            })();
+        </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SJPlot Online</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://pyscript.net/releases/2025.8.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 2.5em; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 1.1em; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+        .header-left {
+            flex: 1;
+        }
+        .header-logo {
+            height: 70px;
+            width: auto;
+            flex-shrink: 0;
+            margin-top: -10px;
+        }
+        @media (max-width: 767px) {
+            .header-logo {
+            display: none;
+            }
+            body {
+                padding: 8px;
+            }
+            .container {
+                padding: 20px 12px;
+                border-radius: 12px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .upload-area {
+                padding: 20px 15px;
+            }
+            .config-section {
+                padding: 15px;
+            }
+            .upload-btn {
+                padding: 12px 30px;
+                font-size: 1em;
+            }
+            .analyze-btn {
+                padding: 14px 30px;
+                font-size: 1.1em;
+            }
+        }
+        @media (min-width: 768px) and (max-width: 1024px) {
+            body {
+                padding: 12px;
+            }
+            .container {
+                padding: 30px 20px;
+            }
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .upload-area.drag-over {
+            background-color: #e8ecff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+        .upload-area h3 {
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        .advanced-upload-container {
+            margin-bottom: 30px;
+        }
+        .advanced-upload-grid {
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+        }
+        @media (min-width: 768px) {
+            .advanced-upload-grid {
+                flex-direction: row;
+            }
+            .upload-half {
+                flex: 1;
+            }
+        }
+        .upload-half {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .upload-half.drag-over {
+            background-color: #e8ecff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+        .upload-half h3 {
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        .upload-btn {
+            margin: 0 auto 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .config-section {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 0 15px 15px 15px;
+            margin-bottom: 30px;
+            border: 2px solid #667eea;
+            border-top: 2px solid #667eea;
+        }
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        /* Two-column layout for larger screens */
+        @media (min-width: 768px) {
+            .config-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+
+            /* Text inputs at 50% width */
+            .text-input-item {
+                flex: 0 0 calc(50% - 10px);
+            }
+
+            /* Dropdowns at 50% width */
+            .dropdown-item {
+                flex: 0 0 calc(50% - 10px);
+            }
+
+            /* Checkboxes also at 50% width to align with grid */
+            .checkbox-item {
+                flex: 0 0 calc(50% - 10px);
+            }
+        }
+        .config-item { display: flex; flex-direction: column; }
+        .config-item label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        .config-item select, .config-item input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .config-item select:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        /* Checkbox items: label next to checkbox, not above */
+        .checkbox-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-item label {
+            margin-bottom: 0;
+        }
+        .checkbox-item input[type="checkbox"] { width: 20px; height: 20px; }
+        .checkbox-item input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 50px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        #status.info { background: #e3f2fd; color: #1976d2; display: block; }
+        #status.processing { background: #fff3e0; color: #f57c00; display: block; }
+        #status.success { background: #e8f5e9; color: #388e3c; display: block; }
+        #status.error { background: #ffebee; color: #c62828; display: block; }
+        .file-info {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+            box-sizing: border-box;
+        }
+        .file-info.ready {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 30%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            animation: progressMove 1.5s ease-in-out infinite;
+        }
+        @keyframes progressMove {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(350%); }
+            100% { transform: translateX(-100%); }
+        }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.active { display: block; }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #output {
+            margin-top: 30px;
+            text-align: center;
+        }
+        #output .plot-container {
+            position: relative;
+            display: inline-block;
+        }
+        #output img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: block;
+        }
+        .plot-button {
+            position: absolute;
+            top: 10px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            transition: opacity 0.2s;
+        }
+        .plot-button:hover {
+            opacity: 0.8;
+        }
+        #copy-plot-btn {
+            right: 45px;
+        }
+        #download-plot-btn {
+            right: 10px;
+        }
+        .csv-download-link {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .csv-download-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.475em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+        }
+        .csv-download-link a:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.4);
+        }
+        .csv-download-link svg {
+            flex-shrink: 0;
+        }
+        .error-waveform {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border: 1px solid #667eea;
+        }
+        .error-waveform h4 {
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 1em;
+        }
+        details[open] > summary > span {
+            transform: rotate(90deg);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+        }
+        .footer p {
+            margin: 10px 0;
+        }
+        .contribute-cta {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            background: #f0f8ff;
+            border: 2px solid #667eea;
+            color: #333;
+            font-size: 0.95em;
+            display: none;
+        }
+        .contribute-cta.show {
+            display: block;
+        }
+        .contribute-cta a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .contribute-cta a:hover {
+            text-decoration: underline;
+        }
+        /* Hide advanced controls for now */
+        .config-item:has(#riaaMode),
+        .config-item:has(#riaaInverse),
+        .config-item:has(#normalize) {
+            display: none;
+        }
+        /* Tab navigation styling */
+        .config-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: -2px;
+            position: relative;
+            z-index: 1;
+        }
+        .config-tabs button {
+            background: #e8ecff;
+            border: none;
+            border-bottom: 2px solid #667eea;
+            border-radius: 12px 12px 0 0;
+            padding: 12px 28px;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .config-tabs button:hover {
+            background: #d8dfff;
+            color: #333;
+        }
+        .config-tabs button.active {
+            background: #f8f9ff;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-bottom: none;
+        }
+        .download-icon {
+            display: none;
+            margin: 10px auto;
+            padding: 10px 15px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+            z-index: 10;
+            pointer-events: auto;
+        }
+        .download-icon:hover {
+            opacity: 0.6;
+        }
+        .download-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+    <script>
+        // Define tab switcher globally so it's available for onclick handlers
+        window.switchConfigMode = function(mode) {
+            const standardConfig = document.getElementById('standardConfig');
+            const advancedConfig = document.getElementById('advancedConfig');
+            const standardUploadArea = document.getElementById('standardUploadArea');
+            const advancedUploadArea = document.getElementById('advancedUploadArea');
+            const standardTab = document.getElementById('standardTab');
+            const advancedTab = document.getElementById('advancedTab');
+
+            if (mode === 'standard') {
+                // Copy settings from advanced to standard before switching
+                document.getElementById('plotInfo').value = document.getElementById('plotInfoAdvanced').value;
+                document.getElementById('equipInfo').value = document.getElementById('equipInfoAdvanced').value;
+                document.getElementById('plotStyle').value = document.getElementById('plotStyleAdvanced').value;
+                document.getElementById('normalize').value = document.getElementById('normalizeAdvanced').value;
+                document.getElementById('author').value = document.getElementById('authorAdvanced').value;
+                document.getElementById('testRecord').value = document.getElementById('testRecordAdvanced').value;
+
+                standardConfig.style.display = 'block';
+                advancedConfig.style.display = 'none';
+                standardUploadArea.style.display = 'flex';
+                advancedUploadArea.style.display = 'none';
+                standardTab.classList.add('active');
+                advancedTab.classList.remove('active');
+
+                // Recalculate test record settings based on test record and recording type
+                if (window.updateTestRecordSettings) {
+                    window.updateTestRecordSettings();
+                }
+            } else {
+                // Copy settings from standard to advanced before switching
+                document.getElementById('plotInfoAdvanced').value = document.getElementById('plotInfo').value;
+                document.getElementById('equipInfoAdvanced').value = document.getElementById('equipInfo').value;
+                document.getElementById('plotStyleAdvanced').value = document.getElementById('plotStyle').value;
+                document.getElementById('normalizeAdvanced').value = document.getElementById('normalize').value;
+                document.getElementById('authorAdvanced').value = document.getElementById('author').value;
+                document.getElementById('testRecordAdvanced').value = document.getElementById('testRecord').value;
+                document.getElementById('riaaModeAdvanced').value = document.getElementById('riaaMode').value;
+                document.getElementById('riaaInverseAdvanced').checked = document.getElementById('riaaInverse').checked;
+
+                standardConfig.style.display = 'none';
+                advancedConfig.style.display = 'block';
+                standardUploadArea.style.display = 'none';
+                advancedUploadArea.style.display = 'block';
+                standardTab.classList.remove('active');
+                advancedTab.classList.add('active');
+            }
+
+            console.log('UI mode switched to:', mode);
+        };
+
+        // Define clearFile1 globally so it's available for onclick handlers
+        window.clearFile1 = function() {
+            // Reset file1Data (accessed via window to ensure we're modifying the global variable)
+            window.file1Data = null;
+
+            // Clear the file input
+            const fileInput1 = document.getElementById('fileInput1');
+            if (fileInput1) {
+                fileInput1.value = '';
+            }
+
+            // Hide the file status
+            const file1Status = document.getElementById('file1Status');
+            if (file1Status) {
+                file1Status.style.display = 'none';
+                file1Status.innerHTML = '';
+            }
+
+            // Hide the clear button
+            const clearBtn = document.getElementById('clearFile1Btn');
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+            }
+
+            // Update analyze button state
+            if (window.updateAnalyzeButtonState) {
+                window.updateAnalyzeButtonState();
+            }
+
+            console.log('File 1 cleared');
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>SJPlot Online</h1>
+                <p class="subtitle">Phono Cartridge Frequency Response Analysis</p>
+            </div>
+            <img src="images/myhifi_lockup.svg" alt="MyHiFi" class="header-logo">
+        </div>
+        
+        <!-- Standard Upload Area -->
+        <div class="upload-area" id="standardUploadArea">
+            <h3 style="display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17,8 12,3 7,8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload Audio File
+            </h3>
+            <input type="file" id="fileInput0" style="display:none" accept=".wav" />
+            <button class="upload-btn" onclick="document.getElementById('fileInput0').click()" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                    <polyline points="13,2 13,9 20,9"/>
+                </svg>
+                Select WAV File
+            </button>
+            <div id="fileInfo" class="file-info" style="display: none;"></div>
+        </div>
+
+        <!-- Advanced Upload Area -->
+        <div class="advanced-upload-container" id="advancedUploadArea" style="display: none;">
+            <div class="advanced-upload-grid">
+                <div class="upload-half" id="uploadHalf0">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        File 0 (Required)
+                    </h3>
+                    <input type="file" id="fileInput0Advanced" style="display:none" accept=".wav" />
+                    <button class="upload-btn" onclick="document.getElementById('fileInput0Advanced').click()" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                            <polyline points="13,2 13,9 20,9"/>
+                        </svg>
+                        Select WAV File
+                    </button>
+                    <div id="file0Status" class="file-info" style="display: none;"></div>
+                </div>
+                <div class="upload-half" id="uploadHalf1">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        File 1 (Optional)
+                    </h3>
+                    <input type="file" id="fileInput1" style="display:none" accept=".wav" />
+                    <button class="upload-btn" onclick="document.getElementById('fileInput1').click()" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                            <polyline points="13,2 13,9 20,9"/>
+                        </svg>
+                        Select WAV File
+                    </button>
+                    <div id="file1Status" class="file-info" style="display: none;"></div>
+                    <button id="clearFile1Btn" class="clear-file-btn" onclick="clearFile1()" style="margin-top: 10px; padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; align-items: center; gap: 6px; justify-content: center; display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Clear File
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Tabs -->
+        <div class="config-tabs">
+            <button id="standardTab" class="active" onclick="switchConfigMode('standard')">Standard</button>
+            <button id="advancedTab" onclick="switchConfigMode('advanced')">Advanced</button>
+        </div>
+
+        <!-- Standard Configuration Section -->
+        <div class="config-section" id="standardConfig">
+            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m6-11h-6m-6 0h6m5.657-5.657l-4.243 4.243m-6.828 0L2.343 7.343m14.314 14.314l-4.243-4.243m-6.828 0l-4.243 4.243"/>
+                </svg>
+                Configuration
+            </h3>
+            <div class="config-grid">
+                <div class="config-item text-input-item">
+                    <label>Plot Info (Title)</label>
+                    <input type="text" id="plotInfo" placeholder="Cart / Load / Record" autocomplete="off" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Equipment Info</label>
+                    <input type="text" id="equipInfo" placeholder="Arm -> Phonostage -> ADC" />
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>Test Record</label>
+                    <select id="testRecord">
+                        <option value="STR100" selected>STR 100</option>
+                        <option value="TRS1007">TRS-1007</option>
+                        <option value="TRS1005">TRS-1005</option>
+                        <option value="STR120">STR 120</option>
+                        <option value="STR130">STR 130</option>
+                        <option value="STR170">STR 170</option>
+                        <option value="QR2009">QR 2009</option>
+                        <option value="QR2010">QR 2010</option>
+                        <option value="XG7001">XG-7001</option>
+                        <option value="XG7002">XG-7002</option>
+                        <option value="XG7005">XG-7005</option>
+                        <option value="DIN45543">DIN 45543</option>
+                        <option value="SFC-TR100">SFC-TR100</option>
+                    </select>
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>Recording Type</label>
+                    <select id="recordingType">
+                        <option value="withRIAA" selected>With RIAA</option>
+                        <option value="withoutRIAA">Without RIAA</option>
+                    </select>
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>Plot Style</label>
+                    <select id="plotStyle">
+                        <option value="1">Style 1 - Single Plot</option>
+                        <option value="2">Style 2 - Dual Y-Axis</option>
+                        <option value="3">Style 3 - Stacked Plots</option>
+                        <option value="4" selected>Style 4 - Dual + Zoom</option>
+                        <option value="5">Style 5 - Minimal</option>
+                    </select>
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>RIAA Mode (Auto)</label>
+                    <select id="riaaMode" disabled>
+                        <option value="0">None</option>
+                        <option value="1">Bass Only</option>
+                        <option value="2">Treble Only</option>
+                        <option value="3" selected>Both</option>
+                    </select>
+                </div>
+                <div class="config-item checkbox-item">
+                    <input type="checkbox" id="riaaInverse" checked disabled />
+                    <label>Inverse RIAA (Auto)</label>
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Normalize (Hz)</label>
+                    <input type="number" id="normalize" value="1000" />
+                </div>
+                <div class="config-item text-input-item" style="order: 999;">
+                    <label>Author</label>
+                    <input type="text" id="author" placeholder="Author Name" autocomplete="off"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Configuration Section -->
+        <div class="config-section" id="advancedConfig" style="display: none;">
+            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m6-11h-6m-6 0h6m5.657-5.657l-4.243 4.243m-6.828 0L2.343 7.343m14.314 14.314l-4.243-4.243m-6.828 0l-4.243 4.243"/>
+                </svg>
+                Advanced Configuration
+            </h3>
+
+            <!-- Metadata -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Metadata</h4>
+            <div class="config-grid">
+                <div class="config-item text-input-item">
+                    <label>Plot Info (Title)</label>
+                    <input type="text" id="plotInfoAdvanced" placeholder="Cart / Load / Record" autocomplete="off" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Equipment Info</label>
+                    <input type="text" id="equipInfoAdvanced" placeholder="Arm -> Phonostage -> ADC" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Author</label>
+                    <input type="text" id="authorAdvanced" placeholder="Author Name" autocomplete="off"/>
+                </div>
+            </div>
+
+            <!-- Sweep Extraction -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Sweep Extraction</h4>
+            <div class="config-grid">
+                <div class="config-item dropdown-item">
+                    <label>Test Record</label>
+                    <select id="testRecordAdvanced">
+                        <option value="STR100" selected>STR 100</option>
+                        <option value="TRS1007">TRS-1007</option>
+                        <option value="TRS1005">TRS-1005</option>
+                        <option value="STR120">STR 120</option>
+                        <option value="STR130">STR 130</option>
+                        <option value="STR170">STR 170</option>
+                        <option value="QR2009">QR 2009</option>
+                        <option value="QR2010">QR 2010</option>
+                        <option value="XG7001">XG-7001</option>
+                        <option value="XG7002">XG-7002</option>
+                        <option value="XG7005">XG-7005</option>
+                        <option value="DIN45543">DIN 45543</option>
+                        <option value="SFC-TR100">SFC-TR100</option>
+                    </select>
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>Sweep Extraction</label>
+                    <select id="extractSweeps">
+                        <option value="0" selected>No Extraction</option>
+                        <option value="1">Extract Sweeps</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Plot Parameters -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Plot Parameters</h4>
+            <div class="config-grid">
+                <div class="config-item dropdown-item">
+                    <label>Plot Style</label>
+                    <select id="plotStyleAdvanced">
+                        <option value="1">Style 1 - Single Plot</option>
+                        <option value="2">Style 2 - Dual Y-Axis</option>
+                        <option value="3">Style 3 - Stacked</option>
+                        <option value="4" selected>Style 4 - Dual + Zoom</option>
+                        <option value="5">Style 5 - Minimal</option>
+                    </select>
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Normalize (Hz)</label>
+                    <input type="number" id="normalizeAdvanced" value="1000" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>Start Frequency (Hz)</label>
+                    <input type="number" id="startF" placeholder="Optional: e.g., 20" />
+                </div>
+                <div class="config-item text-input-item">
+                    <label>End Frequency (Hz)</label>
+                    <input type="number" id="endF" placeholder="Optional: e.g., 20000" />
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>Normalization Mode</label>
+                    <select id="file0norm">
+                        <option value="0" selected>Relative</option>
+                        <option value="1">Absolute</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Audio Processing -->
+            <h4 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1em;">Audio Processing</h4>
+            <div class="config-grid">
+                <div class="config-item dropdown-item">
+                    <label>RIAA Mode</label>
+                    <select id="riaaModeAdvanced">
+                        <option value="0">None</option>
+                        <option value="1">Bass Only</option>
+                        <option value="2">Treble Only</option>
+                        <option value="3" selected>Both</option>
+                    </select>
+                </div>
+                <div class="config-item dropdown-item">
+                    <label>RIAA Inverse</label>
+                    <select id="riaaInverseAdvanced">
+                        <option value="true">Yes</option>
+                        <option value="false" selected>No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section" style="display:none;">
+            <details style="margin: 0;">
+                <summary style="cursor: pointer; font-weight: 600; color: #333; font-size: 1.1em; padding: 5px 0; list-style: none; display: flex; align-items: center;">
+                    <span style="margin-right: 8px; display: inline-block; transition: transform 0.2s;">▶</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+                    </svg>
+                    User Guide
+                </summary>
+                <div style="margin-top: 20px; padding: 20px; background: #f8f9ff; border-radius: 8px; color: #666;">
+                    Coming soon
+                </div>
+            </details>
+        </div>
+        
+        <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+            </svg>
+            Loading PyScript...
+        </button>
+        
+        <div id="pyscriptStatus" style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9em;">
+            Initializing Python environment...
+        </div>
+        
+        <div id="status"></div>
+        
+        <div id="contributeCta" class="contribute-cta">
+            📚 Help build the community! Consider <a href="https://www.audiosciencereview.com/forum/index.php?threads/introducing-the-phono-cartridge-measurement-library.46108/post-1643772" target="_blank">contributing your measurements to the Phono Cartridge Library at ASR</a>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p><strong>Processing...</strong></p>
+        </div>
+        <div id="output"></div>
+
+        <div class="footer">
+            <p><a href="https://github.com/FidelisAnalog/SJPlot">SJPlot</a> by JP Jones, conceived by Scott Wurcer</p>
+            <p>Need help? Try the <a href="https://www.audiosciencereview.com/forum/index.php?threads/phono-cartridge-response-measurement-script.41148/post-1453821" target="_blank">official thread at AudioScienceReview</a></p>
+            <p style="margin-top: 30px; font-size: 0.85em; color: #888;">
+                This site uses Google Analytics to understand how visitors use the tool. No personal information is collected. 
+                <a href="https://policies.google.com/privacy" target="_blank" style="color: #667eea;">Learn more</a>
+            </p>
+        </div>
+    </div>
+
+    <py-config>
+        packages = ["numpy", "scipy", "matplotlib"]
+        [files]
+            "../SJPlot.py" = "./SJPlot.py"
+
+
+    </py-config>
+
+    <py-script>
+import sys
+from js import console, window
+
+# Import SJPlot module
+import SJPlot
+
+def process_audio_if_ready():
+    try:
+        # Check if file data is available
+        if not hasattr(window, 'js_file0_data') or window.js_file0_data is None:
+            console.error("File 0 data is missing. Cannot process audio.")
+            window.updateUIWithError("No file data available")
+            return
+
+        # Call the main function from SJPlot module
+        SJPlot.main()
+    except Exception as e:
+        console.error(f"Error processing audio: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        console.error(error_details)
+        
+        # Update UI using existing function
+        error_msg = str(e) if str(e) else "An unknown error occurred"
+        window.updateUIWithError(error_msg, error_details)
+
+# Attach the function to the window object for manual invocation
+window.pyProcessAudio = process_audio_if_ready
+
+    </py-script>
+
+    <script type="module">
+        import { renderWaveform } from './waveform.js';
+        
+        // Generate session ID on page load for tracking
+        const sessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        let analysisCounter = 0;
+        let currentAnalysisId = null;
+
+        let file0Data = null;
+        window.file1Data = null;  // Expose file1Data globally so clearFile1 can access it
+        let fileLoadedViaUrl = false;
+        let pyScriptReady = false;
+        
+        // LocalStorage helper functions
+        function savePreference(key, value) {
+            try {
+                localStorage.setItem('sjplot_' + key, value);
+                console.log(`Saved ${key}: ${value}`);
+            } catch (e) {
+                console.error('Error saving to localStorage:', e);
+            }
+        }
+        
+        function loadPreference(key, defaultValue = null) {
+            try {
+                const value = localStorage.getItem('sjplot_' + key);
+                return value !== null ? value : defaultValue;
+            } catch (e) {
+                console.error('Error loading from localStorage:', e);
+                return defaultValue;
+            }
+        }
+        
+        // Update file input accept attribute based on browser
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput0');
+            if (fileInput) {
+                fileInput.accept = '.wav';
+                console.log('File input accepts: .wav only');
+            }
+            
+            // Load saved preferences
+            // Load and sync Plot Info
+            const savedPlotInfo = loadPreference('plotInfo');
+            if (savedPlotInfo) {
+                document.getElementById('plotInfo').value = savedPlotInfo;
+                document.getElementById('plotInfoAdvanced').value = savedPlotInfo;
+            }
+            // Load and sync Equipment Info
+            const savedEquipInfo = loadPreference('equipInfo');
+            if (savedEquipInfo) {
+                document.getElementById('equipInfo').value = savedEquipInfo;
+                document.getElementById('equipInfoAdvanced').value = savedEquipInfo;
+            }
+            // Load saved test record and sync both dropdowns
+            const savedTestRecord = loadPreference('testRecord');
+            if (savedTestRecord) {
+                document.getElementById('testRecord').value = savedTestRecord;
+                document.getElementById('testRecordAdvanced').value = savedTestRecord;
+            }
+            const savedRecordingType = loadPreference('recordingType');
+            if (savedRecordingType) {
+                document.getElementById('recordingType').value = savedRecordingType;
+                // Trigger change event to update RIAA settings
+                document.getElementById('recordingType').dispatchEvent(new Event('change'));
+            }
+            const savedPlotStyle = loadPreference('plotStyle');
+            if (savedPlotStyle) {
+                document.getElementById('plotStyle').value = savedPlotStyle;
+            }
+            const savedNormalize = loadPreference('normalize');
+            if (savedNormalize) {
+                document.getElementById('normalize').value = savedNormalize;
+            }
+            // Load saved author from localStorage
+            // Load and sync Author
+            const savedAuthor = loadPreference('author');
+            if (savedAuthor) {
+                document.getElementById('author').value = savedAuthor;
+                document.getElementById('authorAdvanced').value = savedAuthor;
+            }
+            // Load advanced mode settings
+            const savedTestRecordAdvanced = loadPreference('testRecordAdvanced');
+            if (savedTestRecordAdvanced) {
+                document.getElementById('testRecordAdvanced').value = savedTestRecordAdvanced;
+            }
+            const savedExtractSweeps = loadPreference('extractSweeps');
+            if (savedExtractSweeps !== null) {
+                document.getElementById('extractSweeps').value = savedExtractSweeps;
+            }
+            const savedEndF = loadPreference('endF');
+            if (savedEndF) {
+                document.getElementById('endF').value = savedEndF;
+            }
+            const savedFile0norm = loadPreference('file0norm');
+            if (savedFile0norm !== null) {
+                document.getElementById('file0norm').value = savedFile0norm;
+            }
+            const savedStartF = loadPreference('startF');
+            if (savedStartF !== null) {
+                document.getElementById('startF').value = savedStartF;
+            }
+            const savedRiaaMode = loadPreference('riaaMode');
+            if (savedRiaaMode) {
+                document.getElementById('riaaModeAdvanced').value = savedRiaaMode;
+            }
+            const savedRiaaInverse = loadPreference('riaaInverse');
+            if (savedRiaaInverse !== null) {
+                document.getElementById('riaaInverseAdvanced').value = savedRiaaInverse;
+            }
+            // ...existing code...
+
+            console.log('Loaded saved preferences');
+            
+            // Check for ?file= URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            let fileUrl = urlParams.get('file');
+            
+            // If there's a separate 'dl' parameter, it was likely meant for the Dropbox URL
+            // This happens when users paste unencoded URLs like: ?file=https://dropbox.com/...?rlkey=...&dl=1
+            // The browser splits it into file=... and dl=1 as separate parameters
+            // We'll convert dl to raw for better CORS support
+            const dlParam = urlParams.get('dl');
+            if (fileUrl && dlParam !== null && fileUrl.includes('dropbox.com')) {
+                // Don't append the dl parameter - let the Dropbox conversion logic handle it
+                // by converting to raw=1 instead
+                fileUrl = fileUrl + '&dl=' + dlParam;
+                console.log('Reconstructed Dropbox URL with dl parameter:', fileUrl);
+            }
+            
+            if (fileUrl) {
+                console.log('File URL parameter detected:', fileUrl);
+                loadFileFromUrl(fileUrl);
+            }
+        });
+        
+        // Save preferences when they change
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('equipInfo').addEventListener('input', function() {
+                // removed input event for equipInfo
+            });
+            
+            // Sync testRecord between both forms
+            function syncTestRecord(val) {
+                document.getElementById('testRecord').value = val;
+                document.getElementById('testRecordAdvanced').value = val;
+                savePreference('testRecord', val);
+            }
+            document.getElementById('testRecord').addEventListener('change', function() {
+                syncTestRecord(this.value);
+            });
+            document.getElementById('testRecordAdvanced').addEventListener('change', function() {
+                syncTestRecord(this.value);
+            });
+            
+            document.getElementById('recordingType').addEventListener('change', function() {
+                savePreference('recordingType', this.value);
+            });
+            
+            document.getElementById('plotStyle').addEventListener('change', function() {
+                savePreference('plotStyle', this.value);
+            });
+            
+            document.getElementById('normalize').addEventListener('change', function() {
+                savePreference('normalize', this.value);
+            });
+            
+            // Sync Author between both forms
+            function syncAuthor(val) {
+                document.getElementById('author').value = val;
+                document.getElementById('authorAdvanced').value = val;
+                savePreference('author', val);
+            }
+            document.getElementById('author').addEventListener('change', function() {
+                syncAuthor(this.value);
+            });
+            document.getElementById('authorAdvanced').addEventListener('change', function() {
+                syncAuthor(this.value);
+            });
+
+            // Sync Plot Info between both forms
+            function syncPlotInfo(val) {
+                document.getElementById('plotInfo').value = val;
+                document.getElementById('plotInfoAdvanced').value = val;
+                savePreference('plotInfo', val);
+            }
+            document.getElementById('plotInfo').addEventListener('change', function() {
+                syncPlotInfo(this.value);
+            });
+            document.getElementById('plotInfoAdvanced').addEventListener('change', function() {
+                syncPlotInfo(this.value);
+            });
+
+            // Sync Equipment Info between both forms
+            function syncEquipInfo(val) {
+                document.getElementById('equipInfo').value = val;
+                document.getElementById('equipInfoAdvanced').value = val;
+                savePreference('equipInfo', val);
+            }
+            document.getElementById('equipInfo').addEventListener('change', function() {
+                syncEquipInfo(this.value);
+            });
+            document.getElementById('equipInfoAdvanced').addEventListener('change', function() {
+                syncEquipInfo(this.value);
+            });
+
+            // Save advanced mode settings when they change
+            document.getElementById('extractSweeps').addEventListener('change', function() {
+                savePreference('extractSweeps', this.value);
+            });
+
+            document.getElementById('endF').addEventListener('input', function() {
+                // removed input event for endF
+            });
+
+            document.getElementById('startF').addEventListener('input', function() {
+                // removed input event for startF
+            });
+            // Advanced text fields: save on change only
+            document.getElementById('authorAdvanced').addEventListener('change', function() {
+                // (No-op, handled by syncAuthor)
+            });
+            document.getElementById('startF').addEventListener('change', function() {
+                savePreference('startF', this.value);
+            });
+            document.getElementById('endF').addEventListener('change', function() {
+                savePreference('endF', this.value);
+            });
+
+            document.getElementById('file0norm').addEventListener('change', function() {
+                savePreference('file0norm', this.value);
+            });
+
+            document.getElementById('startF').addEventListener('change', function() {
+                // duplicate removed
+            });
+
+            document.getElementById('riaaModeAdvanced').addEventListener('change', function() {
+                savePreference('riaaMode', this.value);
+            });
+
+            document.getElementById('riaaInverseAdvanced').addEventListener('change', function() {
+                savePreference('riaaInverse', this.value);
+            });
+
+            document.getElementById('testRecordAdvanced').addEventListener('change', function() {
+                savePreference('testRecordAdvanced', this.value);
+            });
+
+            document.getElementById('normalizeAdvanced').addEventListener('change', function() {
+                // ...existing code...
+            });
+        });
+        
+        // Test network connectivity to PyScript CDN
+        function testPyScriptCDN() {
+            fetch('https://pyscript.net/releases/2024.8.2/core.js', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('PyScript CDN is reachable');
+                        document.getElementById('pyscriptStatus').textContent = 'PyScript loading, please wait...';
+                    } else {
+                        console.error('PyScript CDN returned error:', response.status);
+                        document.getElementById('pyscriptStatus').innerHTML = `
+                            PyScript CDN error: ${response.status}<br>
+                            <a href="javascript:location.reload()">Try refreshing the page</a>
+                        `;
+                        document.getElementById('pyscriptStatus').style.color = 'red';
+                    }
+                })
+                .catch(error => {
+                    console.error('Cannot reach PyScript CDN:', error);
+                    document.getElementById('pyscriptStatus').innerHTML = `
+                        Cannot reach PyScript CDN. Check your internet connection.<br>
+                        <a href="javascript:location.reload()">Try refreshing the page</a>
+                    `;
+                    document.getElementById('pyscriptStatus').style.color = 'red';
+                });
+        }
+        
+        // Test CDN connectivity first
+        testPyScriptCDN();
+        
+        // Listen for PyScript events properly
+        document.addEventListener('py:ready', function() {
+            console.log('py:ready event fired - PyScript is ready!');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+            // Stop any ongoing polling
+            pollCount = 999; 
+        });
+        
+        document.addEventListener('py:all-done', function() {
+            console.log('py:all-done event fired - PyScript is ready!');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+            // Stop any ongoing polling
+            pollCount = 999;
+        });
+        
+        // Also listen for other possible events
+        document.addEventListener('pyscript:ready', function() {
+            console.log('pyscript:ready event fired');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, starting PyScript checks...');
+        });
+        
+        // More aggressive polling approach with detailed logging
+        let pollCount = 0;
+        function pollForPyScript() {
+            // If events already fired, stop polling
+            if (pyScriptReady) {
+                console.log('PyScript already ready, stopping poll');
+                return;
+            }
+            
+            pollCount++;
+            console.log(`Poll ${pollCount}: Checking PyScript status...`);
+            console.log('window.pyscript exists:', !!window.pyscript);
+            
+            // Check for newer PyScript API
+            if (window.pyscript) {
+                console.log('window.pyscript keys:', Object.keys(window.pyscript));
+                // In newer versions, just having pyscript object means it's ready
+                console.log('PyScript object found - assuming ready!');
+                pyScriptReady = true;
+                updateAnalyzeButtonState();
+                return;
+            }
+            
+            // Check for Pyodide directly
+            if (window.pyodide && window.pyodide.runPython) {
+                console.log('Pyodide runPython available - PyScript is ready!');
+                pyScriptReady = true;
+                updateAnalyzeButtonState();
+                return;
+            }
+            
+            if (pollCount < 15) { // Reduced to 15 seconds since events should fire
+                setTimeout(pollForPyScript, 1000);
+            } else {
+                console.error('PyScript polling timed out, but events may have fired');
+                document.getElementById('pyscriptStatus').innerHTML = `
+                    PyScript polling timed out, but it may still be working.<br>
+                    <a href="javascript:forcePyScriptReady()">Force Ready (recommended)</a> or 
+                    <a href="javascript:location.reload()">Refresh page</a>
+                `;
+                document.getElementById('pyscriptStatus').style.color = 'orange';
+                
+                // Google Analytics event: PyScript error (timeout)
+                if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                    gtag('event', 'pyscript_error', {
+                        'event_category': 'Error',
+                        'event_label': 'PyScript polling timed out',
+                        'app_session_id': sessionId
+                    });
+                }
+            }
+        }
+        
+        // Also try the window load event as a fallback
+        window.addEventListener('load', function() {
+            console.log('Window loaded, starting PyScript polling in 3 seconds...');
+            setTimeout(pollForPyScript, 3000); // Start polling after 3 seconds
+        });
+        
+        // Add a manual override for testing
+        window.forcePyScriptReady = function() {
+            console.log('Forcing PyScript ready state...');
+            pyScriptReady = true;
+            updateAnalyzeButtonState();
+            document.getElementById('pyscriptStatus').style.display = 'none';
+            console.log('PyScript manually marked as ready');
+        };
+        
+        // Also add a debug function
+        window.debugPyScript = function() {
+            console.log('=== PyScript Debug Info ===');
+            console.log('pyScriptReady:', pyScriptReady);
+            console.log('window.pyscript:', window.pyscript);
+            console.log('window.pyodide:', window.pyodide);
+            if (window.pyscript) {
+                console.log('pyscript keys:', Object.keys(window.pyscript));
+            }
+            console.log('========================');
+        };
+        
+        function updateAnalyzeButtonState() {
+            const btn = document.getElementById('analyzeBtn');
+            const statusDiv = document.getElementById('pyscriptStatus');
+            
+            if (file0Data && pyScriptReady) {
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <polygon points="5,3 19,12 5,21"/>
+                </svg>Analyze Audio`;
+                statusDiv.style.display = 'none';
+            } else if (!pyScriptReady) {
+                btn.disabled = true;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12,6 12,12 16,14"/>
+                </svg>Loading PyScript...`;
+                statusDiv.style.display = 'block';
+                statusDiv.style.color = '#666';
+            } else {
+                btn.disabled = true;
+                btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <polygon points="5,3 19,12 5,21"/>
+                </svg>Analyze Audio`;
+                statusDiv.textContent = 'Upload a WAV file to begin';
+                statusDiv.style.display = 'block';
+                statusDiv.style.color = '#666';
+            }
+        }
+        
+        // Callback functions for Python to update UI
+        function updateUIWithResults(html) {
+            console.log('updateUIWithResults called');
+            document.getElementById('output').innerHTML = html;
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = '✅ Complete!';
+            statusEl.className = 'success';
+            document.getElementById('loading').classList.remove('active');
+            
+            // Show the contribute CTA
+            const ctaEl = document.getElementById('contributeCta');
+            console.log('Looking for CTA element:', ctaEl);
+            if (ctaEl) {
+                ctaEl.classList.add('show');
+                console.log('CTA show class added');
+            } else {
+                console.error('CTA element not found');
+            }
+            
+            updateAnalyzeButtonState();
+        }
+        
+        function updateUIWithError(errorMessage, traceback = null) {
+            // Clear the output div
+            document.getElementById('output').innerHTML = '';
+            
+            // Build status message with optional traceback
+            const statusEl = document.getElementById('status');
+            let statusHtml = `❌ ${errorMessage}`;
+            
+            if (traceback) {
+                // Escape traceback for safe HTML insertion
+                const escapedTraceback = traceback.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                
+                statusHtml += `
+                    <br><br>
+                    <details style="margin-top:10px; text-align:center;">
+                        <summary style="cursor:pointer; font-weight:bold; color:#c00; list-style:revert;">Show Technical Details</summary>
+                        <div style="position:relative; text-align:left; margin-top:10px;">
+                            <button onclick="
+                                const pre = this.nextElementSibling;
+                                const text = pre.textContent;
+                                navigator.clipboard.writeText(text).then(() => {
+                                    this.style.opacity = '0.6';
+                                    setTimeout(() => this.style.opacity = '1', 200);
+                                }).catch(err => console.error('Copy failed:', err));
+                            " 
+                                    style="position:absolute; top:5px; right:5px; padding:6px 10px; background:rgba(255,255,255,0.9); color:#333; border:none; border-radius:4px; cursor:pointer; font-size:0.85em; display:flex; align-items:center; transition:opacity 0.2s;" 
+                                    title="Copy to clipboard">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                                </svg>
+                            </button>
+                            <pre style="margin:0; padding:10px 10px 10px 10px; font-size:0.85em; overflow:auto; background:#fff; border-radius:4px; border:1px solid #ddd; color:#333; text-align:left;">${escapedTraceback}</pre>
+                            <div id="error-waveform-container"></div>
+                        </div>
+                    </details>
+                `;
+            }
+            
+            statusEl.innerHTML = statusHtml;
+            statusEl.className = 'error';
+            document.getElementById('loading').classList.remove('active');
+            
+            // Google Analytics event: script error
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                gtag('event', 'script_error', {
+                    'event_category': 'Error',
+                    'event_label': errorMessage,
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+            }
+            
+            currentAnalysisId = null;
+            
+            updateAnalyzeButtonState();
+            
+            // Display waveform for troubleshooting
+            showErrorWaveform();
+        }
+        
+        // Function to download the plot image
+        function downloadPlot() {
+            const outputDiv = document.getElementById('output');
+            const img = outputDiv.querySelector('img');
+            
+            if (!img) {
+                alert('No plot available to download');
+                return;
+            }
+            
+            // Get the plot info for filename, sanitize for filesystem
+            let plotInfo = document.getElementById('plotInfo').value || 'SJPlot';
+            let filename = plotInfo.replace(/ \/ /g, '_').replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') + '.png';
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Google Analytics event: plot download
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                gtag('event', 'plot_download', {
+                    'event_category': 'Download',
+                    'event_label': 'plot_download',
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+            }
+        }
+
+        // Function to copy the plot image to clipboard
+        async function copyPlotToClipboard() {
+            try {
+                const outputDiv = document.getElementById('output');
+                const img = outputDiv.querySelector('img');
+
+                if (!img) {
+                    alert('No plot available to copy');
+                    return;
+                }
+
+                // Check if clipboard API is available
+                if (!navigator.clipboard || !navigator.clipboard.write) {
+                    alert('Clipboard API not supported in this browser. Try using the download button instead.');
+                    return;
+                }
+
+                // Safari requires ClipboardItem to be created synchronously,
+                // but the blob can be a Promise that resolves later
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'image/png': new Promise(async (resolve, reject) => {
+                            try {
+                                const response = await fetch(img.src);
+                                const blob = await response.blob();
+                                resolve(blob);
+                            } catch (error) {
+                                reject(error);
+                            }
+                        })
+                    })
+                ]);
+
+                console.log('Plot image copied to clipboard');
+
+                // Google Analytics event: plot copy
+                if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                    gtag('event', 'plot_copy', {
+                        'event_category': 'Clipboard',
+                        'event_label': 'plot_copy',
+                        'app_session_id': sessionId,
+                        'app_analysis_id': currentAnalysisId
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error copying plot to clipboard:', error);
+                alert('Failed to copy image to clipboard. Try the download button instead.');
+            }
+        }
+
+        // Make functions globally available for Python to call
+        window.updateAnalyzeButtonState = updateAnalyzeButtonState;
+        window.updateUIWithResults = updateUIWithResults;
+        window.updateUIWithError = updateUIWithError;
+        
+        // Function for Python to update progress status (works across worker boundary)
+        window.updateProgressStatus = function(statusText) {
+            const element = document.getElementById('progressStatus');
+            if (element) {
+                element.innerHTML = statusText;
+            }
+        };
+        
+        // Test Record RIAA Settings Mapping
+        window.testRecordSettings = {
+            'STR100':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 20000 },
+            'TRS1007':   { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
+            'TRS1005':   { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
+            'STR120':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
+            'STR130':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false}, end_f: 20000 },
+            'STR170':    { withRIAA: {mode: 2, inverse: false}, withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
+            'QR2009':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
+            'QR2010':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 50000 },
+            'XG7001':    { withRIAA: {mode: 3, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 20000 },
+            'XG7002':    { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 0, inverse: false}, end_f: 50000 },
+            'XG7005':    { withRIAA: {mode: 0, inverse: false}, withoutRIAA: {mode: 3, inverse: false}, end_f: 20000 },
+            'DIN45543':  { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 },
+            'SFC-TR100': { withRIAA: {mode: 2, inverse: true},  withoutRIAA: {mode: 1, inverse: false}, end_f: 20000 }
+        };
+        
+        // Function to update RIAA settings based on test record and recording type
+        window.updateTestRecordSettings = function() {
+            // Only run this in standard mode
+            const standardConfig = document.getElementById('standardConfig');
+            if (!standardConfig || standardConfig.style.display === 'none') {
+                return; // Exit if we're in advanced mode
+            }
+
+            const testRecord = document.getElementById('testRecord').value;
+            const recordingType = document.getElementById('recordingType').value;
+            const settings = window.testRecordSettings[testRecord];
+            if (!settings) return;
+            const riaa = settings[recordingType];
+            if (riaa) {
+                document.getElementById('riaaMode').value = riaa.mode;
+                document.getElementById('riaaInverse').checked = riaa.inverse;
+            }
+            // Set end_f in the config (if you want to update a hidden field or use directly in config build)
+            // Example: document.getElementById('endF').value = settings.end_f;
+        };
+
+        // Initialize UI event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up file input and drag-and-drop handlers...');
+
+            // Initialize test record settings on page load
+            updateTestRecordSettings();
+
+            // Standard mode file input
+            document.getElementById('fileInput0').addEventListener('change', e => handleFile(e.target.files[0], 0));
+
+            // Advanced mode file inputs
+            document.getElementById('fileInput0Advanced').addEventListener('change', e => handleFile(e.target.files[0], 0));
+            document.getElementById('fileInput1').addEventListener('change', e => handleFile(e.target.files[0], 1));
+            
+            // Handle Test Record dropdown to auto-update RIAA settings
+            document.getElementById('testRecord').addEventListener('change', updateTestRecordSettings);
+            // Handle Recording Type dropdown to auto-update settings
+            document.getElementById('recordingType').addEventListener('change', updateTestRecordSettings);
+            
+            // Drag and drop functionality
+            const uploadArea = document.querySelector('.upload-area');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+            
+            uploadArea.addEventListener('dragleave', (e) => {
+                // Only remove if we're leaving the upload area itself, not a child element
+                if (e.target === uploadArea) {
+                    uploadArea.classList.remove('drag-over');
+                }
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFile(file, 0);
+                }
+            });
+
+            // Drag and drop for advanced mode file 0
+            const uploadHalf0 = document.getElementById('uploadHalf0');
+
+            uploadHalf0.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadHalf0.classList.add('drag-over');
+            });
+
+            uploadHalf0.addEventListener('dragleave', (e) => {
+                if (e.target === uploadHalf0) {
+                    uploadHalf0.classList.remove('drag-over');
+                }
+            });
+
+            uploadHalf0.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadHalf0.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFile(file, 0);
+                }
+            });
+
+            // Drag and drop for advanced mode file 1
+            const uploadHalf1 = document.getElementById('uploadHalf1');
+
+            uploadHalf1.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadHalf1.classList.add('drag-over');
+            });
+
+            uploadHalf1.addEventListener('dragleave', (e) => {
+                if (e.target === uploadHalf1) {
+                    uploadHalf1.classList.remove('drag-over');
+                }
+            });
+
+            uploadHalf1.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadHalf1.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFile(file, 1);
+                }
+            });
+
+            console.log('File input and drag-and-drop handlers ready!');
+        });
+        
+        function handleFile(file, index) {
+            if (!file) {
+                alert('No file selected');
+                return;
+            }
+
+            // Clear previous output and status when new file is selected
+            document.getElementById('output').innerHTML = '';
+            const statusEl = document.getElementById('status');
+            statusEl.className = '';
+            statusEl.innerHTML = '';
+            document.getElementById('contributeCta').classList.remove('show');
+
+            const fileName = file.name.toLowerCase();
+
+            // Only accept WAV files
+            if (!fileName.endsWith('.wav')) {
+                alert('Only WAV files are supported.\n\nFor measurement accuracy, this tool requires uncompressed WAV audio files.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    // Direct WAV file - use as is
+                    const wavBytes = new Uint8Array(e.target.result);
+                    console.log(`Loaded WAV file ${index}: ${file.name} (${wavBytes.length} bytes)`);
+
+                    if (index === 0) {
+                        file0Data = {name: file.name, bytes: wavBytes};
+                        // Reset URL flag since this is a manual upload
+                        fileLoadedViaUrl = false;
+                        console.log('File 0 loaded manually, reset fileLoadedViaUrl flag');
+
+                        // Update file info in standard mode
+                        const fileInfoDiv = document.getElementById('fileInfo');
+                                               fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
+                        fileInfoDiv.className = 'file-info ready';
+                        fileInfoDiv.style.display = 'block';
+
+                        // Update status in advanced mode
+                        const file0Status = document.getElementById('file0Status');
+                        file0Status.innerHTML = `✅ ${file0Data.name}`;
+                        file0Status.className = 'file-info ready';
+                        file0Status.style.display = 'block';
+                    } else if (index === 1) {
+                        window.file1Data = {name: file.name, bytes: wavBytes};
+                        console.log('File 1 loaded');
+
+                        // Update status in advanced mode
+                        const file1Status = document.getElementById('file1Status');
+                        file1Status.innerHTML = `✅ ${window.file1Data.name}`;
+                        file1Status.className = 'file-info ready';
+                        file1Status.style.display = 'block';
+
+                        // Show clear button
+                        const clearBtn = document.getElementById('clearFile1Btn');
+                        if (clearBtn) {
+                            clearBtn.style.display = 'flex';
+                        }
+                    }
+
+                    updateAnalyzeButtonState();
+                } catch (error) {
+                    console.error('File processing error:', error);
+                    alert(error.message || 'Error processing WAV file');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        async function loadFileFromUrl(fileUrl) {
+            const fileInfoDiv = document.getElementById('fileInfo');
+            
+            try {
+                // Show loading status
+                fileInfoDiv.innerHTML = `⏳ Loading file from URL...`;
+                fileInfoDiv.className = 'file-info';
+                fileInfoDiv.style.display = 'block';
+                
+                console.log(`Original URL: ${fileUrl}`);
+                
+                // Handle Dropbox URLs - convert to dl.dropboxusercontent.com for direct access with CORS support
+                if (fileUrl.includes('dropbox.com/')) {
+                    // Replace www.dropbox.com with dl.dropboxusercontent.com
+                    fileUrl = fileUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+                    fileUrl = fileUrl.replace('dropbox.com', 'dl.dropboxusercontent.com');
+                    
+                    // Remove dl=0 or dl=1 parameters as they're not needed for dropboxusercontent.com
+                    fileUrl = fileUrl.replace(/[&?]dl=0/, '');
+                    fileUrl = fileUrl.replace(/[&?]dl=1/, '');
+                    fileUrl = fileUrl.replace(/[&?]raw=1/, '');
+                    
+                    console.log('Converted Dropbox URL to direct CDN:', fileUrl);
+                }
+                
+                console.log(`Fetching file from URL: ${fileUrl}`);
+                
+                // Fetch the file
+                const response = await fetch(fileUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
+                }
+                
+                // Get the filename from URL or Content-Disposition header
+                let fileName = 'audio.wav';
+                const contentDisposition = response.headers.get('Content-Disposition');
+                if (contentDisposition) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+                    if (matches && matches[1]) {
+                        fileName = matches[1].replace(/['"]/g, '');
+                    }
+                } else {
+                    // Try to extract filename from URL
+                    const urlPath = new URL(fileUrl).pathname;
+                    const urlFileName = urlPath.split('/').pop();
+                    if (urlFileName && urlFileName.includes('.')) {
+                        fileName = urlFileName;
+                    }
+                }
+                
+                // Verify it's a WAV file
+                if (!fileName.toLowerCase().endsWith('.wav')) {
+                    throw new Error('Only WAV files are supported.\n\nFor measurement accuracy, this tool requires uncompressed WAV audio files.');
+                }
+                
+                // Get the file data
+                const arrayBuffer = await response.arrayBuffer();
+                const wavBytes = new Uint8Array(arrayBuffer);
+                
+                console.log(`Loaded WAV file from URL: ${fileName} (${wavBytes.length} bytes)`);
+                
+                // Store the file data
+                file0Data = {name: fileName, bytes: wavBytes};
+                fileLoadedViaUrl = true;
+                
+                // Update UI
+                fileInfoDiv.innerHTML = `✅ ${file0Data.name}`;
+                fileInfoDiv.className = 'file-info ready';
+                fileInfoDiv.style.display = 'block';
+                updateAnalyzeButtonState();
+                
+                // Clear the file parameter from URL so refresh doesn't reload it
+                const url = new URL(window.location);
+                url.searchParams.delete('file');
+                url.searchParams.delete('dl'); // Also remove dl if it was split from file URL
+                window.history.replaceState({}, '', url);
+                console.log('Cleared file parameter from URL');
+                
+            } catch (error) {
+                console.error('Error loading file from URL:', error);
+                
+                // Provide more specific error messages for common issues
+                let errorMessage = error.message;
+                let errorDetails = 'Please check the URL and try again, or upload a file directly.';
+                
+                // Check for specific error types
+                const urlParams = new URLSearchParams(window.location.search);
+                const originalFileUrl = urlParams.get('file');
+                
+                if (originalFileUrl && originalFileUrl.startsWith('http://')) {
+                    errorMessage = 'HTTP URLs are not supported';
+                    errorDetails = 'For security reasons, only HTTPS URLs can be loaded. Please use an HTTPS URL or upload the file directly.';
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('CORS')) {
+                    errorMessage = 'Unable to load file from URL';
+                    errorDetails = 'This could be due to:\n\n• Cross-origin restrictions (CORS) - server must allow requests\n• Invalid or expired HTTPS certificate\n• Network connectivity issues\n• File not found or moved\n\nFor Dropbox: Links are automatically converted to dl.dropboxusercontent.com\nFor Google Drive: May not work due to CORS restrictions\n\nOtherwise, please upload the file directly.';
+                }
+                
+                fileInfoDiv.innerHTML = `❌ ${errorMessage}`;
+                fileInfoDiv.className = 'file-info';
+                fileInfoDiv.style.display = 'block';
+                alert(`Failed to load file from URL:\n\n${errorMessage}\n\n${errorDetails}`);
+            }
+        }
+        
+        function startAnalysis() {
+            if (!file0Data) { alert('Upload a file first'); return; }
+
+            // Check if PyScript is ready
+            if (!pyScriptReady) {
+                alert('PyScript is still loading. Please wait a moment and try again.');
+                return;
+            }
+
+            // Check if Python function is available
+            if (!window.pyProcessAudio) {
+                alert('Python environment not ready. Please wait a moment and try again.');
+                return;
+            }
+
+            // Generate analysis ID for this analysis
+            analysisCounter++;
+            currentAnalysisId = `${sessionId}-${analysisCounter}`;
+            console.log('Starting analysis:', currentAnalysisId);
+            
+            // Google Analytics event: Analyze Audio button clicked
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                gtag('event', 'analyze_audio_click', {
+                    'event_category': 'Interaction',
+                    'event_label': 'Analyze Audio Button',
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                // Also fire events for current config values
+                gtag('event', 'test_record_used', {
+                    'event_category': 'Config',
+                    'event_label': document.getElementById('testRecord').value,
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                gtag('event', 'plot_style_used', {
+                    'event_category': 'Config',
+                    'event_label': document.getElementById('plotStyle').value,
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                gtag('event', 'recording_type_used', {
+                    'event_category': 'Config',
+                    'event_label': document.getElementById('recordingType').value,
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+                // Fire event if file was loaded via URL parameter
+                if (fileLoadedViaUrl) {
+                    gtag('event', 'file_loaded_via_url', {
+                        'event_category': 'File Source',
+                        'event_label': 'URL Parameter',
+                        'app_session_id': sessionId,
+                        'app_analysis_id': currentAnalysisId
+                    });
+                }
+                // Fire GA event for startF and endF if present, but only in advanced mode
+                const standardConfig = document.getElementById('standardConfig');
+                const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+                if (mode === 'advanced') {
+                    const startFValue = document.getElementById('startF').value;
+                    const endFValue = document.getElementById('endF').value;
+                    if (startFValue || endFValue) {
+                        gtag('event', 'start_end_frequencies_used', {
+                            'event_category': 'Config',
+                            'event_label': 'Start/End Frequency',
+                            'startF': startFValue || null,
+                            'endF': endFValue || null,
+                            'app_session_id': sessionId,
+                            'app_analysis_id': currentAnalysisId
+                        });
+                    }
+                }
+            }
+
+            // Track config mode before starting analysis (needs to be outside the above block to access 'mode' variable)
+            setTimeout(() => {
+                const standardConfig = document.getElementById('standardConfig');
+                const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+
+                if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                    gtag('event', 'config_mode_used', {
+                        'event_category': 'Config',
+                        'event_label': mode,
+                        'app_session_id': sessionId,
+                        'app_analysis_id': currentAnalysisId
+                    });
+                }
+            }, 0);
+            
+            // Hide previous status banner and show loading
+            const statusEl = document.getElementById('status');
+            statusEl.className = '';
+            statusEl.textContent = '';
+            document.getElementById('contributeCta').classList.remove('show');
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('analyzeBtn').disabled = true;
+            
+            // Clear previous output
+            document.getElementById('output').innerHTML = '';
+            
+            // Force UI update before starting Python processing
+            setTimeout(() => {
+                // Determine which mode we're in by checking which config section is visible
+                const standardConfig = document.getElementById('standardConfig');
+                const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+                let config;
+
+                if (mode === 'standard') {
+                    // Standard mode configuration with defaults for advanced-only parameters
+                    const testRecord = document.getElementById('testRecord').value;
+                    const testRecordSettings = window.testRecordSettings[testRecord];
+                    config = {
+                        plot_info: document.getElementById('plotInfo').value || "Cart / Load / Record",
+                        equip_info: document.getElementById('equipInfo').value || "Arm -> Phonostage -> ADC",
+                        plot_style: parseInt(document.getElementById('plotStyle').value),
+                        riaa_mode: parseInt(document.getElementById('riaaMode').value),
+                        riaa_inverse: document.getElementById('riaaInverse').checked ? 1 : 0,
+                        extract_sweeps: 1, // Always enabled in standard mode
+                        test_record: testRecord,
+                        author: document.getElementById('author').value,
+                        plot_data_out: 1, // Always enabled for web mode
+                        // Advanced-only parameters
+                        file0norm: 0,
+                        onekfstart: 0
+                    };
+                    if (testRecordSettings && typeof testRecordSettings.end_f !== 'undefined') {
+                        config.end_f = testRecordSettings.end_f;
+                    }
+                } else {
+                    // Advanced mode configuration
+                    config = {
+                        plot_info: document.getElementById('plotInfoAdvanced').value || "Cart / Load / Record",
+                        equip_info: document.getElementById('equipInfoAdvanced').value || "Arm -> Phonostage -> ADC",
+                        plot_style: parseInt(document.getElementById('plotStyleAdvanced').value),
+                        riaa_mode: parseInt(document.getElementById('riaaModeAdvanced').value),
+                        riaa_inverse: document.getElementById('riaaInverseAdvanced').value === 'true' ? 1 : 0,
+                        normalize: parseInt(document.getElementById('normalizeAdvanced').value),
+                        extract_sweeps: parseInt(document.getElementById('extractSweeps').value),
+                        test_record: document.getElementById('testRecordAdvanced').value,
+                        author: document.getElementById('authorAdvanced').value,
+                        file0norm: parseInt(document.getElementById('file0norm').value),
+                        plot_data_out: 1 // Always enabled for web mode
+                    };
+
+                    // Add advanced-only parameters only if they have values (avoid sending null)
+                    const endFValue = document.getElementById('endF').value;
+                    if (endFValue) {
+                        config.end_f = parseInt(endFValue);
+                    }
+                    const startFValue = document.getElementById('startF').value;
+                    if (startFValue) {
+                        config.start_f = parseInt(startFValue);
+                    }                
+                }
+                
+                try {
+                    console.log('Calling Python function directly...');
+                    console.log('Config being sent to Python:', config);
+
+                    // Set global JS variables that Python can access
+                    window.js_file0_data = file0Data.bytes;
+                    // Only pass file1 in advanced mode
+                    window.js_file1_data = (mode === 'advanced' && window.file1Data) ? window.file1Data.bytes : null;
+                    window.js_config = config;
+
+                    // Call the Python function asynchronously to allow UI updates
+                    window.pyProcessAudio();
+                    
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    document.getElementById('status').textContent = '❌ Error: ' + error.message;
+                    document.getElementById('status').className = 'error';
+                    document.getElementById('loading').classList.remove('active');
+                    updateAnalyzeButtonState();
+                }
+            }, 100);  // Allow UI to render loading state first
+        }
+        
+        function updateUIWithPlotImage(imgData) {
+
+            // Update the output div with the plot image and buttons
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `
+                <div class="plot-container">
+                    <button id="copy-plot-btn" class="plot-button" title="Copy plot to clipboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                    </button>
+                    <button id="download-plot-btn" class="plot-button" title="Download plot as PNG">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </button>
+                    <img src="data:image/png;base64,${imgData}" />
+                </div>
+                <div class="csv-download-link">
+                    <a href="#" id="download-csv-btn" onclick="window.downloadCSV(); return false;">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Download Plot CSV
+                    </a>
+                </div>
+            `;
+
+            // Setup button event listeners
+            const downloadBtn = document.getElementById('download-plot-btn');
+            const copyBtn = document.getElementById('copy-plot-btn');
+
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', () => {
+                    downloadBtn.style.opacity = '0.6';
+                    setTimeout(() => downloadBtn.style.opacity = '1', 200);
+                    downloadPlot();
+                });
+            }
+
+            if (copyBtn) {
+                copyBtn.addEventListener('click', async () => {
+                    copyBtn.style.opacity = '0.6';
+                    setTimeout(() => copyBtn.style.opacity = '1', 200);
+                    await copyPlotToClipboard();
+                });
+            }
+
+            // Show the contribute CTA
+            const ctaElem = document.getElementById('contributeCta');
+            if (ctaElem) {
+                ctaElem.classList.add('show');
+            }
+
+            // Update the status div
+            const statusElem = document.getElementById('status');
+            statusElem.textContent = '✅ Analysis Complete!';
+            statusElem.className = 'success';
+
+            // Hide the processing spinner
+            const loadingElem = document.getElementById('loading');
+            if (loadingElem) {
+                loadingElem.classList.remove('active');
+            }
+
+            // Re-enable the analyze button
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            if (analyzeBtn) {
+                analyzeBtn.disabled = false;
+            }
+
+            // Fire Google Analytics event for successful plot display (only fires if on sjplot.com)
+            if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                gtag('event', 'plot_image_displayed', {
+                    'event_category': 'Plot',
+                    'event_label': 'Plot image displayed successfully',
+                    'app_session_id': sessionId,
+                    'app_analysis_id': currentAnalysisId
+                });
+            }
+        }
+
+        // Function to display the input waveform when errors occur
+        async function showErrorWaveform() {
+            if (!file0Data || !file0Data.bytes) {
+                console.log('No audio file data available for waveform');
+                return;
+            }
+            
+            // Find the container inside the error details
+            const container = document.getElementById('error-waveform-container');
+            if (!container) {
+                console.log('Error waveform container not found');
+                return;
+            }
+            
+            try {
+                // Use the waveform module to render (no resampling)
+                await renderWaveform('error-waveform-container', file0Data.bytes);
+            } catch (error) {
+                console.error('Error rendering waveform:', error);
+                // Error message already set by module
+            }
+        }
+
+        // Store CSV data globally for download
+        window.csvData = { file0: null, file1: null };
+
+        function updateUIWithPlotData(csvData0, csvData1) {
+            // Store CSV data for download
+            window.csvData.file0 = csvData0;
+            window.csvData.file1 = csvData1;
+            console.log('CSV data received:', csvData1 ? 'dual files' : 'single file');
+        }
+
+        function downloadCSV() {
+            const standardConfig = document.getElementById('standardConfig');
+            const mode = standardConfig.style.display !== 'none' ? 'standard' : 'advanced';
+            const plotInfo = document.getElementById(mode === 'advanced' ? 'plotInfoAdvanced' : 'plotInfo').value || 'SJPlot';
+            const baseFilename = plotInfo.replace(/ \/ /g, '_').replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
+
+            if (window.csvData.file1) {
+                // Dual files - create two downloads
+                const link0 = document.createElement('a');
+                link0.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(window.csvData.file0);
+                link0.download = `${baseFilename}_L.csv`;
+                document.body.appendChild(link0);
+                link0.click();
+                document.body.removeChild(link0);
+
+                // Small delay between downloads
+                setTimeout(() => {
+                    const link1 = document.createElement('a');
+                    link1.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(window.csvData.file1);
+                    link1.download = `${baseFilename}_R.csv`;
+                    document.body.appendChild(link1);
+                    link1.click();
+                    document.body.removeChild(link1);
+                }, 100);
+            } else {
+                // Single file
+                const link = document.createElement('a');
+                link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(window.csvData.file0);
+                link.download = `${baseFilename}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Make the function globally available for Python to call
+        window.updateUIWithPlotImage = updateUIWithPlotImage;
+        window.updateUIWithPlotData = updateUIWithPlotData;
+        window.showErrorWaveform = showErrorWaveform;
+
+        // Make functions globally available for onclick handlers
+        window.startAnalysis = startAnalysis;
+        window.downloadPlot = downloadPlot;
+        window.downloadCSV = downloadCSV;
+    </script>
+    <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Track CTA link click
+                const ctaLink = document.querySelector('.contribute-cta a');
+                if (ctaLink) {
+                    ctaLink.addEventListener('click', function() {
+                        if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                            gtag('event', 'cta_library_click', {
+                                'event_category': 'Link',
+                                'event_label': 'ASR Phono Cartridge Library',
+                                'app_session_id': sessionId
+                            });
+                        }
+                    });
+                }
+                // Track help link click
+                const helpLink = document.querySelector('.footer a[href*="phono-cartridge-response-measurement-script"]');
+                if (helpLink) {
+                    helpLink.addEventListener('click', function() {
+                        if (typeof gtag === 'function' && (location.hostname === "sjplot.com" || location.hostname.endsWith(".sjplot.com"))) {
+                            gtag('event', 'help_link_click', {
+                                'event_category': 'Link',
+                                'event_label': 'ASR Help Thread',
+                                'app_session_id': sessionId
+                            });
+                        }
+                    });
+                }
+            });
+        </script>
+</body>
+</html>
